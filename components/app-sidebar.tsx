@@ -25,118 +25,47 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-const data = {
-  user: {
-    name: "Toby Belhome",
-    email: "m@example.com",
-    avatar: "https://www.tobybelhome.com/toby-belhome.png",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Users",
-      url: "/dashboard/users",
-      icon: IconListDetails,
-    },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: IconChartBar,
-    },
-    {
-      title: "Login",
-      url: "/login",
-      icon: IconFolder,
-    },
-    {
-      title: "Register",
-      url: "/register",
-      icon: IconUsers,
-    },
-    {
-      title: "404 Page",
-      url: "/404-page",
-      icon: IconFolder,
-    },
-    {
-      title: "500 Page",
-      url: "/500-page",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Get Pro",
-      url: "https://shadcnuikit.com/pricing",
-      icon: IconCircle,
-    },
-    {
-      title: "Shadcn UI Kit",
-      url: "https://shadcnuikit.com/",
-      icon: IconCircle,
-    },
-    {
-      title: "Bundui Component",
-      url: "https://bundui.io",
-      icon: IconCircle,
-    },
-  ],
-}
+import { useAuth } from "./providers/auth-provider";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { role } = useAuth();
+
+  const navItems = role === "admin"
+    ? [
+        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        { title: "Users", url: "/dashboard/users", icon: IconUsers },
+        { title: "Roles", url: "/dashboard/roles", icon: IconListDetails },
+        { title: "Products", url: "/dashboard/products", icon: IconFolder },
+      ]
+    : [
+        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        { title: "Products", url: "/dashboard/products", icon: IconFolder },
+      ];
+
+  const data = {
+    user: {
+      name: "Toby Belhome",
+      email: "m@example.com",
+      avatar: "https://www.tobybelhome.com/toby-belhome.png",
+    },
+    navSecondary: [
+      {
+        title: "Get Pro",
+        url: "https://shadcnuikit.com/pricing",
+        icon: IconCircle,
+      },
+      {
+        title: "Shadcn UI Kit",
+        url: "https://shadcnuikit.com/",
+        icon: IconCircle,
+      },
+      {
+        title: "Bundui Component",
+        url: "https://bundui.io",
+        icon: IconCircle,
+      },
+    ],
+  };
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -155,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

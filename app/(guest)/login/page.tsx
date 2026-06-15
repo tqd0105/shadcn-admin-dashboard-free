@@ -1,20 +1,30 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { generateMeta } from "@/lib/utils";
 import { GithubIcon } from "lucide-react";
 import Link from "next/link";
-import { Metadata } from "next";
-
-export async function generateMetadata(): Promise<Metadata> {
-  return generateMeta({
-    title: "Login Page",
-    description:
-      "A login form with email and password. There's an option to login with Google and a link to sign up if you don't have an account.",
-  });
-}
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { authService } from "@/lib/services/auth.service";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPageV1() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await authService.login(email, password);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    router.push("/dashboard");
+  };
+
   return (
     <div className="flex pb-8 lg:h-screen lg:pb-0">
       <div className="hidden w-1/2 bg-gray-100 lg:block">
@@ -28,7 +38,7 @@ export default function LoginPageV1() {
             <p className="mt-2 text-sm text-gray-600">Please sign in to your account</p>
           </div>
 
-          <form className="mt-8 space-y-6">
+          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="email" className="sr-only">
@@ -42,6 +52,8 @@ export default function LoginPageV1() {
                   required
                   className="w-full"
                   placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
@@ -56,6 +68,8 @@ export default function LoginPageV1() {
                   required
                   className="w-full"
                   placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               <div className="text-end">
@@ -105,7 +119,7 @@ export default function LoginPageV1() {
                 Google
               </Button>
               <Button variant="outline" className="w-full">
-                <GithubIcon className="mr-2 h-4 w-4" />
+                <GitHubLogoIcon className="mr-2 h-4 w-4" />
                 GitHub
               </Button>
             </div>

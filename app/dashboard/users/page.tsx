@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircledIcon } from "@radix-ui/react-icons";
 import UsersDataTable from "./data-table";
 import { Card, CardContent } from "@/components/ui/card";
+import RoleGuard from "@/components/guards/role-guard";
 
 export async function generateMetadata(): Promise<Metadata>{
   return generateMeta({
@@ -27,8 +28,9 @@ export default async function Page() {
 
   return (
     <>
+    <RoleGuard allowedRoles={["admin"]} > 
       <div className="flex items-center justify-between ">
-        <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Users Page</h1>
         <Button variant="secondary" asChild>
           <Link href="#">
             <PlusCircledIcon /> Add New User
@@ -40,6 +42,7 @@ export default async function Page() {
           <UsersDataTable data={users} />
         </CardContent>
       </Card>
+      </RoleGuard>
     </>
   );
 }

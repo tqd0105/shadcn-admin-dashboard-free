@@ -28,6 +28,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from "./providers/auth-provider"
 
 export function NavUser({
   user,
@@ -39,6 +40,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { profile, role, logout } = useAuth()
 
   return (
     <SidebarMenu>
@@ -54,10 +56,11 @@ export function NavUser({
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate font-medium">{profile?.full_name}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
+                  {profile?.email}
                 </span>
+                <span>{role}</span>
               </div>
               <IconDotsVertical className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -75,10 +78,11 @@ export function NavUser({
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate font-medium">{profile?.full_name}</span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
+                    {profile?.email}
                   </span>
+                  <span>{role}</span> 
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -98,7 +102,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>
               <IconLogout />
               Log out
             </DropdownMenuItem>
