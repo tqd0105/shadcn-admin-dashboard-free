@@ -3,10 +3,12 @@
 import {
   IconCreditCard,
   IconDotsVertical,
+  IconLogin,
   IconLogout,
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
+import Link from "next/link"
 
 import {
   Avatar,
@@ -40,8 +42,52 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-  const { profile, role, logout } = useAuth()
+  const { user: authUser, profile, role, loading, logout } = useAuth()
 
+  // Loading state — skeleton
+  if (loading) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" className="animate-pulse">
+            <div className="bg-muted h-8 w-8 rounded-lg" />
+            <div className="grid flex-1 gap-1.5">
+              <div className="bg-muted h-3.5 w-24 rounded" />
+              <div className="bg-muted h-2.5 w-32 rounded" />
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  // Guest state — not logged in
+  if (!authUser) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" asChild>
+            <Link href="/login" className="gap-3">
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarFallback className="bg-muted rounded-lg">
+                  <IconUserCircle className="text-muted-foreground size-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">Guest</span>
+                <span className="text-muted-foreground truncate text-xs">
+                  Sign in to your account
+                </span>
+              </div>
+              <IconLogin className="text-muted-foreground ml-auto size-4" />
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  // Authenticated state
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -82,7 +128,7 @@ export function NavUser({
                   <span className="text-muted-foreground truncate text-xs">
                     {profile?.email}
                   </span>
-                  <span>{role}</span> 
+                  <span>{role}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -112,3 +158,4 @@ export function NavUser({
     </SidebarMenu>
   )
 }
+
