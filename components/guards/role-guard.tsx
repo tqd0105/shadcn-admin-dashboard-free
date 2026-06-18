@@ -12,7 +12,7 @@ type RoleGuardProps = {
 
 export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     const router = useRouter()
-    const { role, loading } = useAuth();
+    const { role, loading, setSessionExpired } = useAuth();
 
     const isAllowed = role !== null && allowedRoles.includes(role);
 
@@ -20,7 +20,7 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
         if (loading) return;
 
         if (!isAllowed) {
-            router.replace("/dashboard");
+            setSessionExpired(true);
         }
     }, [isAllowed, loading, router]);
 

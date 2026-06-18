@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js"
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import SessionExpiredModal from "@/components/SessionExpiredModal";
+import { isSessionValid } from "@/lib/supabase/client";
 
 type AuthContextType = {
     user: User | null;
@@ -13,6 +15,8 @@ type AuthContextType = {
     role: string | null;
     loading: boolean;
     logout: () => Promise<void>;
+    sessionExpired: boolean;
+    setSessionExpired: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +25,8 @@ const AuthContext = createContext<AuthContextType>({
     role: null,
     loading: true,
     logout: async () => {},
+    sessionExpired: false,
+    setSessionExpired: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -28,7 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [profile, setProfile] = useState<any>(null)
     const [role, setRole] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(true);
+    const [sessionExpired, setSessionExpired] = useState(false);
 
     const logout = useCallback(async () => {
         await supabase.auth.signOut();
@@ -37,7 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(null);
         router.push("/login");
     }, [router]);
-
     const fetchProfileAndRole = useCallback(async (userId: string) => {
         const { data, error } = await getProfile(userId);
         if (error) {
@@ -59,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 await fetchProfileAndRole(user.id);
             }
             setLoading(false);
-        }
+        };
         init();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -73,17 +79,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (event === "SIGNED_OUT") {
                 setProfile(null);
                 setRole(null);
+                // Trigger session expiration modal
+                setSessionExpired(true);
             }
         });
 
         return () => {
             subscription?.unsubscribe();
-        }
-    }, [fetchProfileAndRole])
+        };
+    }, [fetchProfileAndRole, setSessionExpired]);
 
+    // Periodic check for session expiration (in case Supabase does not emit SIGNED_OUT)
+    useEffect(() => {
+        const check = async () => {
+            const valid = await isSessionValid();
+            if (!valid && !sessionExpired) {
+                setSessionExpired(true);
+            }
+        };
+        const interval = setInterval(check, 60000); // every minute
+        return () => clearInterval(interval);
+    }, [sessionExpired, setSessionExpired]);
     return (
-        <AuthContext.Provider value={{ user, profile, role, loading, logout }}>
+        <AuthContext.Provider value={{ user, profile, role, loading, logout, sessionExpired, setSessionExpired }}>
             {children}
+            <SessionExpiredModal />
         </AuthContext.Provider>
     );
 }

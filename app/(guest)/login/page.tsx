@@ -34,7 +34,7 @@ export default function LoginPageV1() {
       <div className="flex w-full items-center justify-center lg:w-1/2">
         <div className="w-full max-w-md space-y-8 px-4">
           <div className="text-center">
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome back</h2>
+            <h2 className="mt-6 text-3xl font-bold text-gray-500">Welcome back</h2>
             <p className="mt-2 text-sm text-gray-600">Please sign in to your account</p>
           </div>
 
