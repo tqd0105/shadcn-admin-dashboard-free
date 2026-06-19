@@ -1,72 +1,88 @@
-/**
- * Services for registration flow.
- * All calls go to NestJS backend (NEXT_PUBLIC_OTP_API_URL).
- */
+import { supabase } from "../supabase/client";
 
-const getOtpApiUrl = (): string => {
-  const url = process.env.NEXT_PUBLIC_OTP_API_URL;
-  if (!url) {
-    throw new Error("NEXT_PUBLIC_OTP_API_URL is missing in .env.local");
+/**
+ * Checks if the email is already registered, verified, and has a password.
+ * Uses the secure PostgreSQL RPC function.
+ */
+export async function isEmailRegistered(email: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("is_email_registered", {
+    email_to_check: email,
+  });
+
+  if (error) {
+    console.error("Error checking email registration:", error);
+    // Fallback to checking the profiles table if RPC fails
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle();
+    return !!profile;
   }
-  return url.replace(/\/$/, ""); // remove trailing slash
-};
+
+  return !!data;
+}
 
 /**
- * Bước 1: Gửi OTP đến email
- * Backend: POST /api/auth/register/send-otp
- * - Kiểm tra email tồn tại → 409
- * - Tạo OTP 6 số server-side, lưu DB, gửi email qua Nodemailer
+ * Triggers native Supabase OTP sending.
+ * Creates an unconfirmed user in auth.users if they do not exist yet.
  */
-export async function sendOtp(email: string): Promise<Response> {
-  return fetch(`${getOtpApiUrl()}/api/auth/register/send-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+export async function sendOtp(email: string) {
+  return supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+    },
   });
 }
 
 /**
- * Bước 2: Xác thực OTP → nhận temp_token
- * Backend: POST /api/auth/register/verify-otp
- * - Kiểm tra OTP đúng & chưa hết hạn
- * - Trả về { temp_token }
+ * Verifies the 6-digit OTP code against Supabase Auth.
+ * Automatically logs the user in (sets session) on success.
  */
-export async function verifyOtp(
-  email: string,
-  otp: string,
-): Promise<Response | { temp_token: string }> {
-  const resp = await fetch(`${getOtpApiUrl()}/api/auth/register/verify-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, otp }),
+export async function verifyOtp(email: string, token: string) {
+  return supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "email",
   });
-  if (!resp.ok) return resp;
-  return resp.json() as Promise<{ temp_token: string }>;
 }
 
 /**
- * Bước 3: Hoàn tất đăng ký (đặt mật khẩu)
- * Backend: POST /api/auth/register/complete
- * - Xác thực temp_token
- * - Tạo user trong Supabase Auth
- * - Trả về { success: true }
+ * Sets the password and name for the newly registered user.
+ * Assumes the user is already signed in (has a valid session from verifyOtp).
  */
-export async function register(
-  name: string,
-  email: string,
-  password: string,
-  tempToken: string,
-): Promise<Response | { success: boolean }> {
-  const resp = await fetch(`${getOtpApiUrl()}/api/auth/register/complete`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name,
-      email,
-      password,
-      temp_token: tempToken,
-    }),
+export async function completeRegister(name: string, passwordInput: string) {
+  // 1. Get current logged-in user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    throw new Error(userError?.message || "No authenticated user session found");
+  }
+
+  // 2. Set password and metadata
+  const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
+    password: passwordInput,
+    data: {
+      full_name: name,
+    },
   });
-  if (!resp.ok) return resp;
-  return resp.json() as Promise<{ success: boolean }>;
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  // 3. Update public.profiles table
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      full_name: name,
+    })
+    .eq("id", user.id);
+
+  if (profileError) {
+    console.error("Error updating public profile:", profileError);
+    // We don't fail the whole registration if public profile update fails, but log it
+  }
+
+  return updatedUser;
 }
