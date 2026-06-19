@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSessionExpired(true);
             }
         };
-        const interval = setInterval(check, 60000); // every minute
+        const interval = setInterval(check, 300000); // every 5 minutes
         return () => clearInterval(interval);
     }, [sessionExpired, setSessionExpired]);
     return (

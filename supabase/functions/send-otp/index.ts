@@ -77,12 +77,7 @@ Deno.serve(async (req) => {
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;border:1px solid #e0e0e0;border-radius:8px;">
         <h2 style="color:#333;margin-bottom:10px;">Your OTP Code</h2>
         <p style="margin:0 0 10px;">Use the code below to verify your email address. The code will expire in 5 minutes.</p>
-        <div style="font-size:24px;font-weight:bold;background:#f5f5f5;padding:10px 15px;border-radius:4px;text-align:center;letter-spacing:2px;">${otp}</div>
-        <p style="margin:15px 0 0;">
-          <button style="background:#4F46E5;color:#fff;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;" onclick="navigator.clipboard.writeText('${otp}');alert('OTP copied to clipboard');">
-            Copy OTP
-          </button>
-        </p>
+        <div style="font-size:32px;font-weight:bold;background:#f5f5f5;padding:10px 15px;border-radius:4px;text-align:center;letter-spacing:2px;">${otp}</div>
         <p style="margin-top:20px;color:#555;font-size:14px;">If you did not request this code, you can safely ignore this email.</p>
       </div>`,
   });
