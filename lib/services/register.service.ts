@@ -1,71 +1,65 @@
 /**
- * File: services/authService.ts (hoặc tên file tương ứng của bạn)
+ * Services for registration flow.
+ * All calls go to NestJS backend (NEXT_PUBLIC_OTP_API_URL).
  */
 
-const getSupabaseFunctionUrl = (functionName: string) => {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL is missing in .env file");
+const getOtpApiUrl = (): string => {
+  const url = process.env.NEXT_PUBLIC_OTP_API_URL;
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_OTP_API_URL is missing in .env.local");
   }
-  return `${baseUrl.replace(/\/$/, "")}/functions/v1/${functionName}`;
+  return url.replace(/\/$/, ""); // remove trailing slash
 };
 
-/** 
- * Tạo headers mặc định bắt buộc cho Supabase Edge Functions
+/**
+ * Bước 1: Gửi OTP đến email
+ * Backend: POST /api/auth/register/send-otp
+ * - Kiểm tra email tồn tại → 409
+ * - Tạo OTP 6 số server-side, lưu DB, gửi email qua Nodemailer
  */
-const getHeaders = () => {
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!anonKey) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is missing in .env file");
-  }
-
-  return {
-    "Content-Type": "application/json",
-    "apikey": anonKey,
-    "Authorization": `Bearer ${anonKey}`, // Header quan trọng nhất để sửa lỗi 401
-  };
-};
-
-/** Gửi OTP tới email */
-export async function sendOtp(email: string) {
-  return fetch(getSupabaseFunctionUrl("send-otp"), {
+export async function sendOtp(email: string): Promise<Response> {
+  return fetch(`${getOtpApiUrl()}/api/auth/register/send-otp`, {
     method: "POST",
-    headers: getHeaders(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
 }
 
 /**
- * Xác thực OTP và nhận temp_token.
+ * Bước 2: Xác thực OTP → nhận temp_token
+ * Backend: POST /api/auth/register/verify-otp
+ * - Kiểm tra OTP đúng & chưa hết hạn
+ * - Trả về { temp_token }
  */
-export async function verifyOtp(email: string, otp: string) {
-  const resp = await fetch(getSupabaseFunctionUrl("verify-otp"), {
+export async function verifyOtp(
+  email: string,
+  otp: string,
+): Promise<Response | { temp_token: string }> {
+  const resp = await fetch(`${getOtpApiUrl()}/api/auth/register/verify-otp`, {
     method: "POST",
-    headers: getHeaders(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, otp }),
   });
-
-  if (!resp.ok) {
-    // Trả về response gốc để UI hiển thị lỗi (ví dụ: OTP không đúng)
-    return resp;
-  }
-
-  // Thành công → trả về JSON { temp_token: "..." }
-  return resp.json();
+  if (!resp.ok) return resp;
+  return resp.json() as Promise<{ temp_token: string }>;
 }
 
 /**
- * Đăng ký tài khoản sau khi OTP đã được xác thực.
+ * Bước 3: Hoàn tất đăng ký (đặt mật khẩu)
+ * Backend: POST /api/auth/register/complete
+ * - Xác thực temp_token
+ * - Tạo user trong Supabase Auth
+ * - Trả về { success: true }
  */
 export async function register(
   name: string,
   email: string,
   password: string,
-  tempToken: string
-) {
-  const resp = await fetch(getSupabaseFunctionUrl("register"), {
+  tempToken: string,
+): Promise<Response | { success: boolean }> {
+  const resp = await fetch(`${getOtpApiUrl()}/api/auth/register/complete`, {
     method: "POST",
-    headers: getHeaders(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name,
       email,
@@ -73,10 +67,6 @@ export async function register(
       temp_token: tempToken,
     }),
   });
-
-  if (!resp.ok) {
-    return resp;
-  }
-
-  return resp.json();
+  if (!resp.ok) return resp;
+  return resp.json() as Promise<{ success: boolean }>;
 }
