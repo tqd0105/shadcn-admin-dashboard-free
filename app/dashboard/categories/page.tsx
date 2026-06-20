@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   getCategories,
   createCategory,
@@ -42,6 +43,7 @@ import {
   IconTrash,
   IconLoader2,
   IconTags,
+  IconSearch,
 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -52,9 +54,46 @@ type Category = {
   updated_at: string;
 };
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search state
+  const initialSearch = searchParams.get("search") || "";
+  const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Pagination state
+  const initialPage = parseInt(searchParams.get("page") || "1", 10);
+  const [page, setPage] = useState(initialPage);
+  const pageSize = 10;
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch((prev) => {
+        if (prev !== search) {
+          setPage(1); // Reset to page 1 on new search
+        }
+        return search;
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (page > 1) params.set("page", page.toString());
+    
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [debouncedSearch, page, pathname, router]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,23 +108,27 @@ export default function CategoriesPage() {
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await getCategories();
+    const { data, error, totalPages: fetchedTotalPages } = await getCategories(debouncedSearch, page, pageSize);
     if (error) console.error(error);
     setCategories(data ?? []);
+    if (fetchedTotalPages !== undefined) {
+      setTotalPages(fetchedTotalPages || 1);
+    }
     setLoading(false);
-  }, []);
+  }, [debouncedSearch, page, pageSize]);
 
   useEffect(() => {
     fetchCategories();
+  }, [fetchCategories, refreshTrigger]);
 
+  useEffect(() => {
     const channel = supabase
       .channel("categories-realtime")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "categories" },
-        (payload) => {
-          console.log("Category changed:", payload);
-          fetchCategories();
+        () => {
+          setRefreshTrigger((prev) => prev + 1);
         }
       )
       .subscribe();
@@ -93,7 +136,7 @@ export default function CategoriesPage() {
     return () => {
       channel.unsubscribe();
     };
-  }, [fetchCategories]);
+  }, []);
 
   // Open dialog for create
   const openCreate = () => {
@@ -191,6 +234,19 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
+      {/* Search */}
+      <div className="flex items-center">
+        <div className="relative max-w-sm flex-1">
+          <IconSearch className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+          <Input
+            placeholder="Search categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       {/* Categories Table */}
       <div className="rounded-md border bg-card text-card-foreground shadow-sm">
         <Table>
@@ -247,6 +303,31 @@ export default function CategoriesPage() {
             )}
           </TableBody>
         </Table>
+        
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-4 py-4 border-t">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1 || loading}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0 || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Create / Edit Dialog */}
@@ -333,5 +414,17 @@ export default function CategoriesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function CategoriesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
+      </div>
+    }>
+      <CategoriesPageContent />
+    </Suspense>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   getProduct,
   createProduct,
   updateProduct,
   deleteProduct,
 } from "@/lib/services/product.service";
+import { getCategories } from "@/lib/services/category.service";
 import { uploadProductImage } from "@/lib/services/storage.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +20,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +64,8 @@ type Product = {
   name: string;
   price: number;
   image_url?: string;
+  category_id?: string | null;
+  categories?: { name: string } | null;
   created_at: string;
   updated_at: string;
 };
@@ -62,6 +73,7 @@ type Product = {
 type FormState = {
   name: string;
   price: string;
+  category_id: string;
   imageFile: File | null;
   imagePreview: string;
 };
@@ -69,14 +81,52 @@ type FormState = {
 const emptyForm: FormState = {
   name: "",
   price: "",
+  category_id: "",
   imageFile: null,
   imagePreview: "",
 };
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+
+  // Search state
+  const initialSearch = searchParams.get("search") || "";
+  const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Pagination state
+  const initialPage = parseInt(searchParams.get("page") || "1", 10);
+  const [page, setPage] = useState(initialPage);
+  const pageSize = 8; // 4 columns grid
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch((prev) => {
+        if (prev !== search) {
+          setPage(1); // Reset to page 1 on new search
+        }
+        return search;
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (page > 1) params.set("page", page.toString());
+    
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [debouncedSearch, page, pathname, router]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,32 +141,37 @@ export default function ProductsPage() {
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await getProduct();
+    const { data, error, totalPages: fetchedTotalPages } = await getProduct(debouncedSearch, page, pageSize);
     if (error) console.error(error);
     setProducts(data ?? []);
+    if (fetchedTotalPages !== undefined) {
+      setTotalPages(fetchedTotalPages || 1);
+    }
     setLoading(false);
-  }, []);
+  }, [debouncedSearch, page, pageSize]);
 
   useEffect(() => {
-    fetchProducts(); // <-- Load sản phẩm lần đầu
+    fetchProducts();
+  }, [fetchProducts, refreshTrigger]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      const { data } = await getCategories("", 1, 100);
+      if (data) setCategories(data);
+    };
+    loadCategories();
 
     const channel = supabase
       .channel("products-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, (payload) => {
-        console.log("Product changed:", payload);
-        fetchProducts();
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
+        setRefreshTrigger((prev) => prev + 1);
       })
       .subscribe();
 
     return () => {
       channel.unsubscribe();
     };
-  }, [fetchProducts]);
-
-  // Filter
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  }, []);
 
   // File selection handler
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +213,7 @@ export default function ProductsPage() {
     setForm({
       name: product.name,
       price: String(product.price),
+      category_id: product.category_id ?? "",
       imageFile: null,
       imagePreview: product.image_url ?? "",
     });
@@ -181,6 +237,7 @@ export default function ProductsPage() {
         name: form.name.trim(),
         price: parseFloat(form.price),
         image_url: imageUrl,
+        category_id: form.category_id || null,
       };
 
       if (editingProduct) {
@@ -268,7 +325,7 @@ export default function ProductsPage() {
         <div className="flex items-center justify-center py-20">
           <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : products.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="bg-muted mb-4 rounded-full p-4">
@@ -296,18 +353,18 @@ export default function ProductsPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((product) => (
+          {products.map((product) => (
             <Card
               key={product.id}
               className="group relative overflow-hidden transition-shadow hover:shadow-lg"
             >
               {/* Product Image */}
-              <div className="bg-muted relative aspect-[4/3] overflow-hidden">
+              <div className="bg-muted relative aspect-square overflow-hidden">
                 {product.image_url ? (
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -337,20 +394,56 @@ export default function ProductsPage() {
               </div>
 
               <CardHeader className="pb-2">
-                <CardTitle className="line-clamp-1 text-base">
-                  {product.name}
-                </CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <CardTitle className="line-clamp-1 text-base truncate max-w-[120px]">
+                      {product.name}
+                    </CardTitle>
+                    <span className="text-muted-foreground text-[11px]">
+                      {formatDate(product.created_at)}
+                    </span>
+                  </div>
+                  {product.categories && (
+                    <Badge variant="outline" className="text-[10px] whitespace-nowrap">
+                      {product.categories.name}
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
-              <CardFooter className="flex items-center justify-between">
+              <CardFooter>
                 <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                   {formatPrice(product.price)}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {formatDate(product.created_at)}
                 </span>
               </CardFooter>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {products.length > 0 && (
+        <div className="flex items-center justify-between px-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1 || loading}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0 || loading}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
 
@@ -396,6 +489,26 @@ export default function ProductsPage() {
                   setForm((f) => ({ ...f, price: e.target.value }))
                 }
               />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <Label htmlFor="product-category">Category</Label>
+              <Select
+                value={form.category_id}
+                onValueChange={(value) => setForm((f) => ({ ...f, category_id: value }))}
+              >
+                <SelectTrigger id="product-category">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Image Upload */}
@@ -513,5 +626,17 @@ export default function ProductsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
   );
 }

@@ -10,6 +10,7 @@ import {
   IconFolder,
   IconInnerShadowTop,
   IconListDetails,
+  IconTags,
   IconUsers
 } from "@tabler/icons-react";
 
@@ -35,6 +36,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
         { title: "Users", url: "/dashboard/users", icon: IconUsers },
         { title: "Roles", url: "/dashboard/roles", icon: IconListDetails },
+        { title: "Categories", url: "/dashboard/categories", icon: IconTags },
         { title: "Products", url: "/dashboard/products", icon: IconFolder },
       ]
     : [
