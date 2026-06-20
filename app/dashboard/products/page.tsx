@@ -125,8 +125,13 @@ function ProductsPageContent() {
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (page > 1) params.set("page", page.toString());
     
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [debouncedSearch, page, pathname, router]);
+    const newQueryString = params.toString();
+    const currentQueryString = searchParams.toString();
+
+    if (newQueryString !== currentQueryString) {
+      router.replace(`${pathname}?${newQueryString}`, { scroll: false });
+    }
+  }, [debouncedSearch, page, pathname, router, searchParams]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);

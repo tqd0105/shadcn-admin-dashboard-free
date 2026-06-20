@@ -1,11 +1,14 @@
 import { supabase } from "../supabase/client";
 
 export async function uploadProductImage(file: File) {
-    const fileName = `Products/${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "");
+    const fileName = `Products/${Date.now()}-${safeName}`;
 
     const {data, error} = await supabase.storage
     .from("products-bucket")
-    .upload(fileName, file);
+    .upload(fileName, file, {
+        upsert: true,
+    });
 
     if (error) throw error;
 
