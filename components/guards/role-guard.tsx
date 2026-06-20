@@ -12,24 +12,24 @@ type RoleGuardProps = {
 
 export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     const router = useRouter()
-    const { role, loading, setSessionExpired } = useAuth();
+    const { user, role, loading } = useAuth();
 
     const isAllowed = role !== null && allowedRoles.includes(role);
 
     useEffect(() => {
-        if (loading) return;
+        if (loading || !user) return; // AuthGuard already handles !user
 
         if (!isAllowed) {
-            setSessionExpired(true);
+            router.replace("/dashboard");
         }
-    }, [isAllowed, loading, router]);
+    }, [user, isAllowed, loading, router]);
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (!isAllowed) {
-        return <div className="text-xl font-bold">You do not have access.</div>;
+    if (loading || !user || !isAllowed) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
     }
 
     return <>{children}</>;

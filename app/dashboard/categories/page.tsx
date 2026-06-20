@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import RoleGuard from "@/components/guards/role-guard";
 import {
   getCategories,
   createCategory,
@@ -424,7 +425,9 @@ export default function CategoriesPage() {
         <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
       </div>
     }>
-      <CategoriesPageContent />
+      <RoleGuard allowedRoles={["admin"]}>
+        <CategoriesPageContent />
+      </RoleGuard>
     </Suspense>
   );
 }

@@ -6,7 +6,6 @@ import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js"
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import SessionExpiredModal from "@/components/SessionExpiredModal";
 import { isSessionValid } from "@/lib/supabase/client";
 
 type AuthContextType = {
@@ -15,8 +14,6 @@ type AuthContextType = {
     role: string | null;
     loading: boolean;
     logout: () => Promise<void>;
-    sessionExpired: boolean;
-    setSessionExpired: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,8 +22,6 @@ const AuthContext = createContext<AuthContextType>({
     role: null,
     loading: true,
     logout: async () => {},
-    sessionExpired: false,
-    setSessionExpired: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -35,7 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [profile, setProfile] = useState<any>(null)
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [sessionExpired, setSessionExpired] = useState(false);
 
     const logout = useCallback(async () => {
         await supabase.auth.signOut();
@@ -79,31 +73,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (event === "SIGNED_OUT") {
                 setProfile(null);
                 setRole(null);
-                // Trigger session expiration modal
-                setSessionExpired(true);
+                router.push("/login");
             }
         });
 
         return () => {
             subscription?.unsubscribe();
         };
-    }, [fetchProfileAndRole, setSessionExpired]);
+    }, [fetchProfileAndRole, router]);
 
     // Periodic check for session expiration (in case Supabase does not emit SIGNED_OUT)
     useEffect(() => {
         const check = async () => {
             const valid = await isSessionValid();
-            if (!valid && !sessionExpired) {
-                setSessionExpired(true);
+            if (!valid) {
+                logout();
             }
         };
         const interval = setInterval(check, 300000); // every 5 minutes
         return () => clearInterval(interval);
-    }, [sessionExpired, setSessionExpired]);
+    }, [logout]);
+
     return (
-        <AuthContext.Provider value={{ user, profile, role, loading, logout, sessionExpired, setSessionExpired }}>
+        <AuthContext.Provider value={{ user, profile, role, loading, logout }}>
             {children}
-            <SessionExpiredModal />
         </AuthContext.Provider>
     );
 }

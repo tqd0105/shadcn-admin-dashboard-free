@@ -120,4 +120,21 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Make all interactive elements have a pointer cursor */
+  button:not(:disabled),
+  a:not([aria-disabled="true"]),
+  select:not(:disabled),
+  summary,
+  label,
+  [role="button"]:not(:disabled):not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
