@@ -140,12 +140,12 @@ export async function getNewArrivals(limit: number = 8) {
 export async function createProduct(payload: { 
   name: string; 
   price: number; 
-  image_url?: string; 
+  image_url?: string | null; 
   category_id?: string | null;
   discount_percent?: number;
   stock_quantity?: number;
-  description_html?: string;
-  brand?: string;
+  description_html?: string | null;
+  brand?: string | null;
 }) {
     return supabase
         .from("products")
@@ -159,12 +159,12 @@ export async function updateProduct(
   payload: {
     name: string;
     price: number;
-    image_url?: string;
+    image_url?: string | null;
     category_id?: string | null;
     discount_percent?: number;
     stock_quantity?: number;
-    description_html?: string;
-    brand?: string;
+    description_html?: string | null;
+    brand?: string | null;
   }
 ) {
   return supabase
