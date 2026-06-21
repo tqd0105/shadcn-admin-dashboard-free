@@ -18,13 +18,49 @@ interface Review {
 }
 
 interface ProductTabsProps {
+  productId: string;
   description: string;
   specs: Spec[];
   reviews: Review[];
 }
 
-export function ProductTabs({ description, specs, reviews }: ProductTabsProps) {
+export function ProductTabs({ productId, description, specs, reviews }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "reviews">("desc");
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Dynamically import supabase client to avoid SSR issues if any
+    const { supabase } = await import("@/lib/supabase/client");
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      alert("Bạn cần đăng nhập để gửi đánh giá!");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from("product_reviews").insert({
+      product_id: productId,
+      rating,
+      comment,
+      user_id: session.user.id
+    });
+
+    setIsSubmitting(false);
+    if (error) {
+      alert("Có lỗi xảy ra: " + error.message);
+    } else {
+      alert("Cảm ơn bạn đã đánh giá!");
+      setComment("");
+      setRating(5);
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="mt-16 border border-outline-variant rounded-lg bg-surface-container-lowest overflow-hidden">
@@ -142,6 +178,45 @@ export function ProductTabs({ description, specs, reviews }: ProductTabsProps) {
                 </div>
               </>
             )}
+
+            {/* Review Form */}
+            <div className="mt-8 pt-6 border-t border-outline-variant/50">
+              <h3 className="font-headline-sm text-lg font-bold mb-4">Viết đánh giá của bạn</h3>
+              <form onSubmit={submitReview} className="space-y-4 max-w-lg">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Đánh giá (Số sao)</label>
+                  <select 
+                    value={rating} 
+                    onChange={(e) => setRating(Number(e.target.value))}
+                    className="w-full border rounded-md p-2 bg-surface"
+                  >
+                    <option value={5}>5 Sao - Tuyệt vời</option>
+                    <option value={4}>4 Sao - Tốt</option>
+                    <option value={3}>3 Sao - Bình thường</option>
+                    <option value={2}>2 Sao - Tệ</option>
+                    <option value={1}>1 Sao - Quá tệ</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nhận xét chi tiết</label>
+                  <textarea 
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                    rows={3}
+                    placeholder="Sản phẩm này như thế nào?"
+                    className="w-full border rounded-md p-2 bg-surface"
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-md hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {isSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </div>

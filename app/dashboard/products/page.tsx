@@ -4,12 +4,19 @@ import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   getProduct,
-  createProduct,
-  updateProduct,
   deleteProduct,
 } from "@/lib/services/product.service";
-import { getCategories, createCategory } from "@/lib/services/category.service";
-import { uploadProductImage } from "@/lib/services/storage.service";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ProductForm } from "@/components/admin/product-form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,24 +49,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { Badge } from "@/components/ui/badge";
 import {
   IconPlus,
@@ -68,11 +58,6 @@ import {
   IconPackage,
   IconSearch,
   IconLoader2,
-  IconUpload,
-  IconPhoto,
-  IconX,
-  IconCheck,
-  IconChevronDown,
 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -91,29 +76,6 @@ type Product = {
   updated_at: string;
 };
 
-type FormState = {
-  name: string;
-  price: string;
-  category_id: string;
-  discount_percent: string;
-  stock_quantity: string;
-  brand: string;
-  description_html: string;
-  imageFile: File | null;
-  imagePreview: string;
-};
-
-const emptyForm: FormState = {
-  name: "",
-  price: "",
-  category_id: "",
-  discount_percent: "0",
-  stock_quantity: "0",
-  brand: "",
-  description_html: "",
-  imageFile: null,
-  imagePreview: "",
-};
 
 function ProductsPageContent() {
   const router = useRouter();
@@ -121,7 +83,6 @@ function ProductsPageContent() {
   const searchParams = useSearchParams();
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Search state
@@ -165,9 +126,6 @@ function ProductsPageContent() {
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
@@ -188,59 +146,7 @@ function ProductsPageContent() {
     fetchProducts();
   }, [fetchProducts, refreshTrigger]);
 
-  // Category Combobox state
-  const [comboboxOpen, setComboboxOpen] = useState(false);
-  const [catSearch, setCatSearch] = useState("");
-  const [debouncedCatSearch, setDebouncedCatSearch] = useState("");
-  const [isSearchingCat, setIsSearchingCat] = useState(false);
-  
-  // Quick Create Category state
-  const [quickCreateDialogOpen, setQuickCreateDialogOpen] = useState(false);
-  const [quickCreateName, setQuickCreateName] = useState("");
-  const [creatingCategory, setCreatingCategory] = useState(false);
 
-  // Sync catSearch to debouncedCatSearch
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedCatSearch(catSearch), 500);
-    return () => clearTimeout(timer);
-  }, [catSearch]);
-
-  // Fetch categories based on debounced search
-  useEffect(() => {
-    const loadCategories = async () => {
-      setIsSearchingCat(true);
-      const { data } = await getCategories(debouncedCatSearch, 1, 100);
-      if (data) setCategories(data);
-      setIsSearchingCat(false);
-    };
-    loadCategories();
-  }, [debouncedCatSearch]);
-
-  const handleQuickCreateCategory = async () => {
-    if (!quickCreateName.trim()) return;
-    setCreatingCategory(true);
-    const { error } = await createCategory({ name: quickCreateName.trim() });
-    setCreatingCategory(false);
-    
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setQuickCreateDialogOpen(false);
-    
-    // Refresh list and auto-select
-    const { data } = await getCategories("", 1, 100);
-    if (data) {
-      setCategories(data);
-      const newCat = data.find(c => c.name.toLowerCase() === quickCreateName.trim().toLowerCase());
-      if (newCat) {
-        setForm(f => ({ ...f, category_id: newCat.id }));
-      }
-    }
-    setQuickCreateName("");
-    setComboboxOpen(false);
-  };
 
   useEffect(() => {
 
@@ -256,102 +162,16 @@ function ProductsPageContent() {
     };
   }, []);
 
-  // File selection handler
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image must be less than 5MB");
-      return;
-    }
-
-    const preview = URL.createObjectURL(file);
-    setForm((f) => ({ ...f, imageFile: file, imagePreview: preview }));
-  };
-
-  const clearImage = () => {
-    setForm((f) => ({ ...f, imageFile: null, imagePreview: "" }));
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   // Open dialog for create
   const openCreate = () => {
     setEditingProduct(null);
-    setForm(emptyForm);
-    if (fileInputRef.current) fileInputRef.current.value = "";
     setDialogOpen(true);
   };
 
   // Open dialog for edit
   const openEdit = (product: Product) => {
     setEditingProduct(product);
-    setForm({
-      name: product.name,
-      price: String(product.price),
-      category_id: product.category_id ?? "",
-      discount_percent: String(product.discount_percent ?? 0),
-      stock_quantity: String(product.stock_quantity ?? 0),
-      brand: product.brand ?? "",
-      description_html: product.description_html ?? "",
-      imageFile: null,
-      imagePreview: product.image_url ?? "",
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
     setDialogOpen(true);
-  };
-
-  // Submit create/update
-  const handleSubmit = async () => {
-    if (!form.name.trim() || !form.price) return;
-    setSaving(true);
-
-    try {
-      // Upload image if a new file is selected
-      let imageUrl = editingProduct?.image_url;
-      if (form.imageFile) {
-        imageUrl = await uploadProductImage(form.imageFile);
-      }
-
-      const payload = {
-        name: form.name.trim(),
-        price: parseFloat(form.price),
-        image_url: imageUrl,
-        category_id: form.category_id || null,
-        discount_percent: form.discount_percent ? parseInt(form.discount_percent) : 0,
-        stock_quantity: form.stock_quantity ? parseInt(form.stock_quantity) : 0,
-        brand: form.brand.trim() || null,
-        description_html: form.description_html.trim() || null,
-      };
-
-      if (editingProduct) {
-        const { error } = await updateProduct(editingProduct.id, payload);
-        if (error) {
-          alert(error.message);
-          return;
-        }
-      } else {
-        const { error } = await createProduct(payload);
-        if (error) {
-          alert(error.message);
-          return;
-        }
-      }
-
-      setDialogOpen(false);
-      fetchProducts();
-    } catch (err: any) {
-      alert(err.message || "An error occurred");
-    } finally {
-      setSaving(false);
-    }
   };
 
   // Delete
@@ -538,326 +358,44 @@ function ProductsPageContent() {
         </div>
       )}
 
-      {/* Create / Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
-          <DialogHeader>
-            <DialogTitle>
-              {editingProduct ? "Edit Product" : "New Product"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingProduct
-                ? "Update the product details below."
-                : "Fill in the details to add a new product."}
-            </DialogDescription>
-          </DialogHeader>
+      <ProductForm 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen} 
+        product={editingProduct} 
+        onSuccess={fetchProducts} 
+      />
 
-          <div className="space-y-5 py-2">
-            {/* Product Name */}
-            <div className="space-y-2">
-              <Label htmlFor="product-name">Product Name</Label>
-              <Input
-                id="product-name"
-                placeholder="e.g. Wireless Headphones"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-              />
-            </div>
-
-            {/* Price */}
-            <div className="space-y-2">
-              <Label htmlFor="product-price">Price (VND)</Label>
-              <Input
-                id="product-price"
-                type="number"
-                min="0"
-                step="1000"
-                placeholder="0"
-                value={form.price}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, price: e.target.value }))
-                }
-              />
-            </div>
-
-            {/* Category */}
-            <div className="space-y-2 flex flex-col">
-              <Label htmlFor="product-category">Category</Label>
-              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen} modal={true}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="product-category"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={comboboxOpen}
-                    className="w-full justify-between"
-                  >
-                    {form.category_id
-                      ? categories.find((c) => c.id === form.category_id)?.name || "Select a category"
-                      : "Select a category"}
-                    <IconChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command shouldFilter={false}>
-                    <CommandInput
-                      placeholder="Search category..."
-                      value={catSearch}
-                      onValueChange={setCatSearch}
-                    />
-                    <CommandList className="max-h-48">
-                      {isSearchingCat ? (
-                        <div className="p-4 text-center text-sm text-muted-foreground flex justify-center items-center">
-                          <IconLoader2 className="mr-2 size-4 animate-spin" /> Searching...
-                        </div>
-                      ) : (
-                        <CommandEmpty className="p-2 text-sm text-muted-foreground text-center">
-                          Không tìm thấy Category.
-                        </CommandEmpty>
-                      )}
-                      <CommandGroup>
-                        {categories.map((c) => (
-                          <CommandItem
-                            key={c.id}
-                            value={c.id}
-                            onSelect={() => {
-                              setForm((f) => ({ ...f, category_id: c.id }));
-                              setComboboxOpen(false);
-                            }}
-                          >
-                            <IconCheck
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.category_id === c.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {c.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                    <div className="border-t p-1">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-primary"
-                        onClick={() => {
-                          setQuickCreateName(catSearch);
-                          setQuickCreateDialogOpen(true);
-                        }}
-                      >
-                        <IconPlus className="mr-2 size-4" />
-                        Tạo {catSearch ? `"${catSearch}"` : "danh mục mới"}
-                      </Button>
-                    </div>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Brand */}
-            <div className="space-y-2">
-              <Label htmlFor="product-brand">Brand</Label>
-              <Input
-                id="product-brand"
-                placeholder="e.g. Apple, Nike"
-                value={form.brand}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, brand: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Discount */}
-              <div className="space-y-2">
-                <Label htmlFor="product-discount">Discount (%)</Label>
-                <Input
-                  id="product-discount"
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="0"
-                  value={form.discount_percent}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, discount_percent: e.target.value }))
-                  }
-                />
-              </div>
-
-              {/* Stock */}
-              <div className="space-y-2">
-                <Label htmlFor="product-stock">Stock Quantity</Label>
-                <Input
-                  id="product-stock"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={form.stock_quantity}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, stock_quantity: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Description HTML */}
-            <div className="space-y-2 flex flex-col">
-              <Label htmlFor="product-desc">Description (HTML)</Label>
-              <RichTextEditor
-                value={form.description_html}
-                onChange={(html) =>
-                  setForm((f) => ({ ...f, description_html: html }))
-                }
-                placeholder="Write a detailed product description here..."
-              />
-            </div>
-
-            {/* Image Upload */}
-            <div className="space-y-2">
-              <Label>Product Image</Label>
-
-              {/* Preview */}
-              {form.imagePreview ? (
-                <div className="relative overflow-hidden rounded-lg border">
-                  <img
-                    src={form.imagePreview}
-                    alt="Preview"
-                    className="h-48 w-full object-cover"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    className="absolute right-2 top-2 size-8 rounded-full p-0 shadow-lg"
-                    onClick={clearImage}
-                  >
-                    <IconX className="size-4" />
-                  </Button>
-                  {/* Show "Change image" hint */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all hover:bg-black/30 hover:opacity-100"
-                  >
-                    <span className="rounded-md bg-white/90 px-3 py-1.5 text-sm font-medium text-gray-900 shadow">
-                      Change image
-                    </span>
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50 flex w-full flex-col items-center gap-3 rounded-lg border-2 border-dashed py-8 transition-colors"
-                >
-                  <div className="bg-muted rounded-full p-3">
-                    <IconUpload className="text-muted-foreground size-6" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium">
-                      Click to upload image
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      PNG, JPG, WebP up to 5MB
-                    </p>
-                  </div>
-                </button>
-              )}
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={saving || !form.name.trim() || !form.price}
-              className="gap-2"
-            >
-              {saving && <IconLoader2 className="size-4 animate-spin" />}
-              {saving
-                ? "Uploading..."
-                : editingProduct
-                  ? "Save Changes"
-                  : "Create Product"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">&ldquo;{deleteTarget?.name}&rdquo;</span>?
-              This action cannot be undone.
+              This action cannot be undone. This will permanently delete the product
+              "{deleteTarget?.name}" and remove all of its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting && <IconLoader2 className="size-4 animate-spin" />}
-              Delete
+              {deleting ? (
+                <>
+                  <IconLoader2 className="mr-2 size-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Quick Create Category Dialog */}
-      <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Tạo Category mới</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="quick-cat-name">Tên Category</Label>
-              <Input
-                id="quick-cat-name"
-                placeholder="Nhập tên category..."
-                value={quickCreateName}
-                onChange={(e) => setQuickCreateName(e.target.value)}
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setQuickCreateDialogOpen(false)} disabled={creatingCategory}>
-              Hủy
-            </Button>
-            <Button onClick={handleQuickCreateCategory} disabled={!quickCreateName.trim() || creatingCategory}>
-              {creatingCategory && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-              Lưu
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

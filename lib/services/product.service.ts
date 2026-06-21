@@ -150,6 +150,8 @@ export async function createProduct(payload: {
     return supabase
         .from("products")
         .insert([payload])
+        .select()
+        .single();
 }
 
 export async function updateProduct(
@@ -178,4 +180,72 @@ export async function deleteProduct(
     .from("products")
     .delete()
     .eq("id", id);
+}
+
+export async function addProductImages(productId: string, imageUrls: string[]) {
+  if (imageUrls.length === 0) return { data: null, error: null };
+  const payload = imageUrls.map((url, i) => ({
+    product_id: productId,
+    image_url: url,
+    display_order: i + 1,
+  }));
+  return supabase.from("product_images").insert(payload);
+}
+
+export async function deleteProductImage(imageId: string) {
+  return supabase.from("product_images").delete().eq("id", imageId);
+}
+
+export async function syncProductVariants(productId: string, variants: { id?: string, name: string, sku: string, price_modifier: number, stock_quantity: number }[]) {
+  const { data: existing } = await supabase.from("product_variants").select("id").eq("product_id", productId);
+  const existingIds = existing?.map(v => v.id) || [];
+  
+  const incomingIds = variants.map(v => v.id).filter(Boolean);
+  const idsToDelete = existingIds.filter(id => !incomingIds.includes(id));
+  
+  if (idsToDelete.length > 0) {
+    await supabase.from("product_variants").delete().in("id", idsToDelete);
+  }
+  
+  if (variants.length > 0) {
+    const payload = variants.map(v => {
+      const item: any = {
+        product_id: productId,
+        name: v.name,
+        sku: v.sku,
+        price_modifier: v.price_modifier,
+        stock_quantity: v.stock_quantity,
+      };
+      if (v.id && v.id.length > 0) item.id = v.id;
+      return item;
+    });
+    return supabase.from("product_variants").upsert(payload);
+  }
+  return { data: null, error: null };
+}
+
+export async function syncProductSpecs(productId: string, specs: { id?: string, spec_name: string, spec_value: string }[]) {
+  const { data: existing } = await supabase.from("product_specs").select("id").eq("product_id", productId);
+  const existingIds = existing?.map(s => s.id) || [];
+  
+  const incomingIds = specs.map(s => s.id).filter(Boolean);
+  const idsToDelete = existingIds.filter(id => !incomingIds.includes(id));
+  
+  if (idsToDelete.length > 0) {
+    await supabase.from("product_specs").delete().in("id", idsToDelete);
+  }
+  
+  if (specs.length > 0) {
+    const payload = specs.map(s => {
+      const item: any = {
+        product_id: productId,
+        spec_name: s.spec_name,
+        spec_value: s.spec_value,
+      };
+      if (s.id && s.id.length > 0) item.id = s.id;
+      return item;
+    });
+    return supabase.from("product_specs").upsert(payload);
+  }
+  return { data: null, error: null };
 }

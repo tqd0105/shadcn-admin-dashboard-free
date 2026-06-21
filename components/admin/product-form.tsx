@@ -1,0 +1,723 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import {
+  createProduct,
+  updateProduct,
+  addProductImages,
+  deleteProductImage,
+  syncProductVariants,
+  syncProductSpecs,
+} from "@/lib/services/product.service";
+import { getCategories, createCategory } from "@/lib/services/category.service";
+import { uploadProductImage, uploadProductImages } from "@/lib/services/storage.service";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  IconLoader2,
+  IconUpload,
+  IconX,
+  IconCheck,
+  IconChevronDown,
+  IconPlus,
+} from "@tabler/icons-react";
+
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  image_url?: string;
+  category_id?: string | null;
+  categories?: { name: string } | null;
+  discount_percent?: number | null;
+  stock_quantity?: number | null;
+  description_html?: string | null;
+  brand?: string | null;
+  created_at: string;
+  updated_at: string;
+  product_images?: { id: string; image_url: string; display_order: number }[];
+  product_variants?: { id: string; name: string; sku: string; price_modifier: number; stock_quantity: number }[];
+  product_specs?: { id: string; spec_name: string; spec_value: string }[];
+};
+
+type GalleryImage = {
+  id?: string;
+  url: string;
+  file?: File;
+  isExisting: boolean;
+};
+
+type VariantState = {
+  id?: string;
+  name: string;
+  sku: string;
+  price_modifier: string;
+  stock_quantity: string;
+};
+
+type SpecState = {
+  id?: string;
+  spec_name: string;
+  spec_value: string;
+};
+
+type FormState = {
+  name: string;
+  price: string;
+  category_id: string;
+  discount_percent: string;
+  stock_quantity: string;
+  brand: string;
+  description_html: string;
+  imageFile: File | null;
+  imagePreview: string;
+  galleryImages: GalleryImage[];
+  imagesToDelete: string[];
+  variants: VariantState[];
+  specs: SpecState[];
+};
+
+const emptyForm: FormState = {
+  name: "",
+  price: "",
+  category_id: "",
+  discount_percent: "0",
+  stock_quantity: "0",
+  brand: "",
+  description_html: "",
+  imageFile: null,
+  imagePreview: "",
+  galleryImages: [],
+  imagesToDelete: [],
+  variants: [],
+  specs: [],
+};
+
+interface ProductFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  product: Product | null;
+  onSuccess: () => void;
+}
+
+export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductFormProps) {
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Category Combobox state
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [catSearch, setCatSearch] = useState("");
+  const [debouncedCatSearch, setDebouncedCatSearch] = useState("");
+  const [isSearchingCat, setIsSearchingCat] = useState(false);
+  
+  // Quick Create Category state
+  const [quickCreateDialogOpen, setQuickCreateDialogOpen] = useState(false);
+  const [quickCreateName, setQuickCreateName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+
+  // Sync state when dialog opens
+  useEffect(() => {
+    if (open) {
+      if (product) {
+        const existingGallery: GalleryImage[] = product.product_images?.map(img => ({
+          id: img.id,
+          url: img.image_url,
+          isExisting: true,
+        })) || [];
+        
+        setForm({
+          name: product.name,
+          price: String(product.price),
+          category_id: product.category_id ?? "",
+          discount_percent: String(product.discount_percent ?? 0),
+          stock_quantity: String(product.stock_quantity ?? 0),
+          brand: product.brand ?? "",
+          description_html: product.description_html ?? "",
+          imageFile: null,
+          imagePreview: product.image_url ?? "",
+          galleryImages: existingGallery,
+          imagesToDelete: [],
+          variants: product.product_variants?.map(v => ({
+            id: v.id,
+            name: v.name,
+            sku: v.sku,
+            price_modifier: String(v.price_modifier),
+            stock_quantity: String(v.stock_quantity),
+          })) || [],
+          specs: product.product_specs?.map(s => ({
+            id: s.id,
+            spec_name: s.spec_name,
+            spec_value: s.spec_value,
+          })) || [],
+        });
+      } else {
+        setForm(emptyForm);
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [open, product]);
+
+  // Sync catSearch to debouncedCatSearch
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedCatSearch(catSearch), 500);
+    return () => clearTimeout(timer);
+  }, [catSearch]);
+
+  // Fetch categories based on debounced search
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsSearchingCat(true);
+      const { data } = await getCategories(debouncedCatSearch, 1, 100);
+      if (data) setCategories(data);
+      setIsSearchingCat(false);
+    };
+    if (open) {
+      loadCategories();
+    }
+  }, [debouncedCatSearch, open]);
+
+  const handleQuickCreateCategory = async () => {
+    if (!quickCreateName.trim()) return;
+    setCreatingCategory(true);
+    const { error } = await createCategory({ name: quickCreateName.trim() });
+    setCreatingCategory(false);
+    
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setQuickCreateDialogOpen(false);
+    
+    // Refresh list and auto-select
+    const { data } = await getCategories("", 1, 100);
+    if (data) {
+      setCategories(data);
+      const newCat = data.find(c => c.name.toLowerCase() === quickCreateName.trim().toLowerCase());
+      if (newCat) {
+        setForm(f => ({ ...f, category_id: newCat.id }));
+      }
+    }
+    setQuickCreateName("");
+    setComboboxOpen(false);
+  };
+
+  // File selection handler
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be less than 5MB");
+      return;
+    }
+
+    const preview = URL.createObjectURL(file);
+    setForm((f) => ({ ...f, imageFile: file, imagePreview: preview }));
+  };
+
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const newGalleryImages: GalleryImage[] = files.map(file => ({
+      url: URL.createObjectURL(file),
+      file,
+      isExisting: false,
+    }));
+
+    setForm(f => ({
+      ...f,
+      galleryImages: [...f.galleryImages, ...newGalleryImages]
+    }));
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setForm(f => {
+      const img = f.galleryImages[index];
+      const newImagesToDelete = img.isExisting && img.id ? [...f.imagesToDelete, img.id] : f.imagesToDelete;
+      
+      const newGallery = [...f.galleryImages];
+      newGallery.splice(index, 1);
+      
+      return {
+        ...f,
+        galleryImages: newGallery,
+        imagesToDelete: newImagesToDelete
+      };
+    });
+  };
+
+  const addVariant = () => setForm(f => ({ ...f, variants: [...f.variants, { name: "", sku: "", price_modifier: "0", stock_quantity: "0" }] }));
+  const updateVariant = (index: number, field: keyof VariantState, value: string) => setForm(f => {
+    const newVariants = [...f.variants];
+    newVariants[index] = { ...newVariants[index], [field]: value };
+    return { ...f, variants: newVariants };
+  });
+  const removeVariant = (index: number) => setForm(f => ({ ...f, variants: f.variants.filter((_, i) => i !== index) }));
+
+  const addSpec = () => setForm(f => ({ ...f, specs: [...f.specs, { spec_name: "", spec_value: "" }] }));
+  const updateSpec = (index: number, field: keyof SpecState, value: string) => setForm(f => {
+    const newSpecs = [...f.specs];
+    newSpecs[index] = { ...newSpecs[index], [field]: value };
+    return { ...f, specs: newSpecs };
+  });
+  const removeSpec = (index: number) => setForm(f => ({ ...f, specs: f.specs.filter((_, i) => i !== index) }));
+
+  const clearImage = () => {
+    setForm((f) => ({ ...f, imageFile: null, imagePreview: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Submit create/update
+  const handleSubmit = async () => {
+    if (!form.name.trim() || !form.price) return;
+    setSaving(true);
+
+    try {
+      let imageUrl = product?.image_url;
+      if (form.imageFile) {
+        imageUrl = await uploadProductImage(form.imageFile);
+      }
+
+      const payload = {
+        name: form.name.trim(),
+        price: parseFloat(form.price),
+        image_url: imageUrl,
+        category_id: form.category_id || null,
+        discount_percent: form.discount_percent ? parseInt(form.discount_percent) : 0,
+        stock_quantity: form.stock_quantity ? parseInt(form.stock_quantity) : 0,
+        brand: form.brand.trim() || null,
+        description_html: form.description_html.trim() || null,
+      };
+
+      let productId = product?.id;
+
+      if (product) {
+        const { error } = await updateProduct(product.id, payload);
+        if (error) throw error;
+      } else {
+        const { data: newProduct, error } = await createProduct(payload);
+        if (error) throw error;
+        productId = newProduct.id;
+      }
+
+      // Handle Gallery Images
+      if (productId) {
+        // Delete removed images
+        for (const imgId of form.imagesToDelete) {
+          await deleteProductImage(imgId);
+        }
+
+        // Upload new images
+        const newFiles = form.galleryImages.filter(img => !img.isExisting && img.file).map(img => img.file!);
+        if (newFiles.length > 0) {
+          const uploadedUrls = await uploadProductImages(newFiles);
+          await addProductImages(productId, uploadedUrls);
+        }
+
+        // Sync Variants
+        const variantsPayload = form.variants.map(v => ({
+          id: v.id,
+          name: v.name,
+          sku: v.sku,
+          price_modifier: v.price_modifier ? parseFloat(v.price_modifier) : 0,
+          stock_quantity: v.stock_quantity ? parseInt(v.stock_quantity) : 0,
+        }));
+        await syncProductVariants(productId, variantsPayload);
+
+        // Sync Specs
+        const specsPayload = form.specs.map(s => ({
+          id: s.id,
+          spec_name: s.spec_name,
+          spec_value: s.spec_value,
+        }));
+        await syncProductSpecs(productId, specsPayload);
+      }
+
+      onOpenChange(false);
+      onSuccess();
+    } catch (err: any) {
+      alert(err.message || "An error occurred");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+          <DialogHeader>
+            <DialogTitle>
+              {product ? "Edit Product" : "New Product"}
+            </DialogTitle>
+            <DialogDescription>
+              {product
+                ? "Update the product details below."
+                : "Fill in the details to add a new product."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="product-name">Product Name</Label>
+              <Input
+                id="product-name"
+                placeholder="e.g. Wireless Headphones"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="product-price">Price (VND)</Label>
+              <Input
+                id="product-price"
+                type="number"
+                min="0"
+                step="1000"
+                placeholder="0"
+                value={form.price}
+                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2 flex flex-col">
+              <Label htmlFor="product-category">Category</Label>
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen} modal={true}>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="product-category"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboboxOpen}
+                    className="w-full justify-between"
+                  >
+                    {form.category_id
+                      ? categories.find((c) => c.id === form.category_id)?.name || "Select a category"
+                      : "Select a category"}
+                    <IconChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search category..."
+                      value={catSearch}
+                      onValueChange={setCatSearch}
+                    />
+                    <CommandList className="max-h-48">
+                      {isSearchingCat ? (
+                        <div className="p-4 text-center text-sm text-muted-foreground flex justify-center items-center">
+                          <IconLoader2 className="mr-2 size-4 animate-spin" /> Searching...
+                        </div>
+                      ) : (
+                        <CommandEmpty className="p-2 text-sm text-muted-foreground text-center">
+                          Không tìm thấy Category.
+                        </CommandEmpty>
+                      )}
+                      <CommandGroup>
+                        {categories.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.id}
+                            onSelect={() => {
+                              setForm((f) => ({ ...f, category_id: c.id }));
+                              setComboboxOpen(false);
+                            }}
+                          >
+                            <IconCheck
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                form.category_id === c.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                    <div className="border-t p-1">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-primary"
+                        onClick={() => {
+                          setQuickCreateName(catSearch);
+                          setQuickCreateDialogOpen(true);
+                        }}
+                      >
+                        <IconPlus className="mr-2 size-4" />
+                        Tạo {catSearch ? `"${catSearch}"` : "danh mục mới"}
+                      </Button>
+                    </div>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="product-brand">Brand</Label>
+              <Input
+                id="product-brand"
+                placeholder="e.g. Apple, Nike"
+                value={form.brand}
+                onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="product-discount">Discount (%)</Label>
+                <Input
+                  id="product-discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="0"
+                  value={form.discount_percent}
+                  onChange={(e) => setForm((f) => ({ ...f, discount_percent: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="product-stock">Stock Quantity</Label>
+                <Input
+                  id="product-stock"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={form.stock_quantity}
+                  onChange={(e) => setForm((f) => ({ ...f, stock_quantity: e.target.value }))}
+                />
+              </div>
+            </div>
+
+                     {/* Description HTML */}
+            <div className="space-y-2 flex flex-col">
+              <Label htmlFor="product-desc">Description (HTML)</Label>
+              <RichTextEditor
+                value={form.description_html}
+                onChange={(html) => setForm((f) => ({ ...f, description_html: html }))}
+                placeholder="Write a detailed product description here..."
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Main Image Upload */}
+              <div className="space-y-2">
+                <Label>Main Product Image</Label>
+                {form.imagePreview ? (
+                  <div className="relative overflow-hidden rounded-lg border h-48">
+                    <img
+                      src={form.imagePreview}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute right-2 top-2 size-8 rounded-full p-0 shadow-lg"
+                      onClick={clearImage}
+                    >
+                      <IconX className="size-4" />
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all hover:bg-black/30 hover:opacity-100"
+                    >
+                      <span className="rounded-md bg-white/90 px-3 py-1.5 text-sm font-medium text-gray-900 shadow">
+                        Change image
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50 flex w-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed h-48 transition-colors"
+                  >
+                    <div className="bg-muted rounded-full p-3">
+                      <IconUpload className="text-muted-foreground size-6" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium">Click to upload main image</p>
+                      <p className="text-muted-foreground mt-1 text-xs">PNG, JPG, WebP up to 5MB</p>
+                    </div>
+                  </button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+              </div>
+
+              {/* Gallery Images Upload */}
+              <div className="space-y-2">
+                <Label>Gallery Images</Label>
+                <div className="grid grid-cols-3 gap-2 h-48 overflow-y-auto pr-2 hide-scrollbar">
+                  {form.galleryImages.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden border group">
+                      <img src={img.url} className="w-full h-full object-cover" alt={`Gallery ${idx}`} />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute right-1 top-1 size-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeGalleryImage(idx)}
+                      >
+                        <IconX className="size-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <label className="border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50 flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed transition-colors">
+                    <IconPlus className="text-muted-foreground size-6" />
+                    <span className="text-[10px] mt-1 text-muted-foreground">Add More</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleGallerySelect}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Variants Section */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Tùy chọn (Biến thể)</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addVariant} className="h-8 gap-1">
+                  <IconPlus className="size-3.5" /> Thêm tùy chọn
+                </Button>
+              </div>
+              {form.variants.length > 0 ? (
+                <div className="grid gap-3">
+                  {form.variants.map((v, i) => (
+                    <div key={i} className="flex gap-2 items-start bg-muted/30 p-2 rounded-md border">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1">
+                        <Input placeholder="Tên (VD: Màu Đỏ)" value={v.name} onChange={(e) => updateVariant(i, "name", e.target.value)} />
+                        <Input placeholder="SKU" value={v.sku} onChange={(e) => updateVariant(i, "sku", e.target.value)} />
+                        <Input placeholder="Giá cộng thêm (VD: 50000)" type="number" value={v.price_modifier} onChange={(e) => updateVariant(i, "price_modifier", e.target.value)} />
+                        <Input placeholder="Tồn kho" type="number" min="0" value={v.stock_quantity} onChange={(e) => updateVariant(i, "stock_quantity", e.target.value)} />
+                      </div>
+                      <Button type="button" variant="destructive" size="icon" className="shrink-0" onClick={() => removeVariant(i)}>
+                        <IconX className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4 bg-muted/20 rounded-md border border-dashed">Sản phẩm này không có biến thể.</p>
+              )}
+            </div>
+
+            {/* Specifications Section */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Thông số kỹ thuật</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addSpec} className="h-8 gap-1">
+                  <IconPlus className="size-3.5" /> Thêm thông số
+                </Button>
+              </div>
+              {form.specs.length > 0 ? (
+                <div className="grid gap-3">
+                  {form.specs.map((s, i) => (
+                    <div key={i} className="flex gap-2 items-start bg-muted/30 p-2 rounded-md border">
+                      <div className="grid grid-cols-2 gap-2 flex-1">
+                        <Input placeholder="Tên thông số (VD: Chipset)" value={s.spec_name} onChange={(e) => updateSpec(i, "spec_name", e.target.value)} />
+                        <Input placeholder="Giá trị (VD: Apple M3)" value={s.spec_value} onChange={(e) => updateSpec(i, "spec_value", e.target.value)} />
+                      </div>
+                      <Button type="button" variant="destructive" size="icon" className="shrink-0" onClick={() => removeSpec(i)}>
+                        <IconX className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4 bg-muted/20 rounded-md border border-dashed">Chưa có thông số kỹ thuật.</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={saving || !form.name.trim() || !form.price} className="gap-2">
+              {saving && <IconLoader2 className="size-4 animate-spin" />}
+              {saving ? "Uploading..." : product ? "Save Changes" : "Create Product"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Tạo Category mới</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="quick-cat-name">Tên Category</Label>
+              <Input
+                id="quick-cat-name"
+                placeholder="Nhập tên category..."
+                value={quickCreateName}
+                onChange={(e) => setQuickCreateName(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickCreateDialogOpen(false)} disabled={creatingCategory}>
+              Hủy
+            </Button>
+            <Button onClick={handleQuickCreateCategory} disabled={!quickCreateName.trim() || creatingCategory}>
+              {creatingCategory && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+              Lưu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

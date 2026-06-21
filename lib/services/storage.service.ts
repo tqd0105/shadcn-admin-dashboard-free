@@ -17,3 +17,8 @@ export async function uploadProductImage(file: File) {
 
     return urlData.publicUrl;
 }
+
+export async function uploadProductImages(files: File[]) {
+    const uploadPromises = files.map(file => uploadProductImage(file));
+    return Promise.all(uploadPromises);
+}
