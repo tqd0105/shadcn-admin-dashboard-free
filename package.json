@@ -20,6 +20,7 @@
     "@radix-ui/react-toast": "^1.2.15",
     "@supabase/supabase-js": "^2.108.1",
     "@tabler/icons-react": "^3.36.0",
+    "@tailwindcss/typography": "^0.5.20",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-placeholder": "^3.27.1",
     "@tiptap/react": "^3.27.1",
