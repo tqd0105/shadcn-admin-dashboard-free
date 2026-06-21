@@ -31,6 +31,15 @@ export async function getCategories(search?: string, page: number = 1, pageSize:
   };
 }
 
+export async function getAllCategories() {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("name", { ascending: true });
+
+  return { data, error };
+}
+
 export async function createCategory(payload: { name: string }) {
   return supabase
     .from("categories")

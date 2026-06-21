@@ -5,8 +5,8 @@ export async function getProduct(
   page: number = 1,
   pageSize: number = 10,
   options?: {
-    category_id?: string;
-    brand?: string;
+    category_ids?: string[];
+    brands?: string[];
     minPrice?: number;
     maxPrice?: number;
     sort?: string;
@@ -20,12 +20,12 @@ export async function getProduct(
     query = query.ilike("name", `%${search}%`);
   }
   
-  if (options?.category_id) {
-    query = query.eq("category_id", options.category_id);
+  if (options?.category_ids && options.category_ids.length > 0) {
+    query = query.in("category_id", options.category_ids);
   }
   
-  if (options?.brand) {
-    query = query.ilike("brand", `%${options.brand}%`);
+  if (options?.brands && options.brands.length > 0) {
+    query = query.in("brand", options.brands);
   }
   
   if (options?.minPrice !== undefined) {
@@ -65,6 +65,18 @@ export async function getProduct(
   };
 }
 
+export async function getDistinctBrands() {
+  const { data, error } = await supabase
+    .from("products")
+    .select("brand")
+    .not("brand", "is", null);
+
+  if (error) return { data: null, error };
+  
+  const brands = Array.from(new Set(data.map((item) => item.brand).filter(Boolean))) as string[];
+  return { data: brands.sort(), error: null };
+}
+
 export async function getProductBySlug(slug: string) {
   const { data, error } = await supabase
     .from("products")
@@ -72,6 +84,35 @@ export async function getProductBySlug(slug: string) {
     .eq("slug", slug)
     .single();
 
+  return { data, error };
+}
+
+export async function getProductById(id: string) {
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      categories(name),
+      product_images(id, image_url, display_order),
+      product_variants(id, name, sku, price_modifier, stock_quantity),
+      product_specs(id, spec_name, spec_value),
+      product_reviews(id, rating, comment, created_at, user_id)
+    `)
+    .eq("id", id)
+    .single();
+
+  return { data, error };
+}
+
+export async function getRelatedProducts(categoryId: string | null, excludeProductId: string, limit: number = 3) {
+  if (!categoryId) return { data: [], error: null };
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, categories(name)")
+    .eq("category_id", categoryId)
+    .neq("id", excludeProductId)
+    .limit(limit);
+    
   return { data, error };
 }
 
