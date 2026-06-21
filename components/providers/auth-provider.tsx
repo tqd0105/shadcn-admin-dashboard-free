@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
         setRole(null);
-        router.push("/login");
+        router.push("/");
     }, [router]);
     const fetchProfileAndRole = useCallback(async (userId: string) => {
         const { data, error } = await getProfile(userId);
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (event === "SIGNED_OUT") {
                 setProfile(null);
                 setRole(null);
-                router.push("/login");
+                // Removed router.push("/login") to allow guests to view public pages.
             }
         });
 

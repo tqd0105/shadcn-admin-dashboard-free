@@ -8,8 +8,9 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/lib/services/product.service";
-import { getCategories } from "@/lib/services/category.service";
+import { getCategories, createCategory } from "@/lib/services/category.service";
 import { uploadProductImage } from "@/lib/services/storage.service";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +70,8 @@ import {
   IconUpload,
   IconPhoto,
   IconX,
+  IconCheck,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -159,12 +175,61 @@ function ProductsPageContent() {
     fetchProducts();
   }, [fetchProducts, refreshTrigger]);
 
+  // Category Combobox state
+  const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [catSearch, setCatSearch] = useState("");
+  const [debouncedCatSearch, setDebouncedCatSearch] = useState("");
+  const [isSearchingCat, setIsSearchingCat] = useState(false);
+  
+  // Quick Create Category state
+  const [quickCreateDialogOpen, setQuickCreateDialogOpen] = useState(false);
+  const [quickCreateName, setQuickCreateName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+
+  // Sync catSearch to debouncedCatSearch
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedCatSearch(catSearch), 500);
+    return () => clearTimeout(timer);
+  }, [catSearch]);
+
+  // Fetch categories based on debounced search
   useEffect(() => {
     const loadCategories = async () => {
-      const { data } = await getCategories("", 1, 100);
+      setIsSearchingCat(true);
+      const { data } = await getCategories(debouncedCatSearch, 1, 100);
       if (data) setCategories(data);
+      setIsSearchingCat(false);
     };
     loadCategories();
+  }, [debouncedCatSearch]);
+
+  const handleQuickCreateCategory = async () => {
+    if (!quickCreateName.trim()) return;
+    setCreatingCategory(true);
+    const { error } = await createCategory({ name: quickCreateName.trim() });
+    setCreatingCategory(false);
+    
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setQuickCreateDialogOpen(false);
+    
+    // Refresh list and auto-select
+    const { data } = await getCategories("", 1, 100);
+    if (data) {
+      setCategories(data);
+      const newCat = data.find(c => c.name.toLowerCase() === quickCreateName.trim().toLowerCase());
+      if (newCat) {
+        setForm(f => ({ ...f, category_id: newCat.id }));
+      }
+    }
+    setQuickCreateName("");
+    setComboboxOpen(false);
+  };
+
+  useEffect(() => {
 
     const channel = supabase
       .channel("products-realtime")
@@ -497,23 +562,77 @@ function ProductsPageContent() {
             </div>
 
             {/* Category */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col">
               <Label htmlFor="product-category">Category</Label>
-              <Select
-                value={form.category_id}
-                onValueChange={(value) => setForm((f) => ({ ...f, category_id: value }))}
-              >
-                <SelectTrigger id="product-category">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="product-category"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboboxOpen}
+                    className="w-full justify-between"
+                  >
+                    {form.category_id
+                      ? categories.find((c) => c.id === form.category_id)?.name || "Select a category"
+                      : "Select a category"}
+                    <IconChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search category..."
+                      value={catSearch}
+                      onValueChange={setCatSearch}
+                    />
+                    <CommandList className="max-h-48">
+                      {isSearchingCat ? (
+                        <div className="p-4 text-center text-sm text-muted-foreground flex justify-center items-center">
+                          <IconLoader2 className="mr-2 size-4 animate-spin" /> Searching...
+                        </div>
+                      ) : (
+                        <CommandEmpty className="p-2 text-sm text-muted-foreground text-center">
+                          Không tìm thấy Category.
+                        </CommandEmpty>
+                      )}
+                      <CommandGroup>
+                        {categories.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.id}
+                            onSelect={() => {
+                              setForm((f) => ({ ...f, category_id: c.id }));
+                              setComboboxOpen(false);
+                            }}
+                          >
+                            <IconCheck
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                form.category_id === c.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                    <div className="border-t p-1">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-primary"
+                        onClick={() => {
+                          setQuickCreateName(catSearch);
+                          setQuickCreateDialogOpen(true);
+                        }}
+                      >
+                        <IconPlus className="mr-2 size-4" />
+                        Tạo {catSearch ? `"${catSearch}"` : "danh mục mới"}
+                      </Button>
+                    </div>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Image Upload */}
@@ -630,6 +749,36 @@ function ProductsPageContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Quick Create Category Dialog */}
+      <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Tạo Category mới</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="quick-cat-name">Tên Category</Label>
+              <Input
+                id="quick-cat-name"
+                placeholder="Nhập tên category..."
+                value={quickCreateName}
+                onChange={(e) => setQuickCreateName(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickCreateDialogOpen(false)} disabled={creatingCategory}>
+              Hủy
+            </Button>
+            <Button onClick={handleQuickCreateCategory} disabled={!quickCreateName.trim() || creatingCategory}>
+              {creatingCategory && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+              Lưu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,29 +1,22 @@
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
-import { DataTable } from "@/components/data-table"
-import { SectionCards } from "@/components/section-cards"
-
-import data from "./data.json"
 import { Metadata } from "next";
 import { generateMeta } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata>{
   return generateMeta({
-    title: "Dashboard Template",
-    description:
-      "A list of users created using the Tanstack Table. Tailwind is built on CSS and React.",
+    title: "Dashboard",
+    description: "LuxeCommerce Admin Dashboard",
   });
 }
 
 export default function Page() {
   return (
-    <>
-
-      <div className="flex items-center justify-between ">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome Toby</h1>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Tổng quan</h1>
       </div>
-      <SectionCards />
-        <ChartAreaInteractive />
-      <DataTable data={data} />
-    </>
+      <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
+        <p className="text-muted-foreground">Chào mừng bạn đến với trang quản trị LuxeCommerce. Tính năng thống kê đang được phát triển.</p>
+      </div>
+    </div>
   )
 }

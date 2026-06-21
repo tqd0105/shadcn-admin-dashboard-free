@@ -87,16 +87,16 @@ export default function LoginPageV1() {
           </form>
 
           <div className="mt-6">
-            <div className="relative">
+            {/* <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="bg-muted px-2 text-gray-500">or continue with</span>
               </div>
-            </div>
+            </div> */}
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            {/* <div className="mt-6 grid grid-cols-2 gap-3">
               <Button variant="outline" className="w-full">
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
@@ -122,7 +122,7 @@ export default function LoginPageV1() {
                 <GitHubLogoIcon className="mr-2 h-4 w-4" />
                 GitHub
               </Button>
-            </div>
+            </div> */}
 
             <div className="mt-6 text-center text-sm">
               Don&apos;t have an account?{" "}
