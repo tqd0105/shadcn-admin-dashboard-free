@@ -30,7 +30,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <img
           alt={product.name}
           className="w-full h-full object-cover"
-          src={product.image}
+          src={product.image_url}
         />
       </Link>
       <div className="p-4 flex flex-col flex-grow">

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Card,
   CardContent,
@@ -82,6 +83,10 @@ type Product = {
   image_url?: string;
   category_id?: string | null;
   categories?: { name: string } | null;
+  discount_percent?: number | null;
+  stock_quantity?: number | null;
+  description_html?: string | null;
+  brand?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -90,6 +95,10 @@ type FormState = {
   name: string;
   price: string;
   category_id: string;
+  discount_percent: string;
+  stock_quantity: string;
+  brand: string;
+  description_html: string;
   imageFile: File | null;
   imagePreview: string;
 };
@@ -98,6 +107,10 @@ const emptyForm: FormState = {
   name: "",
   price: "",
   category_id: "",
+  discount_percent: "0",
+  stock_quantity: "0",
+  brand: "",
+  description_html: "",
   imageFile: null,
   imagePreview: "",
 };
@@ -284,6 +297,10 @@ function ProductsPageContent() {
       name: product.name,
       price: String(product.price),
       category_id: product.category_id ?? "",
+      discount_percent: String(product.discount_percent ?? 0),
+      stock_quantity: String(product.stock_quantity ?? 0),
+      brand: product.brand ?? "",
+      description_html: product.description_html ?? "",
       imageFile: null,
       imagePreview: product.image_url ?? "",
     });
@@ -308,6 +325,10 @@ function ProductsPageContent() {
         price: parseFloat(form.price),
         image_url: imageUrl,
         category_id: form.category_id || null,
+        discount_percent: form.discount_percent ? parseInt(form.discount_percent) : 0,
+        stock_quantity: form.stock_quantity ? parseInt(form.stock_quantity) : 0,
+        brand: form.brand.trim() || null,
+        description_html: form.description_html.trim() || null,
       };
 
       if (editingProduct) {
@@ -519,7 +540,7 @@ function ProductsPageContent() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? "Edit Product" : "New Product"}
@@ -564,7 +585,7 @@ function ProductsPageContent() {
             {/* Category */}
             <div className="space-y-2 flex flex-col">
               <Label htmlFor="product-category">Category</Label>
-              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen} modal={true}>
                 <PopoverTrigger asChild>
                   <Button
                     id="product-category"
@@ -633,6 +654,64 @@ function ProductsPageContent() {
                   </Command>
                 </PopoverContent>
               </Popover>
+            </div>
+
+            {/* Brand */}
+            <div className="space-y-2">
+              <Label htmlFor="product-brand">Brand</Label>
+              <Input
+                id="product-brand"
+                placeholder="e.g. Apple, Nike"
+                value={form.brand}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, brand: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Discount */}
+              <div className="space-y-2">
+                <Label htmlFor="product-discount">Discount (%)</Label>
+                <Input
+                  id="product-discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="0"
+                  value={form.discount_percent}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, discount_percent: e.target.value }))
+                  }
+                />
+              </div>
+
+              {/* Stock */}
+              <div className="space-y-2">
+                <Label htmlFor="product-stock">Stock Quantity</Label>
+                <Input
+                  id="product-stock"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={form.stock_quantity}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, stock_quantity: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Description HTML */}
+            <div className="space-y-2 flex flex-col">
+              <Label htmlFor="product-desc">Description (HTML)</Label>
+              <RichTextEditor
+                value={form.description_html}
+                onChange={(html) =>
+                  setForm((f) => ({ ...f, description_html: html }))
+                }
+                placeholder="Write a detailed product description here..."
+              />
             </div>
 
             {/* Image Upload */}
