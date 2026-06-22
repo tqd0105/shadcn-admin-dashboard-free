@@ -108,7 +108,7 @@ export default function CartPage() {
         <h2 className="text-2xl font-bold">Giỏ hàng trống</h2>
         <p className="text-muted-foreground">Chưa có sản phẩm nào trong giỏ hàng của bạn.</p>
         <Button asChild>
-          <Link href="/dashboard/products">Tiếp tục mua sắm</Link>
+          <Link href="/products">Tiếp tục mua sắm</Link>
         </Button>
       </div>
     );
