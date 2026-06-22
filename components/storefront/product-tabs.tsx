@@ -2,6 +2,15 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Spec {
   id: string;
@@ -29,6 +38,18 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    isSuccess: boolean;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    isSuccess: false,
+  });
 
   const submitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +60,12 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      alert("Bạn cần đăng nhập để gửi đánh giá!");
+      setModalState({
+        isOpen: true,
+        title: "Yêu cầu đăng nhập",
+        message: "Bạn cần đăng nhập để gửi đánh giá!",
+        isSuccess: false,
+      });
       setIsSubmitting(false);
       return;
     }
@@ -53,12 +79,21 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
 
     setIsSubmitting(false);
     if (error) {
-      alert("Có lỗi xảy ra: " + error.message);
+      setModalState({
+        isOpen: true,
+        title: "Có lỗi xảy ra",
+        message: error.message,
+        isSuccess: false,
+      });
     } else {
-      alert("Cảm ơn bạn đã đánh giá!");
       setComment("");
       setRating(5);
-      window.location.reload();
+      setModalState({
+        isOpen: true,
+        title: "Thành công",
+        message: "Cảm ơn bạn đã gửi đánh giá!",
+        isSuccess: true,
+      });
     }
   };
 
@@ -220,6 +255,40 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
           </div>
         )}
       </div>
+
+      {/* Response Modal */}
+      <AlertDialog 
+        open={modalState.isOpen} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen && modalState.isSuccess) {
+            window.location.reload();
+          }
+          setModalState(prev => ({ ...prev, isOpen }));
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className={modalState.isSuccess ? "text-green-600" : "text-destructive"}>
+              {modalState.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {modalState.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => {
+                setModalState(prev => ({ ...prev, isOpen: false }));
+                if (modalState.isSuccess) {
+                  window.location.reload();
+                }
+              }}
+            >
+              Đóng lại
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
