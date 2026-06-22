@@ -53,7 +53,7 @@ export function SiteHeader() {
 
   return (
     <header className="border-b bg-background sticky top-0 z-50">
-      <div className="flex justify-between items-center w-full px-4 md:px-10 max-w-7xl mx-auto h-16 z-50">
+      <div className="flex justify-between items-center w-full px-4 md:px-10 max-w-7xl mx-auto h-20 z-50">
         {/* Brand */}
         <Link href="/" className="text-xl font-bold tracking-tight flex-shrink-0 text-primary">
           LuxeCommerce
@@ -157,7 +157,7 @@ export function SiteHeader() {
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] z-[100]">
+            <SheetContent side="right" className="w-[300px] sm:w-[300px] z-[100]">
               <SheetHeader>
                 <SheetTitle className="text-left font-bold text-primary text-xl">LuxeCommerce</SheetTitle>
               </SheetHeader>
