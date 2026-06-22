@@ -71,6 +71,7 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
       toast.error(error.message || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
     } else {
       toast.success("Đã thêm vào giỏ hàng thành công!");
+      window.dispatchEvent(new Event("cart-updated"));
     }
   };
 
@@ -87,6 +88,7 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
     if (error) {
       toast.error(error.message || "Có lỗi xảy ra!");
     } else {
+      window.dispatchEvent(new Event("cart-updated"));
       router.push("/cart");
     }
   };

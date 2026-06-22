@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, ShoppingCart, Heart, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,17 @@ export function SiteHeader() {
   const { openModal } = useAuthModal();
   const { user, profile, role, logout } = useAuth();
   const [cartCount, setCartCount] = useState(0);
+  const [isBumping, setIsBumping] = useState(false);
   const pathname = usePathname();
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    if (cartCount > 0 && initialLoadDone.current) {
+      setIsBumping(true);
+      const timer = setTimeout(() => setIsBumping(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
 
   useEffect(() => {
     if (!user) {
@@ -39,8 +50,13 @@ export function SiteHeader() {
     const fetchCount = async () => {
       const { count } = await supabase.from('cart_items').select('id', { count: 'exact' }).eq('user_id', user.id);
       if (count !== null) setCartCount(count);
+      initialLoadDone.current = true;
     };
     fetchCount();
+
+    // Listen to custom event for instant updates from other components
+    const handleCartUpdate = () => fetchCount();
+    window.addEventListener("cart-updated", handleCartUpdate);
 
     const channel = supabase.channel('cart-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cart_items', filter: `user_id=eq.${user.id}` }, () => {
@@ -49,6 +65,7 @@ export function SiteHeader() {
       .subscribe();
 
     return () => {
+      window.removeEventListener("cart-updated", handleCartUpdate);
       supabase.removeChannel(channel);
     };
   }, [user]);
@@ -96,7 +113,14 @@ export function SiteHeader() {
               }
             }}
           >
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn(
+                "text-muted-foreground hover:text-primary relative transition-all duration-300",
+                isBumping ? "scale-125 text-primary" : "scale-100"
+              )}
+            >
               <ShoppingCart className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
                 {cartCount}

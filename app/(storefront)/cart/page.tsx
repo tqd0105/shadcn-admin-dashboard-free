@@ -57,6 +57,7 @@ export default function CartPage() {
     const { error } = await removeFromCart(id);
     if (!error) {
       setCartItems(items => items.filter(item => item.id !== id));
+      window.dispatchEvent(new Event("cart-updated"));
     }
     setUpdatingId(null);
   };
