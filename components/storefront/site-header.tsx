@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Search, ShoppingCart, Heart, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
@@ -28,6 +29,7 @@ export function SiteHeader() {
   const { openModal } = useAuthModal();
   const { user, profile, role, logout } = useAuth();
   const [cartCount, setCartCount] = useState(0);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!user) {
@@ -71,9 +73,9 @@ export function SiteHeader() {
 
         {/* Navigation Links (Desktop) */}
         <nav className="hidden lg:flex items-center gap-6 ml-auto mr-10">
-          <Link className="text-sm font-medium text-primary border-b-2 border-primary pb-1" href="/">Trang chủ</Link>
-          <Link className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200" href="/products">Sản phẩm</Link>
-          <Link className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200" href="#">Bộ sưu tập</Link>
+          <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/">Trang chủ</Link>
+          <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/products">Sản phẩm</Link>
+          <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/collections" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="#">Bộ sưu tập</Link>
         </nav>
 
         {/* Actions */}
@@ -84,14 +86,21 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground hover:text-primary">
             <Heart className="w-5 h-5" />
           </Button>
-          <Link href="/cart" className="relative">
+          <Link 
+            href={user ? "/cart" : "#"} 
+            className="relative"
+            onClick={(e) => {
+              if (!user) {
+                e.preventDefault();
+                openModal('login');
+              }
+            }}
+          >
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
               <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[10px] flex items-center justify-center rounded-full">
-                  {cartCount}
-                </span>
-              )}
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
+                {cartCount}
+              </span>
             </Button>
           </Link>
           
@@ -162,14 +171,14 @@ export function SiteHeader() {
                 <SheetTitle className="text-left font-bold text-primary text-xl">LuxeCommerce</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4 py-8">
-                <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="/">
+                <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/" ? "text-primary" : "hover:text-primary"}`} href="/">
                   <HomeIcon  className="w-5 h-5 mr-2" />
                   <span>Trang chủ</span></Link>
-                <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="/products">
+                <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary" : "hover:text-primary"}`} href="/products">
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   <span>Sản phẩm</span>
                 </Link>
-                <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="#">
+                <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/collections" ? "text-primary" : "hover:text-primary"}`} href="#">
                   <BoxIcon className="w-5 h-5 mr-2" />
                   <span>Bộ sưu tập</span>
                 </Link>

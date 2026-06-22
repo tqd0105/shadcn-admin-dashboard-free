@@ -4,6 +4,19 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { addToCart } from "@/lib/services/cart.service";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useAuthModal } from "@/lib/store/use-auth-modal";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Variant {
   id: string;
@@ -27,50 +40,53 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
 
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
+  
+  const { user } = useAuth();
+  const { openModal } = useAuthModal();
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
 
   // Calculate final price based on discount and selected variant
   const hasDiscount = (discountPercent ?? 0) > 0;
-  const originalPrice = hasDiscount
-    ? Math.round(basePrice / (1 - (discountPercent as number) / 100))
-    : basePrice;
+  const originalBasePrice = basePrice;
+  const saleBasePrice = hasDiscount
+    ? Math.round(originalBasePrice * (1 - (discountPercent as number) / 100))
+    : originalBasePrice;
 
   const currentPriceModifier = selectedVariant ? selectedVariant.price_modifier : 0;
   
-  const finalPrice = basePrice + currentPriceModifier;
-  const finalOriginalPrice = originalPrice + currentPriceModifier;
+  const finalPrice = saleBasePrice + currentPriceModifier; // Red text (Sale Price)
+  const finalOriginalPrice = originalBasePrice + currentPriceModifier; // Strikethrough (Original Price)
 
   const handleAddToCart = async () => {
+    if (!user) {
+      setShowLoginAlert(true);
+      return;
+    }
+    
     setIsAdding(true);
     const { error } = await addToCart(productId, 1, selectedVariant?.id);
     setIsAdding(false);
 
     if (error) {
-      if (error.message.includes("User not authenticated")) {
-        alert("Vui lòng đăng nhập để thêm vào giỏ hàng.");
-        router.push("/login");
-      } else {
-        alert("Có lỗi xảy ra khi thêm vào giỏ hàng!");
-      }
+      toast.error(error.message || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
     } else {
-      alert("Đã thêm vào giỏ hàng thành công!");
-      // Optionally emit an event or update a global cart state here
+      toast.success("Đã thêm vào giỏ hàng thành công!");
     }
   };
 
   const handleBuyNow = async () => {
+    if (!user) {
+      setShowLoginAlert(true);
+      return;
+    }
+
     setIsAdding(true);
     const { error } = await addToCart(productId, 1, selectedVariant?.id);
     setIsAdding(false);
 
     if (error) {
-      if (error.message.includes("User not authenticated")) {
-        alert("Vui lòng đăng nhập để mua hàng.");
-        router.push("/login");
-      } else {
-        alert("Có lỗi xảy ra!");
-      }
+      toast.error(error.message || "Có lỗi xảy ra!");
     } else {
-      // Redirect to cart or checkout
       router.push("/cart");
     }
   };
@@ -153,6 +169,27 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
         <div className="flex items-center"><span className="material-symbols-outlined text-[18px] mr-2">local_shipping</span> Giao hàng miễn phí toàn quốc</div>
         <div className="flex items-center"><span className="material-symbols-outlined text-[18px] mr-2">assignment_return</span> Đổi trả 30 ngày dễ dàng</div>
       </div>
+
+      {/* Login Alert Modal */}
+      <AlertDialog open={showLoginAlert} onOpenChange={setShowLoginAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Yêu cầu đăng nhập</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn cần phải đăng nhập để thêm sản phẩm vào giỏ hàng hoặc thực hiện mua hàng.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Đóng lại</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setShowLoginAlert(false);
+              openModal("login");
+            }}>
+              Đăng nhập ngay
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

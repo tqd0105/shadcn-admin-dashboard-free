@@ -5,6 +5,7 @@ import { useCallback, useState, useEffect } from "react";
 import { IconChevronUp, IconFilter } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 interface Category {
   id: string;
@@ -177,18 +178,19 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
             <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
               Price Range
             </h3>
-            <div className="space-y-4 px-1">
-              <div className="px-1">
-                <input
-                  type="range"
-                  min="0"
-                  max="100000000"
-                  step="50000"
-                  value={maxPriceInput || 100000000}
-                  onChange={(e) => setMaxPriceInput(e.target.value)}
-                  onMouseUp={() => applyPriceInputs()}
-                  onTouchEnd={() => applyPriceInputs()}
-                  className="w-full accent-primary"
+            <div className="space-y-6 px-1">
+              <div className="px-2">
+                <Slider
+                  min={0}
+                  max={100000000}
+                  step={500000}
+                  value={[Number(minPriceInput || 0), Number(maxPriceInput || 100000000)]}
+                  onValueChange={(vals) => {
+                    setMinPriceInput(vals[0] > 0 ? vals[0].toString() : "");
+                    setMaxPriceInput(vals[1] < 100000000 ? vals[1].toString() : "");
+                  }}
+                  onValueCommit={applyPriceInputs}
+                  className="w-full"
                 />
               </div>
               <div className="flex items-center gap-2">

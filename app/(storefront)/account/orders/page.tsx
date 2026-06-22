@@ -14,8 +14,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { toast } from "sonner";
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: "Chờ xử lý", color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" },
@@ -32,6 +43,10 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  
+  // Modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading) {
@@ -52,16 +67,24 @@ export default function MyOrdersPage() {
     setLoading(false);
   };
 
-  const handleCancelOrder = async (id: string) => {
-    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
+  const confirmCancel = (id: string) => {
+    setOrderToCancel(id);
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+    const id = orderToCancel;
     
     setCancellingId(id);
     const { error } = await updateOrderStatus(id, "cancelled");
     setCancellingId(null);
+    setOrderToCancel(null);
     
     if (error) {
-      alert("Lỗi khi hủy đơn hàng: " + error.message);
+      toast.error("Lỗi khi hủy đơn hàng: " + error.message);
     } else {
+      toast.success("Đã hủy đơn hàng thành công");
       setOrders(orders.map(o => o.id === id ? { ...o, status: "cancelled" } : o));
     }
   };
@@ -146,7 +169,7 @@ export default function MyOrdersPage() {
                     variant="outline" 
                     className="text-destructive hover:bg-destructive/10"
                     disabled={cancellingId === order.id}
-                    onClick={() => handleCancelOrder(order.id)}
+                    onClick={() => confirmCancel(order.id)}
                   >
                     {cancellingId === order.id ? (
                       <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -161,6 +184,26 @@ export default function MyOrdersPage() {
           </Card>
         ))}
       </div>
+
+      <AlertDialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận hủy đơn hàng</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Đóng lại</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCancelOrder}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Chắc chắn hủy
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

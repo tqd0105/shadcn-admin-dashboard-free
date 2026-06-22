@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import AuthGuard from "@/components/guards/auth-guard";
+import RoleGuard from "@/components/guards/role-guard";
 
 
 export default function Page({children}: { children: React.ReactNode}) {
@@ -26,7 +27,9 @@ export default function Page({children}: { children: React.ReactNode}) {
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4  md:gap-6 p-4 lg:p-6">
               <AuthGuard>
-                {children}
+                <RoleGuard allowedRoles={["admin"]}>
+                  {children}
+                </RoleGuard>
               </AuthGuard>
             </div>
           </div>

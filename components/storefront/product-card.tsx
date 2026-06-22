@@ -24,14 +24,15 @@ export function ProductCard({ product }: ProductCardProps) {
   const progress = totalOriginalStock > 0 ? Math.min(100, Math.round((sold / totalOriginalStock) * 100)) : 0;
 
   const hasDiscount = (product.discount_percent ?? 0) > 0;
-  const originalPrice = hasDiscount
-    ? Math.round(product.price / (1 - (product.discount_percent as number) / 100))
-    : null;
+  const originalPrice = product.price;
+  const salePrice = hasDiscount
+    ? Math.round(originalPrice * (1 - (product.discount_percent as number) / 100))
+    : originalPrice;
 
   return (
     <div className="group border rounded-xl overflow-hidden bg-card transition-all duration-300 hover:shadow-lg relative flex flex-col h-full">
       {hasDiscount && (
-        <Badge className="absolute top-4 left-4 z-10 bg-red-600 hover:bg-red-700 pointer-events-none">
+        <Badge className="absolute top-5 left-4 z-10 bg-red-600 hover:bg-red-700 pointer-events-none">
           -{product.discount_percent}%
         </Badge>
       )}
@@ -45,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="p-4 flex flex-col flex-grow">
         <Link href={`/product/${product.id}`} className="flex justify-between items-center mb-2">
           <div className="flex flex-col">
-            <h3 className="font-semibold text-xl text-foreground line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+            <h3 className="font-semibold text-xl text-foreground line-clamp-1 max-w-[180px] hover:text-primary transition-colors cursor-pointer">
               {product.name}
             </h3>
             {product.brand && (
@@ -73,11 +74,11 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="flex justify-between items-center flex-wrap gap-x-3 gap-y-1 mb-2">
           <div className="flex items-end gap-2">
             <span className="font-bold text-red-600 text-lg leading-none">
-              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(salePrice)}
             </span>
             {hasDiscount && (
               <span className="text-muted-foreground line-through text-sm leading-none mb-[2px]">
-                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(originalPrice as number)}
+                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(originalPrice)}
               </span>
             )}
           </div>

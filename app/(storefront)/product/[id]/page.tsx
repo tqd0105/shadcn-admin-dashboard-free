@@ -24,9 +24,14 @@ export default async function ProductDetailsPage({
   const { data: relatedProducts } = await getRelatedProducts(product.category_id, product.id, 4);
 
   // Format images
-  const images = product.product_images?.length 
+  const extraImages = product.product_images?.length 
     ? product.product_images.sort((a: any, b: any) => a.display_order - b.display_order)
-    : [{ id: product.id, image_url: product.image_url }];
+    : [];
+    
+  const images = [
+    { id: product.id, image_url: product.image_url },
+    ...extraImages
+  ];
 
   return (
     <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">

@@ -20,7 +20,7 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
         if (loading || !user) return; // AuthGuard already handles !user
 
         if (!isAllowed) {
-            router.replace("/dashboard");
+            router.replace("/");
         }
     }, [user, isAllowed, loading, router]);
 
