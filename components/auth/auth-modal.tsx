@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { IconLoader2 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase/client";
@@ -18,18 +18,36 @@ export function AuthModal() {
   const [fullName, setFullName] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [regStep, setRegStep] = useState<"email" | "otp" | "password">("email");
+
+  useEffect(() => {
+    if (!isOpen) {
+      const timer = setTimeout(() => {
+        setErrorMsg("");
+        setPassword("");
+        setOtp("");
+        setRegStep("email");
+        setView("login");
+      }, 300); // Wait for modal slide-out animation to finish before clearing
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, setView]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Đăng nhập thành công!");
       closeModal();
     } catch (err: any) {
-      toast.error(err.message || "Lỗi đăng nhập");
+      let msg = err.message || "Lỗi đăng nhập";
+      if (msg === "Invalid login credentials") msg = "Email hoặc mật khẩu không chính xác.";
+      toast.error(msg);
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -38,6 +56,7 @@ export function AuthModal() {
   const handleRegisterEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
     try {
       const exists = await isEmailRegistered(email);
       if (exists) {
@@ -51,6 +70,7 @@ export function AuthModal() {
       setRegStep("otp");
     } catch (err: any) {
       toast.error(err.message || "Lỗi gửi mã OTP");
+      setErrorMsg(err.message || "Lỗi gửi mã OTP");
     } finally {
       setLoading(false);
     }
@@ -59,6 +79,7 @@ export function AuthModal() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
     try {
       const { error } = await verifyOtp(email, otp);
       if (error) throw error;
@@ -66,6 +87,7 @@ export function AuthModal() {
       setRegStep("password");
     } catch (err: any) {
       toast.error(err.message || "Mã OTP không hợp lệ");
+      setErrorMsg("Mã OTP không chính xác hoặc đã hết hạn.");
     } finally {
       setLoading(false);
     }
@@ -74,12 +96,14 @@ export function AuthModal() {
   const handleCompleteRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
     try {
       await completeRegister(fullName, password);
       toast.success("Đăng ký hoàn tất! Chào mừng bạn.");
       closeModal();
     } catch (err: any) {
       toast.error(err.message || "Lỗi cập nhật thông tin");
+      setErrorMsg(err.message || "Đã xảy ra lỗi khi hoàn tất đăng ký.");
     } finally {
       setLoading(false);
     }
@@ -87,6 +111,7 @@ export function AuthModal() {
 
   // Reset steps when changing view
   const switchView = (newView: "login" | "register" | "forgot_password") => {
+    setErrorMsg("");
     setView(newView);
     if (newView === "register") setRegStep("email");
   };
@@ -134,6 +159,13 @@ export function AuthModal() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+                
+                {errorMsg && (
+                  <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
+                    {errorMsg}
+                  </div>
+                )}
+
                 <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Đăng nhập
@@ -160,6 +192,13 @@ export function AuthModal() {
                         onChange={(e) => setEmail(e.target.value)}
                       />
                     </div>
+                    
+                    {errorMsg && (
+                      <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
+                        {errorMsg}
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full h-11" disabled={loading}>
                       {loading && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Gửi mã xác thực
@@ -185,6 +224,13 @@ export function AuthModal() {
                         className="text-center tracking-widest text-lg"
                       />
                     </div>
+                    
+                    {errorMsg && (
+                      <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
+                        {errorMsg}
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full h-11" disabled={loading || otp.length < 6}>
                       {loading && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Xác nhận mã
@@ -221,6 +267,13 @@ export function AuthModal() {
                         minLength={6}
                       />
                     </div>
+                    
+                    {errorMsg && (
+                      <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md font-medium">
+                        {errorMsg}
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full h-11" disabled={loading}>
                       {loading && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Hoàn tất đăng ký
