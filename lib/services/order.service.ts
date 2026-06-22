@@ -88,3 +88,25 @@ export async function updateOrderStatus(id: string, status: string) {
 
   return { data, error };
 }
+
+export async function getMyOrders() {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return { data: null, error: userError || new Error("User not authenticated") };
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select(`
+      *,
+      order_items(
+        id,
+        quantity,
+        price,
+        products(name, image_url),
+        product_variants(name)
+      )
+    `)
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false });
+
+  return { data, error };
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CreditCard, Wallet } from "lucide-react";
+import { CreditCard, FacebookIcon, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { IconBrandInstagram } from "@tabler/icons-react";
 
 export function SiteFooter() {
   return (
@@ -12,8 +13,8 @@ export function SiteFooter() {
           </Link>
           <p className="text-sm text-muted-foreground mb-6">Trải nghiệm mua sắm đẳng cấp với những sản phẩm được tuyển chọn kỹ lưỡng.</p>
           <div className="flex gap-4">
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer">FB</div>
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer">IG</div>
+            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"><FacebookIcon /></div>
+            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"><IconBrandInstagram /></div>
           </div>
         </div>
 
@@ -50,7 +51,7 @@ export function SiteFooter() {
 
       <div className="border-t px-4 md:px-10 py-6 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-sm text-muted-foreground text-center md:text-left">
-          © 2024 LuxeCommerce. Precision Minimalism in Motion.
+          © 2026 LuxeCommerce. All rights reserved.
         </p>
         <div className="flex gap-4">
           <Wallet className="w-6 h-6 text-muted-foreground" />

@@ -38,6 +38,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Roles", url: "/dashboard/roles", icon: IconListDetails },
         { title: "Categories", url: "/dashboard/categories", icon: IconTags },
         { title: "Products", url: "/dashboard/products", icon: IconFolder },
+        { title: "Orders", url: "/dashboard/orders", icon: IconListDetails },
       ]
     : [
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard },

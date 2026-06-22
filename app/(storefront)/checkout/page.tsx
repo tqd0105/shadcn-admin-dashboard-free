@@ -88,7 +88,7 @@ export default function CheckoutPage() {
 
   if (success) {
     return (
-      <div className="container max-w-2xl py-20 text-center space-y-6">
+      <div className="container mx-auto py-20 text-center space-y-6">
         <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
           <IconCheck className="h-8 w-8" />
         </div>
@@ -107,7 +107,7 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="container max-w-2xl py-20 text-center">
+      <div className="container mx-auto py-20 text-center">
         <h1 className="text-2xl font-bold mb-4">Giỏ hàng trống</h1>
         <Button asChild>
           <Link href="/cart">Quay lại Giỏ hàng</Link>
@@ -117,7 +117,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 max-w-6xl">
+    <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-8">Thanh toán</h1>
 
       <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-12">
