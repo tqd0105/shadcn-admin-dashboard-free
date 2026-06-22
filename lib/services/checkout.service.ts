@@ -23,7 +23,7 @@ export async function placeOrder(checkoutData: CheckoutData) {
 
   // Calculate total amount
   let totalAmount = 0;
-  for (const item of cartItems) {
+  for (const item of cartItems as any[]) {
     const basePrice = Number(item.products?.price || 0);
     const discount = Number(item.products?.discount_percent || 0);
     const modifier = Number(item.product_variants?.price_modifier || 0);
@@ -65,7 +65,7 @@ export async function placeOrder(checkoutData: CheckoutData) {
   if (orderError) return { data: null, error: orderError };
 
   // 4. Move Cart Items to Order Items
-  const orderItemsPayload = cartItems.map(item => {
+  const orderItemsPayload = (cartItems as any[]).map(item => {
     const basePrice = Number(item.products?.price || 0);
     const discount = Number(item.products?.discount_percent || 0);
     const modifier = Number(item.product_variants?.price_modifier || 0);
