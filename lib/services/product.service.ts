@@ -208,7 +208,10 @@ export async function syncProductVariants(productId: string, variants: { id?: st
   }
   
   if (variants.length > 0) {
-    const payload = variants.map(v => {
+    const itemsToInsert = [];
+    const itemsToUpdate = [];
+    
+    for (const v of variants) {
       const item: any = {
         product_id: productId,
         name: v.name,
@@ -216,10 +219,23 @@ export async function syncProductVariants(productId: string, variants: { id?: st
         price_modifier: v.price_modifier,
         stock_quantity: v.stock_quantity,
       };
-      if (v.id && v.id.length > 0) item.id = v.id;
-      return item;
-    });
-    return supabase.from("product_variants").upsert(payload);
+      if (v.id && v.id.length > 0) {
+        item.id = v.id;
+        itemsToUpdate.push(item);
+      } else {
+        itemsToInsert.push(item);
+      }
+    }
+
+    if (itemsToInsert.length > 0) {
+      const { error } = await supabase.from("product_variants").insert(itemsToInsert);
+      if (error) return { data: null, error };
+    }
+
+    if (itemsToUpdate.length > 0) {
+      const { error } = await supabase.from("product_variants").upsert(itemsToUpdate);
+      if (error) return { data: null, error };
+    }
   }
   return { data: null, error: null };
 }
@@ -236,16 +252,32 @@ export async function syncProductSpecs(productId: string, specs: { id?: string, 
   }
   
   if (specs.length > 0) {
-    const payload = specs.map(s => {
+    const itemsToInsert = [];
+    const itemsToUpdate = [];
+
+    for (const s of specs) {
       const item: any = {
         product_id: productId,
         spec_name: s.spec_name,
         spec_value: s.spec_value,
       };
-      if (s.id && s.id.length > 0) item.id = s.id;
-      return item;
-    });
-    return supabase.from("product_specs").upsert(payload);
+      if (s.id && s.id.length > 0) {
+        item.id = s.id;
+        itemsToUpdate.push(item);
+      } else {
+        itemsToInsert.push(item);
+      }
+    }
+
+    if (itemsToInsert.length > 0) {
+      const { error } = await supabase.from("product_specs").insert(itemsToInsert);
+      if (error) return { data: null, error };
+    }
+
+    if (itemsToUpdate.length > 0) {
+      const { error } = await supabase.from("product_specs").upsert(itemsToUpdate);
+      if (error) return { data: null, error };
+    }
   }
   return { data: null, error: null };
 }

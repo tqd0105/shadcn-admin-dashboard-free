@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { addToCart } from "@/lib/services/cart.service";
+import { useRouter } from "next/navigation";
 
 interface Variant {
   id: string;
@@ -23,6 +25,9 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
     variants && variants.length > 0 ? variants[0] : null
   );
 
+  const router = useRouter();
+  const [isAdding, setIsAdding] = useState(false);
+
   // Calculate final price based on discount and selected variant
   const hasDiscount = (discountPercent ?? 0) > 0;
   const originalPrice = hasDiscount
@@ -34,12 +39,40 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
   const finalPrice = basePrice + currentPriceModifier;
   const finalOriginalPrice = originalPrice + currentPriceModifier;
 
-  const handleAddToCart = () => {
-    alert("Chức năng giỏ hàng sẽ được cập nhật sau!");
+  const handleAddToCart = async () => {
+    setIsAdding(true);
+    const { error } = await addToCart(productId, 1, selectedVariant?.id);
+    setIsAdding(false);
+
+    if (error) {
+      if (error.message.includes("User not authenticated")) {
+        alert("Vui lòng đăng nhập để thêm vào giỏ hàng.");
+        router.push("/login");
+      } else {
+        alert("Có lỗi xảy ra khi thêm vào giỏ hàng!");
+      }
+    } else {
+      alert("Đã thêm vào giỏ hàng thành công!");
+      // Optionally emit an event or update a global cart state here
+    }
   };
 
-  const handleBuyNow = () => {
-    alert("Chức năng thanh toán sẽ được cập nhật sau!");
+  const handleBuyNow = async () => {
+    setIsAdding(true);
+    const { error } = await addToCart(productId, 1, selectedVariant?.id);
+    setIsAdding(false);
+
+    if (error) {
+      if (error.message.includes("User not authenticated")) {
+        alert("Vui lòng đăng nhập để mua hàng.");
+        router.push("/login");
+      } else {
+        alert("Có lỗi xảy ra!");
+      }
+    } else {
+      // Redirect to cart or checkout
+      router.push("/cart");
+    }
   };
 
   return (
@@ -100,18 +133,18 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
       <div className="flex flex-col sm:flex-row gap-4 pt-6">
         <button 
           onClick={handleAddToCart}
-          disabled={selectedVariant?.stock_quantity === 0}
+          disabled={selectedVariant?.stock_quantity === 0 || isAdding}
           className="flex-1 flex justify-center items-center h-12 bg-primary text-primary-foreground font-semibold rounded-md shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined mr-2">shopping_bag</span>
-          Thêm vào giỏ hàng
+          {isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
         </button>
         <button 
           onClick={handleBuyNow}
-          disabled={selectedVariant?.stock_quantity === 0}
+          disabled={selectedVariant?.stock_quantity === 0 || isAdding}
           className="flex-1 flex justify-center items-center h-12 bg-background border border-primary text-primary font-semibold rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Mua ngay
+          {isAdding ? "Đang xử lý..." : "Mua ngay"}
         </button>
       </div>
 

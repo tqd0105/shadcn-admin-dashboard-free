@@ -8,6 +8,7 @@ import {
   deleteProductImage,
   syncProductVariants,
   syncProductSpecs,
+  getProductById,
 } from "@/lib/services/product.service";
 import { getCategories, createCategory } from "@/lib/services/category.service";
 import { uploadProductImage, uploadProductImages } from "@/lib/services/storage.service";
@@ -141,46 +142,59 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
   const [quickCreateName, setQuickCreateName] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
 
+  // State for loading full details
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
   // Sync state when dialog opens
   useEffect(() => {
-    if (open) {
+    const loadDetails = async () => {
+      if (!open) return;
+
       if (product) {
-        const existingGallery: GalleryImage[] = product.product_images?.map(img => ({
+        setLoadingDetails(true);
+        // Fetch full product to get relations (variants, specs, images)
+        const { data: fullProduct } = await getProductById(product.id);
+        const p = fullProduct || product;
+
+        const existingGallery: GalleryImage[] = p.product_images?.map((img: any) => ({
           id: img.id,
           url: img.image_url,
           isExisting: true,
         })) || [];
         
         setForm({
-          name: product.name,
-          price: String(product.price),
-          category_id: product.category_id ?? "",
-          discount_percent: String(product.discount_percent ?? 0),
-          stock_quantity: String(product.stock_quantity ?? 0),
-          brand: product.brand ?? "",
-          description_html: product.description_html ?? "",
+          name: p.name,
+          price: String(p.price),
+          category_id: p.category_id ?? "",
+          discount_percent: String(p.discount_percent ?? 0),
+          stock_quantity: String(p.stock_quantity ?? 0),
+          brand: p.brand ?? "",
+          description_html: p.description_html ?? "",
           imageFile: null,
-          imagePreview: product.image_url ?? "",
+          imagePreview: p.image_url ?? "",
           galleryImages: existingGallery,
           imagesToDelete: [],
-          variants: product.product_variants?.map(v => ({
+          variants: p.product_variants?.map((v: any) => ({
             id: v.id,
             name: v.name,
             sku: v.sku,
             price_modifier: String(v.price_modifier),
             stock_quantity: String(v.stock_quantity),
           })) || [],
-          specs: product.product_specs?.map(s => ({
+          specs: p.product_specs?.map((s: any) => ({
             id: s.id,
             spec_name: s.spec_name,
             spec_value: s.spec_value,
           })) || [],
         });
+        setLoadingDetails(false);
       } else {
         setForm(emptyForm);
       }
       if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    };
+
+    loadDetails();
   }, [open, product]);
 
   // Sync catSearch to debouncedCatSearch
@@ -355,7 +369,8 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
           price_modifier: v.price_modifier ? parseFloat(v.price_modifier) : 0,
           stock_quantity: v.stock_quantity ? parseInt(v.stock_quantity) : 0,
         }));
-        await syncProductVariants(productId, variantsPayload);
+        const { error: variantError } = await syncProductVariants(productId, variantsPayload);
+        if (variantError) throw variantError;
 
         // Sync Specs
         const specsPayload = form.specs.map(s => ({
@@ -363,7 +378,8 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
           spec_name: s.spec_name,
           spec_value: s.spec_value,
         }));
-        await syncProductSpecs(productId, specsPayload);
+        const { error: specError } = await syncProductSpecs(productId, specsPayload);
+        if (specError) throw specError;
       }
 
       onOpenChange(false);
@@ -390,7 +406,12 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 py-2">
+          {loadingDetails ? (
+            <div className="flex h-64 items-center justify-center">
+              <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-5 py-2">
             <div className="space-y-2">
               <Label htmlFor="product-name">Product Name</Label>
               <Input
@@ -677,6 +698,7 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
               )}
             </div>
           </div>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
