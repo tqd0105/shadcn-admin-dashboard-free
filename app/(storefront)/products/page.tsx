@@ -31,6 +31,7 @@ export default async function ProductsPage({
   const minPrice = typeof resolvedSearchParams.minPrice === "string" ? parseInt(resolvedSearchParams.minPrice) : undefined;
   const maxPrice = typeof resolvedSearchParams.maxPrice === "string" ? parseInt(resolvedSearchParams.maxPrice) : undefined;
   const sort = typeof resolvedSearchParams.sort === "string" ? resolvedSearchParams.sort : undefined;
+  const searchQuery = typeof resolvedSearchParams.search === "string" ? resolvedSearchParams.search : undefined;
 
   // Fetch Filters Options
   const [{ data: categoriesData }, { data: brandsData }] = await Promise.all([
@@ -43,7 +44,7 @@ export default async function ProductsPage({
 
   // Fetch Products
   const { data: products, totalPages, total } = await getProduct(
-    undefined, // search term not fully implemented in this UI yet
+    searchQuery,
     page,
     12, // pageSize
     {
@@ -65,9 +66,13 @@ export default async function ProductsPage({
       <div className="col-span-1 lg:col-span-9 flex flex-col gap-6">
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-foreground lg:hidden">New Arrivals</h1>
+          {searchQuery ? (
+            <h1 className="text-3xl font-bold text-foreground">Kết quả tìm kiếm: "{searchQuery}"</h1>
+          ) : (
+            <h1 className="text-3xl font-bold text-foreground lg:hidden">Tất cả sản phẩm</h1>
+          )}
           <p className="text-muted-foreground text-sm">
-            Showing {products?.length || 0} of {total} products
+            Hiển thị {products?.length || 0} trên tổng số {total} sản phẩm
           </p>
         </div>
 

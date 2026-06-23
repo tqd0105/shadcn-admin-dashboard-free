@@ -39,12 +39,12 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           src={mainImage.image_url}
         />
-        <button
+        {/* <button
           aria-label="Zoom Image"
           className="absolute top-4 right-4 bg-surface-container-lowest/80 backdrop-blur-md p-2 rounded-full shadow-sm text-on-surface hover:text-primary transition-colors flex items-center justify-center"
         >
           <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>zoom_in</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Thumbnails */}

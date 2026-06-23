@@ -22,6 +22,7 @@ export const page_routes: PageRoutesType[] = [
       },
       { title: "Products", href: "/dashboard/products", icon: "Box" },
       { title: "Categories", href: "/dashboard/categories", icon: "Tags" },
+      { title: "Promo Banners", href: "/dashboard/promo-banners", icon: "Image" },
       { title: "Orders", href: "/dashboard/orders", icon: "Receipt" },
       { title: "Users", href: "/dashboard/users", icon: "Users" },
       {

@@ -26,14 +26,51 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { supabase } from "@/lib/supabase/client";
+import { getProduct } from "@/lib/services/product.service";
 
 export function SiteHeader() {
   const { openModal } = useAuthModal();
   const { user, profile, role, logout } = useAuth();
   const [cartCount, setCartCount] = useState(0);
   const [isBumping, setIsBumping] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const pathname = usePathname();
   const initialLoadDone = useRef(false);
+
+  // Search Suggestions State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (searchQuery.trim().length === 0) {
+        setSearchResults([]);
+        return;
+      }
+      setIsSearching(true);
+      const { data } = await getProduct(searchQuery, 1, 5);
+      if (data) {
+        setSearchResults(data);
+      }
+      setIsSearching(false);
+    };
+
+    const debounceTimer = setTimeout(fetchResults, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (cartCount > 0 && initialLoadDone.current) {
@@ -70,23 +107,144 @@ export function SiteHeader() {
       supabase.removeChannel(channel);
     };
   }, [user]);
-
   return (
     <header className="border-b bg-background sticky top-0 z-50">
-      <div className="flex justify-between items-center w-full px-4 md:px-10 max-w-7xl mx-auto h-20 z-50">
-        {/* Brand */}
+      {isMobileSearchOpen ? (
+        <div className="flex items-center gap-2 px-4 h-20 max-w-7xl mx-auto z-50">
+          <form action="/products" method="GET" className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <input
+              name="search"
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              className="w-full bg-secondary/50 py-2.5 pl-10 pr-4 rounded-full border-transparent focus:ring-2 focus:ring-primary text-sm transition-shadow outline-none"
+              placeholder="Tìm kiếm..."
+              type="text"
+              required
+              autoComplete="off"
+            />
+            {/* Mobile Suggestions Dropdown */}
+            {showSuggestions && searchQuery.trim().length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-background border rounded-xl shadow-lg overflow-hidden z-[100]">
+                {isSearching ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Đang tìm kiếm...</div>
+                ) : searchResults.length > 0 ? (
+                  <div className="py-2">
+                    {searchResults.map((product) => {
+                      const price = product.price;
+                      const salePrice = product.discount_percent ? Math.round(price * (1 - product.discount_percent / 100)) : price;
+                      return (
+                        <Link 
+                          key={product.id} 
+                          href={`/product/${product.id}`}
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-secondary/80 transition-colors"
+                          onClick={() => {
+                            setShowSuggestions(false);
+                            setIsMobileSearchOpen(false);
+                          }}
+                        >
+                          <img src={product.image_url || "https://placehold.co/40x40"} alt={product.name} className="w-10 h-10 object-cover rounded-md border" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium line-clamp-1">{product.name}</span>
+                            <span className="text-xs text-red-600 font-bold">
+                              {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(salePrice)}
+                            </span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                    <div className="border-t px-4 py-3 mt-2 bg-secondary/30">
+                      <Link href={`/products?search=${searchQuery}`} onClick={() => {
+                        setShowSuggestions(false);
+                        setIsMobileSearchOpen(false);
+                      }} className="text-sm font-medium text-primary text-center block hover:underline">
+                        Xem tất cả kết quả
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Không tìm thấy sản phẩm nào</div>
+                )}
+              </div>
+            )}
+          </form>
+          <Button variant="ghost" onClick={() => {
+            setIsMobileSearchOpen(false);
+            setShowSuggestions(false);
+          }}>
+            Hủy
+          </Button>
+        </div>
+      ) : (
+        <div className="flex justify-between items-center w-full px-4 md:px-10 max-w-7xl mx-auto h-20 z-50">
+          {/* Brand */}
         <Link href="/" className="text-xl font-bold tracking-tight flex-shrink-0 text-primary">
           LuxeCommerce
         </Link>
 
         {/* Search (Center, Desktop) */}
-        <div className="hidden md:flex flex-1 max-w-2xl mx-10 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            className="w-full bg-secondary/50 py-2.5 pl-12 pr-4 rounded-full border-transparent focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-shadow outline-none"
-            placeholder="Tìm kiếm sản phẩm cao cấp..."
-            type="text"
-          />
+        <div ref={searchRef} className="hidden md:flex flex-1 max-w-2xl mx-10 relative">
+          <form action="/products" method="GET" className="w-full relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <input
+              name="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              className="w-full bg-secondary/50 py-2.5 pl-12 pr-4 rounded-full border-transparent focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-shadow outline-none"
+              placeholder="Tìm kiếm sản phẩm cao cấp..."
+              type="text"
+              required
+              autoComplete="off"
+            />
+          </form>
+
+          {/* Suggestions Dropdown */}
+          {showSuggestions && searchQuery.trim().length > 0 && (
+            <div className="absolute top-full mt-2 w-full bg-background border rounded-xl shadow-lg overflow-hidden z-50">
+              {isSearching ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">Đang tìm kiếm...</div>
+              ) : searchResults.length > 0 ? (
+                <div className="py-2">
+                  {searchResults.map((product) => {
+                    const price = product.price;
+                    const salePrice = product.discount_percent ? Math.round(price * (1 - product.discount_percent / 100)) : price;
+                    return (
+                      <Link 
+                        key={product.id} 
+                        href={`/product/${product.id}`}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-secondary/80 transition-colors"
+                        onClick={() => setShowSuggestions(false)}
+                      >
+                        <img src={product.image_url || "https://placehold.co/40x40"} alt={product.name} className="w-10 h-10 object-cover rounded-md border" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium line-clamp-1">{product.name}</span>
+                          <span className="text-xs text-red-600 font-bold">
+                            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(salePrice)}
+                          </span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                  <div className="border-t px-4 py-3 mt-2 bg-secondary/30">
+                    <Link href={`/products?search=${searchQuery}`} onClick={() => setShowSuggestions(false)} className="text-sm font-medium text-primary text-center block hover:underline">
+                      Xem tất cả kết quả
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-center text-sm text-muted-foreground">Không tìm thấy sản phẩm nào</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation Links (Desktop) */}
@@ -98,7 +256,7 @@ export function SiteHeader() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileSearchOpen(true)}>
             <Search className="w-5 h-5" />
           </Button>
           <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground hover:text-primary">
@@ -255,7 +413,8 @@ export function SiteHeader() {
             </SheetContent>
           </Sheet>
         </div>
-      </div>
+        </div>
+      )}
     </header>
   );
 }
