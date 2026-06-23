@@ -189,7 +189,6 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
                     setMinPriceInput(vals[0] > 0 ? vals[0].toString() : "");
                     setMaxPriceInput(vals[1] < 100000000 ? vals[1].toString() : "");
                   }}
-                  onValueCommit={applyPriceInputs}
                   className="w-full"
                 />
               </div>
@@ -217,7 +216,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
                 />
               </div>
               <Button onClick={applyPriceInputs} className="w-full" size="sm" variant="secondary">
-                Apply Price
+                Áp dụng
               </Button>
             </div>
           </div>

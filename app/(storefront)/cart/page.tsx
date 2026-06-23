@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { IconLoader2, IconTrash, IconMinus, IconPlus, IconShoppingCart } from "@tabler/icons-react";
+import { IconLoader2, IconTrash, IconMinus, IconPlus, IconShoppingCart, IconReceipt2 } from "@tabler/icons-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import Link from "next/link";
 
@@ -125,11 +125,11 @@ export default function CartPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px] sm:w-auto">Sản phẩm</TableHead>
-                  <TableHead className="hidden sm:table-cell">Đơn giá</TableHead>
-                  <TableHead className="text-center">Số lượng</TableHead>
-                  <TableHead className="text-right">Tạm tính</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead>Sản phẩm</TableHead>
+                  <TableHead className="hidden md:table-cell">Đơn giá</TableHead>
+                  <TableHead className="hidden sm:table-cell text-center">Số lượng</TableHead>
+                  <TableHead className="hidden sm:table-cell text-right">Tạm tính</TableHead>
+                  <TableHead className="hidden sm:table-cell w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,31 +138,67 @@ export default function CartPage() {
                   const isUpdating = updatingId === item.id;
                   return (
                     <TableRow key={item.id} className={isUpdating ? "opacity-50 pointer-events-none" : ""}>
-                      <TableCell>
-                        <div className="flex items-center gap-4">
+                      <TableCell className="p-4 sm:p-2">
+                        <div className="flex gap-4">
                           <img 
                             src={item.products?.image_url || "https://placehold.co/100x100"} 
                             alt="product" 
-                            className="h-16 w-16 md:h-20 md:w-20 rounded-md object-cover border shrink-0" 
+                            className="h-20 w-20 sm:h-24 sm:w-24 rounded-md object-cover border shrink-0" 
                           />
-                          <div className="flex flex-col">
-                            <p className="font-semibold text-sm md:text-base line-clamp-2">{item.products?.name}</p>
-                            {item.product_variants && (
-                              <p className="text-xs md:text-sm text-muted-foreground mt-1">Phân loại: {item.product_variants.name}</p>
-                            )}
-                            {/* Hiển thị đơn giá ở mobile */}
-                            <div className="sm:hidden mt-2">
-                              <span className="font-medium text-sm text-primary">{formatCurrency(price)}</span>
-                              {item.products?.discount_percent > 0 && (
-                                <span className="text-xs text-muted-foreground line-through ml-2">
-                                  {formatCurrency(Number(item.products.price))}
-                                </span>
-                              )}
+                          <div className="flex flex-col flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-semibold text-sm md:text-base line-clamp-2">{item.products?.name}</p>
+                                {item.product_variants && (
+                                  <p className="text-xs md:text-sm text-muted-foreground mt-1">Phân loại: {item.product_variants.name}</p>
+                                )}
+                              </div>
+                              {/* Mobile Delete Button */}
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="sm:hidden h-8 w-8 text-muted-foreground hover:text-destructive -mt-2 -mr-2 shrink-0"
+                                onClick={() => handleRemove(item.id)}
+                              >
+                                <IconTrash className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Mobile Price and Quantity */}
+                            <div className="sm:hidden mt-auto pt-4 flex items-end justify-between flex-1">
+                              <div>
+                                <span className="font-medium text-sm text-primary block">{formatCurrency(price)}</span>
+                                {item.products?.discount_percent > 0 && (
+                                  <span className="text-xs text-muted-foreground line-through block mt-0.5">
+                                    {formatCurrency(Number(item.products.price))}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 border rounded-md">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-7 w-7 rounded-none"
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <IconMinus className="h-3 w-3" />
+                                </Button>
+                                <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-7 w-7 rounded-none"
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                >
+                                  <IconPlus className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell font-medium">
+                      <TableCell className="hidden md:table-cell font-medium">
                         <div className="flex flex-col">
                           <span>{formatCurrency(price)}</span>
                           {item.products?.discount_percent > 0 && (
@@ -172,7 +208,7 @@ export default function CartPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center justify-center gap-1 sm:gap-2">
                           <Button 
                             variant="outline" 
@@ -194,10 +230,10 @@ export default function CartPage() {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-primary text-sm sm:text-base">
+                      <TableCell className="hidden sm:table-cell text-right font-semibold text-primary text-sm sm:text-base">
                         {formatCurrency(price * item.quantity)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="hidden sm:table-cell text-right">
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -229,8 +265,11 @@ export default function CartPage() {
               
               <div className="border-t pt-4 mt-2">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-base">Tổng cộng</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(calculateTotal())}</span>
+                  <span className="font-bold text-base flex items-center gap-2">
+                    <IconReceipt2 className="h-5 w-5 hidden md:block lg:hidden" />
+                    <span className="md:hidden lg:block">Tổng cộng</span>
+                  </span>
+                  <span className="text-xl lg:text-2xl font-bold text-primary">{formatCurrency(calculateTotal())}</span>
                 </div>
                 <p className="text-xs text-muted-foreground text-right">(Đã bao gồm VAT nếu có)</p>
               </div>

@@ -23,6 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { supabase } from "@/lib/supabase/client";
 
@@ -195,43 +196,60 @@ export function SiteHeader() {
                 <SheetTitle className="text-left font-bold text-primary text-xl">LuxeCommerce</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4 py-8">
-                <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/" ? "text-primary" : "hover:text-primary"}`} href="/">
-                  <HomeIcon  className="w-5 h-5 mr-2" />
-                  <span>Trang chủ</span></Link>
-                <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary" : "hover:text-primary"}`} href="/products">
-                  <ShoppingCart className="w-5 h-5 mr-2" />
-                  <span>Sản phẩm</span>
-                </Link>
-                <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/collections" ? "text-primary" : "hover:text-primary"}`} href="#">
-                  <BoxIcon className="w-5 h-5 mr-2" />
-                  <span>Bộ sưu tập</span>
-                </Link>
+                <SheetClose asChild>
+                  <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/" ? "text-primary" : "hover:text-primary"}`} href="/">
+                    <HomeIcon  className="w-5 h-5 mr-2" />
+                    <span>Trang chủ</span>
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary" : "hover:text-primary"}`} href="/products">
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    <span>Sản phẩm</span>
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/collections" ? "text-primary" : "hover:text-primary"}`} href="#">
+                    <BoxIcon className="w-5 h-5 mr-2" />
+                    <span>Bộ sưu tập</span>
+                  </Link>
+                </SheetClose>
                 <hr className="my-2 border-outline-variant" />
                 {user ? (
                   <>
-                    <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="/account">
-                      <UserIcon className="w-5 h-5 mr-2" />
-                      <span>Tài khoản của tôi</span>
-                    </Link>
-                    <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="/account/orders">
-                      <Package className="w-5 h-5 mr-2" />
-                      <span>Lịch sử Mua hàng</span>
-                    </Link>
-                    {role === "admin" && (
-                      <Link className="text-base font-medium text-primary flex items-center" href="/dashboard">
-                        <Shield className="w-5 h-5 mr-2" />
-                        <span>Quản trị (Admin)</span>
+                    <SheetClose asChild>
+                      <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="/account">
+                        <UserIcon className="w-5 h-5 mr-2" />
+                        <span>Tài khoản của tôi</span>
                       </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link className="text-base font-medium hover:text-primary transition-colors flex items-center" href="/account/orders">
+                        <Package className="w-5 h-5 mr-2" />
+                        <span>Lịch sử Mua hàng</span>
+                      </Link>
+                    </SheetClose>
+                    {role === "admin" && (
+                      <SheetClose asChild>
+                        <Link className="text-base font-medium text-primary flex items-center" href="/dashboard">
+                          <Shield className="w-5 h-5 mr-2" />
+                          <span>Quản trị (Admin)</span>
+                        </Link>
+                      </SheetClose>
                     )}
-                    <button onClick={() => logout()} className="text-base font-medium text-red-600 flex items-center mt-2">
-                      <LogOutIcon className="w-5 h-5 mr-2" />
-                      <span>Đăng xuất</span>
-                    </button>
+                    <SheetClose asChild>
+                      <button onClick={() => logout()} className="text-base font-medium text-red-600 flex items-center mt-2 w-full text-left">
+                        <LogOutIcon className="w-5 h-5 mr-2" />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </SheetClose>
                   </>
                 ) : (
-                  <Button onClick={() => openModal('login')} className="w-full mt-4">
-                    Đăng nhập / Đăng ký
-                  </Button>
+                  <SheetClose asChild>
+                    <Button onClick={() => openModal('login')} className="w-full mt-4">
+                      Đăng nhập / Đăng ký
+                    </Button>
+                  </SheetClose>
                 )}
               </div>
             </SheetContent>

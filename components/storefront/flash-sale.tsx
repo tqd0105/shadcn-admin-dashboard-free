@@ -13,7 +13,7 @@ export async function FlashSale() {
   return (
     <section className="py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 md:px-10">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Zap className="text-red-600 fill-red-600 w-8 h-8 animate-pulse" />
