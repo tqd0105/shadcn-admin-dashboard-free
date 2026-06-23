@@ -10,6 +10,9 @@ export interface PromoBanner {
   badge_text?: string;
   badge_color?: string;
   order_index: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export async function getPromoBanners() {

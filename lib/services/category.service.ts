@@ -43,7 +43,9 @@ export async function getAllCategories() {
 export async function createCategory(payload: { name: string }) {
   return supabase
     .from("categories")
-    .insert([payload]);
+    .insert([payload])
+    .select()
+    .single();
 }
 
 export async function updateCategory(id: string, payload: { name: string }) {

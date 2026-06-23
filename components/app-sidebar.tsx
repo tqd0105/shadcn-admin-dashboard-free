@@ -11,7 +11,8 @@ import {
   IconInnerShadowTop,
   IconListDetails,
   IconTags,
-  IconUsers
+  IconUsers,
+  IconPhoto
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -27,7 +28,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useAuth } from "./providers/auth-provider";
-import { Image } from "lucide-react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { role } = useAuth();
@@ -40,7 +40,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Categories", url: "/dashboard/categories", icon: IconTags },
         { title: "Products", url: "/dashboard/products", icon: IconFolder },
         { title: "Orders", url: "/dashboard/orders", icon: IconListDetails },
-        { title: "Banners", url: "/dashboard/promo-banners", icon: Image },
+        { title: "Banners", url: "/dashboard/promo-banners", icon: IconPhoto },
       ]
     : [
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard },

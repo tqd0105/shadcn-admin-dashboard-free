@@ -60,7 +60,6 @@ import {
   IconEdit,
   IconTrash,
   IconLoader2,
-  IconImage,
   IconSearch,
   IconChevronDown,
   IconCheck,
