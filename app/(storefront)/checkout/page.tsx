@@ -158,7 +158,7 @@ export default function CheckoutPage() {
                 />
               </div>
               <div className="space-y-2 col-span-2 sm:col-span-1">
-                <Label htmlFor="street">Địa chỉ cụ thể (Số nhà, đường...)</Label>
+                <Label htmlFor="street">Địa chỉ cụ thể</Label>
                 <Input 
                   id="street" 
                   required 
