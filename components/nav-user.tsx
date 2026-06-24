@@ -3,9 +3,11 @@
 import {
   IconCreditCard,
   IconDotsVertical,
+  IconHome,
   IconLogin,
   IconLogout,
   IconNotification,
+  IconTruckReturn,
   IconUserCircle,
 } from "@tabler/icons-react"
 import Link from "next/link"
@@ -31,6 +33,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "./providers/auth-provider"
+import Image from "next/image"
 
 export function NavUser({
   user,
@@ -91,6 +94,14 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
+        <SidebarMenuButton asChild tooltip="Home">
+          <Link href="/">
+            <Image width={20} height={20} src="/icons/back.png" alt="Home" />
+            <span>Return Home</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
@@ -134,21 +145,6 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
               <IconLogout />

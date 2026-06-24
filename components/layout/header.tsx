@@ -50,7 +50,7 @@ export default function Header() {
                     Need more pages and components? Then you can get the pro.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                {/* <CardContent className="space-y-2">
                   <Button
                     size="sm"
                     className="w-full items-center bg-gradient-to-r from-indigo-700 via-purple-500 to-pink-700 hover:opacity-90"
@@ -64,7 +64,7 @@ export default function Header() {
                       Learn More
                     </Link>
                   </Button>
-                </CardContent>
+                </CardContent> */}
               </Card>
             </div>
           </SheetContent>

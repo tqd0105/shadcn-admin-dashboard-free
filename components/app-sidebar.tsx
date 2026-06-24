@@ -13,7 +13,8 @@ import {
   IconTags,
   IconUsers,
   IconPhoto,
-  IconTicket
+  IconTicket,
+  IconHome
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -36,6 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navItems = role === "admin"
     ? [
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        // { title: "Home", url: "/", icon: IconHome },
         { title: "Users", url: "/dashboard/users", icon: IconUsers },
         { title: "Roles", url: "/dashboard/roles", icon: IconListDetails },
         { title: "Categories", url: "/dashboard/categories", icon: IconTags },
@@ -84,7 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <img src="https://shadcnuikit.com/logo.png" className="size-6 rounded-sm group-data-[collapsible=icon]:size-5" alt="shadcn ui kit svg logo" />
-                <span className="text-base font-medium">Shadcn UI Kit</span>
+                <span className="text-base font-medium">LuxeCommerce</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -92,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navItems} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
