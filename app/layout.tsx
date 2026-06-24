@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
+import Providers from "@/components/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,20 +28,22 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <NextTopLoader 
-          color="#006affff" 
-          initialPosition={0.08} 
+          color="#ff00ffff" 
+          initialPosition={0.7} 
           crawlSpeed={200} 
-          height={5} 
+          height={4} 
           crawl={true} 
           showSpinner={false} 
           easing="ease" 
-          speed={200} 
+          speed={300} 
           shadow="0 0 10px #18181b,0 0 5px #18181b" 
         />
-        <AuthProvider>
-          {children}
-          <Toaster position="top-center" richColors />
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>
+            {children}
+            <Toaster position="top-center" richColors />
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

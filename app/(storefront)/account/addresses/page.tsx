@@ -181,7 +181,7 @@ export default function AddressesPage() {
           {addresses.map((addr) => (
             <div key={addr.id} className={`border rounded-xl p-5 relative ${addr.is_default ? 'border-primary bg-primary/5' : 'bg-white'}`}>
               {addr.is_default && (
-                <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl">
+                <span className="absolute top-0 right-0 text-blue-400 bg-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl">
                   MẶC ĐỊNH
                 </span>
               )}

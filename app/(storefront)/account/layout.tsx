@@ -39,7 +39,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     { name: "Lịch sử mua hàng", href: "/account/orders", icon: Package },
     { name: "Sổ địa chỉ", href: "/account/addresses", icon: MapPin },
     { name: "Yêu thích", href: "/account/wishlist", icon: Heart },
-    { name: "Cài đặt", href: "/account/settings", icon: Settings },
+    { name: "Tuỳ chỉnh", href: "/account/settings", icon: Settings },
   ];
 
   return (
@@ -47,7 +47,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <aside className="w-full md:w-64 shrink-0">
-          <div className="bg-white rounded-xl shadow-sm border p-4 sticky top-24">
+          <div className=" rounded-xl shadow-sm border p-4 sticky top-24">
             <div className="mb-6 px-4">
               <h2 className="text-xl font-bold">Tài khoản</h2>
               <p className="text-sm text-muted-foreground truncate">{user.email}</p>
@@ -88,7 +88,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">
-          <div className="bg-white rounded-xl shadow-sm border p-6 min-h-[400px]">
+          <div className=" rounded-xl shadow-sm border p-6 min-h-[400px]">
             {children}
           </div>
         </main>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/providers/auth-provider";
-import { Package, Heart, MapPin, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMyOrders } from "@/lib/services/order.service";
@@ -10,6 +10,7 @@ import { getAddresses } from "@/lib/services/address.service";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import Image from "next/image";
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: "Chờ xử lý", color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" },
@@ -69,9 +70,9 @@ export default function AccountOverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/account/orders" className="group border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors">
-          <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Package className="w-6 h-6" />
+        <Link href="/account/orders" className="group border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors bg-card">
+          <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Image src="/icons/cart.png" alt="Đơn hàng" width={28} height={28} className="object-contain" />
           </div>
           <h3 className="font-semibold group-hover:text-primary transition-colors">Đơn hàng</h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -79,9 +80,9 @@ export default function AccountOverviewPage() {
           </p>
         </Link>
 
-        <Link href="/account/wishlist" className="group border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors">
-          <div className="w-12 h-12 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Heart className="w-6 h-6" />
+        <Link href="/account/wishlist" className="group border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors bg-card">
+          <div className="w-14 h-14 bg-pink-50 dark:bg-pink-900/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Image src="/icons/love.png" alt="Yêu thích" width={28} height={28} className="object-contain" />
           </div>
           <h3 className="font-semibold group-hover:text-primary transition-colors">Yêu thích</h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -89,9 +90,9 @@ export default function AccountOverviewPage() {
           </p>
         </Link>
 
-        <Link href="/account/addresses" className="group border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors">
-          <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <MapPin className="w-6 h-6" />
+        <Link href="/account/addresses" className="group border rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors bg-card">
+          <div className="w-14 h-14 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Image src="/icons/location.png" alt="Địa chỉ" width={28} height={28} className="object-contain" />
           </div>
           <h3 className="font-semibold group-hover:text-primary transition-colors">Địa chỉ</h3>
           <p className="text-sm text-muted-foreground mt-1">

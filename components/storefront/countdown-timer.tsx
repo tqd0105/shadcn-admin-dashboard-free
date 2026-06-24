@@ -11,6 +11,7 @@ export function CountdownTimer() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     
     // Calculate end of current day

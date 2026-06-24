@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { addToCart } from "@/lib/services/cart.service";
-import { toggleWishlist, getWishlist } from "@/lib/services/wishlist.service";
+import { checkWishlisted, removeFromWishlistByProduct } from "@/lib/services/wishlist.service";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
 import { toast } from "sonner";
+import { WishlistModal } from "./wishlist-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,14 +50,12 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
 
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isTogglingHeart, setIsTogglingHeart] = useState(false);
+  const [showWishlistModal, setShowWishlistModal] = useState(false);
 
   useEffect(() => {
     if (user) {
-      getWishlist().then(({ data }) => {
-        if (data) {
-          const found = data.find((item: any) => item.product_id === productId);
-          setIsWishlisted(!!found);
-        }
+      checkWishlisted(productId).then((isListed) => {
+        setIsWishlisted(!!isListed);
       });
     }
   }, [user, productId]);
@@ -66,12 +65,19 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
       setShowLoginAlert(true);
       return;
     }
-    setIsTogglingHeart(true);
-    const { action, error } = await toggleWishlist(productId);
-    setIsTogglingHeart(false);
-    if (!error) {
-      setIsWishlisted(action === "added");
-      toast.success(action === "added" ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
+    
+    if (isWishlisted) {
+      // Bỏ yêu thích trực tiếp
+      setIsTogglingHeart(true);
+      const { error } = await removeFromWishlistByProduct(productId);
+      setIsTogglingHeart(false);
+      if (!error) {
+        setIsWishlisted(false);
+        toast.success("Đã bỏ yêu thích");
+      }
+    } else {
+      // Thêm mới -> bật popup
+      setShowWishlistModal(true);
     }
   };
 
@@ -229,6 +235,15 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {showWishlistModal && (
+        <WishlistModal 
+          isOpen={showWishlistModal} 
+          onClose={() => setShowWishlistModal(false)} 
+          productId={productId} 
+          onSuccess={() => setIsWishlisted(true)} 
+        />
+      )}
     </div>
   );
 }
