@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingCart, Heart, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield } from "lucide-react";
+import { Search, ShoppingCart, Heart, Bell, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
@@ -253,6 +253,7 @@ export function SiteHeader() {
         <nav className="hidden lg:flex items-center gap-6 ml-auto mr-10">
           <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/">Trang chủ</Link>
           <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/products">Sản phẩm</Link>
+          <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/account/wishlist" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/account/wishlist">Yêu thích</Link>
         </nav>
 
         {/* Actions */}
@@ -260,20 +261,9 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileSearchOpen(true)}>
             <Search className="w-5 h-5" />
           </Button>
-          <Link
-            href={user ? "/account/wishlist" : "#"}
-            className="hidden sm:inline-flex relative"
-            onClick={(e) => {
-              if (!user) {
-                e.preventDefault();
-                openModal('login');
-              }
-            }}
-          >
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Heart className="w-5 h-5" />
-            </Button>
-          </Link>
+          <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground hover:text-primary">
+            <Bell className="w-5 h-5" />
+          </Button>
           <Link 
             href={user ? "/cart" : "#"} 
             className="relative"
@@ -376,6 +366,12 @@ export function SiteHeader() {
                   <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary" : "hover:text-primary"}`} href="/products">
                     <BoxIcon className="w-5 h-5 mr-2" />
                     <span>Sản phẩm</span>
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/account/wishlist" ? "text-primary" : "hover:text-primary"}`} href="/account/wishlist">
+                    <Heart className="w-5 h-5 mr-2" />
+                    <span>Yêu thích</span>
                   </Link>
                 </SheetClose>
                 <hr className="my-2 border-outline-variant" />
