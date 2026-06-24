@@ -7,6 +7,7 @@ export interface CheckoutData {
   street: string;
   city: string;
   paymentMethod: string;
+  couponId?: string;
 }
 
 export async function placeOrder(checkoutData: CheckoutData) {
@@ -30,6 +31,31 @@ export async function placeOrder(checkoutData: CheckoutData) {
     const discountedBase = basePrice - (basePrice * discount / 100);
     const finalPrice = discountedBase + modifier;
     totalAmount += finalPrice * item.quantity;
+  }
+
+  // 1.5 Handle Coupon
+  if (checkoutData.couponId) {
+    const { data: coupon, error: couponError } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("id", checkoutData.couponId)
+      .eq("is_active", true)
+      .single();
+    
+    if (!couponError && coupon) {
+      if (new Date(coupon.valid_until) >= new Date() && 
+          (!coupon.usage_limit || coupon.used_count < coupon.usage_limit)) {
+        totalAmount = totalAmount - (totalAmount * coupon.discount_percent / 100);
+        
+        // increment used_count
+        await supabase.from("coupons").update({ used_count: coupon.used_count + 1 }).eq("id", coupon.id);
+      } else {
+        // If coupon invalid at checkout time, we simply ignore or error out. For simplicity, just ignore.
+        checkoutData.couponId = undefined;
+      }
+    } else {
+      checkoutData.couponId = undefined;
+    }
   }
 
   // 2. Create or find Address
@@ -58,6 +84,7 @@ export async function placeOrder(checkoutData: CheckoutData) {
       total_amount: totalAmount,
       shipping_address_id: address.id,
       payment_method: checkoutData.paymentMethod,
+      coupon_id: checkoutData.couponId || null,
     })
     .select()
     .single();

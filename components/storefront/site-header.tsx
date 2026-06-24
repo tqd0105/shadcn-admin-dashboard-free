@@ -251,7 +251,6 @@ export function SiteHeader() {
         <nav className="hidden lg:flex items-center gap-6 ml-auto mr-10">
           <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/">Trang chủ</Link>
           <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/products">Sản phẩm</Link>
-          <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/collections" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="#">Bộ sưu tập</Link>
         </nav>
 
         {/* Actions */}
@@ -259,9 +258,20 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileSearchOpen(true)}>
             <Search className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground hover:text-primary">
-            <Heart className="w-5 h-5" />
-          </Button>
+          <Link
+            href={user ? "/account/wishlist" : "#"}
+            className="hidden sm:inline-flex relative"
+            onClick={(e) => {
+              if (!user) {
+                e.preventDefault();
+                openModal('login');
+              }
+            }}
+          >
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+              <Heart className="w-5 h-5" />
+            </Button>
+          </Link>
           <Link 
             href={user ? "/cart" : "#"} 
             className="relative"
@@ -362,14 +372,8 @@ export function SiteHeader() {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary" : "hover:text-primary"}`} href="/products">
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    <span>Sản phẩm</span>
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link className={`text-base font-medium transition-colors flex items-center ${pathname === "/collections" ? "text-primary" : "hover:text-primary"}`} href="#">
                     <BoxIcon className="w-5 h-5 mr-2" />
-                    <span>Bộ sưu tập</span>
+                    <span>Sản phẩm</span>
                   </Link>
                 </SheetClose>
                 <hr className="my-2 border-outline-variant" />

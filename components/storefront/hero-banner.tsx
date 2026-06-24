@@ -4,13 +4,26 @@ import { ArrowRight, PlayCircle, CheckCircle2, ShoppingCart, Loader2 } from "luc
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getFeaturedCoupon, Coupon } from "@/lib/services/coupon.service";
 
 export function HeroBanner() {
   const [isCopied, setIsCopied] = useState(false);
+  const [featuredCoupon, setFeaturedCoupon] = useState<Coupon | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCoupon() {
+      const { data } = await getFeaturedCoupon();
+      setFeaturedCoupon(data);
+      setLoading(false);
+    }
+    fetchCoupon();
+  }, []);
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText("HOANMY2026");
+    if (!featuredCoupon) return;
+    navigator.clipboard.writeText(featuredCoupon.code);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 3000);
   };
@@ -41,25 +54,29 @@ export function HeroBanner() {
           </p>
           
           {/* Promo Code Box */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 flex items-center justify-between max-w-sm shadow-2xl">
-            <div className="flex flex-col px-4">
-              <span className="text-gray-300 text-xs uppercase tracking-wider mb-1">Mã giảm 20%</span>
-              <span className="text-white font-mono font-bold tracking-widest text-lg">HOANMY2026</span>
-            </div>
-            <Button 
-              onClick={handleCopyCode} 
-              className={`rounded-xl px-6 py-5 font-semibold transition-colors ${
-                isCopied 
-                  ? "bg-green-500 hover:bg-green-600 text-white" 
-                  : "bg-indigo-500 hover:bg-indigo-600 text-white"
-              }`}
-            >
-              {isCopied ? <><CheckCircle2 className="w-5 h-5 mr-1" /> Đã chép</> : "Copy Mã"}
-            </Button>
-          </div>
-          <p className="text-xs text-gray-400 mt-3 ml-2 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-green-400" /> Áp dụng ngay tại trang thanh toán.
-          </p>
+          {!loading && featuredCoupon && (
+            <>
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 flex items-center justify-between max-w-md shadow-2xl">
+                <div className="flex flex-col px-4">
+                  <span className="text-gray-300 text-xs uppercase tracking-wider mb-1">{featuredCoupon.title || `Mã giảm ${featuredCoupon.discount_percent}%`}</span>
+                  <span className="text-white font-mono font-bold tracking-widest text-lg">{featuredCoupon.code}</span>
+                </div>
+                <Button 
+                  onClick={handleCopyCode} 
+                  className={`rounded-xl px-6 py-5 font-semibold transition-colors ${
+                    isCopied 
+                      ? "bg-green-500 hover:bg-green-600 text-white" 
+                      : "bg-indigo-500 hover:bg-indigo-600 text-white"
+                  }`}
+                >
+                  {isCopied ? <><CheckCircle2 className="w-5 h-5 mr-1" /> Đã chép</> : "Copy Mã"}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400 mt-3 ml-2 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-green-400" /> Áp dụng ngay tại trang thanh toán.
+              </p>
+            </>
+          )}
         </div>
 
         {/* <div className="w-full lg:w-1/2 flex justify-center lg:justify-end animate-fade-in-up" style={{ animationDelay: "0.2s" }}>

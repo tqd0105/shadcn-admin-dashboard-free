@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCart } from "@/lib/services/cart.service";
 import { placeOrder } from "@/lib/services/checkout.service";
+import { validateCoupon, Coupon } from "@/lib/services/coupon.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,10 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -49,7 +54,7 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
-  const calculateTotal = () => {
+  const getSubtotal = () => {
     return cartItems.reduce((total, item) => {
       const basePrice = Number(item.products?.price || 0);
       const discount = Number(item.products?.discount_percent || 0);
@@ -57,6 +62,32 @@ export default function CheckoutPage() {
       const discountedBase = basePrice - (basePrice * discount / 100);
       return total + ((discountedBase + modifier) * item.quantity);
     }, 0);
+  };
+
+  const calculateTotal = () => {
+    let total = getSubtotal();
+    if (appliedCoupon) {
+      total = total - (total * appliedCoupon.discount_percent / 100);
+    }
+    return total;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim()) return;
+    setCouponError("");
+    const { data, error } = await validateCoupon(couponCodeInput);
+    if (error || !data) {
+      setCouponError(error?.message || "Mã không hợp lệ");
+      setAppliedCoupon(null);
+    } else {
+      setAppliedCoupon(data);
+      setCouponError("");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCodeInput("");
   };
 
   const formatCurrency = (val: number) => {
@@ -68,7 +99,10 @@ export default function CheckoutPage() {
     if (cartItems.length === 0) return;
 
     setSubmitting(true);
-    const { error } = await placeOrder(formData);
+    const { error } = await placeOrder({
+      ...formData,
+      couponId: appliedCoupon ? appliedCoupon.id : undefined
+    });
     setSubmitting(false);
 
     if (error) {
@@ -225,11 +259,42 @@ export default function CheckoutPage() {
               })}
             </div>
 
+            {/* Mã giảm giá */}
+            <div className="mb-6 border-t pt-4">
+              <Label htmlFor="coupon" className="mb-2 block">Mã giảm giá</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="coupon" 
+                  placeholder="Nhập mã giảm giá..." 
+                  value={couponCodeInput}
+                  onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                  disabled={!!appliedCoupon}
+                />
+                {!appliedCoupon ? (
+                  <Button type="button" variant="secondary" onClick={handleApplyCoupon}>Áp dụng</Button>
+                ) : (
+                  <Button type="button" variant="destructive" onClick={handleRemoveCoupon}>Hủy</Button>
+                )}
+              </div>
+              {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+              {appliedCoupon && (
+                <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
+                  <IconCheck className="w-3 h-3" /> Đã áp dụng mã giảm {appliedCoupon.discount_percent}%
+                </p>
+              )}
+            </div>
+
             <div className="space-y-3 text-sm mb-6 border-t pt-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Tạm tính</span>
-                <span className="font-medium text-base">{formatCurrency(calculateTotal())}</span>
+                <span className="font-medium text-base">{formatCurrency(getSubtotal())}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span>Giảm giá ({appliedCoupon.code})</span>
+                  <span className="font-medium">-{formatCurrency(getSubtotal() * appliedCoupon.discount_percent / 100)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Phí vận chuyển</span>
                 <span className="font-medium">Miễn phí</span>
@@ -249,7 +314,7 @@ export default function CheckoutPage() {
             </Button>
           </div>
         </div>
-      </form>
+      </form> 
     </div>
   );
 }

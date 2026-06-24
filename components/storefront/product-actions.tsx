@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { addToCart } from "@/lib/services/cart.service";
+import { toggleWishlist, getWishlist } from "@/lib/services/wishlist.service";
 import { useRouter } from "next/navigation";
+import { Heart } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
 import { toast } from "sonner";
@@ -44,6 +46,34 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
   const { user } = useAuth();
   const { openModal } = useAuthModal();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
+
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isTogglingHeart, setIsTogglingHeart] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      getWishlist().then(({ data }) => {
+        if (data) {
+          const found = data.find((item: any) => item.product_id === productId);
+          setIsWishlisted(!!found);
+        }
+      });
+    }
+  }, [user, productId]);
+
+  const handleToggleWishlist = async () => {
+    if (!user) {
+      setShowLoginAlert(true);
+      return;
+    }
+    setIsTogglingHeart(true);
+    const { action, error } = await toggleWishlist(productId);
+    setIsTogglingHeart(false);
+    if (!error) {
+      setIsWishlisted(action === "added");
+      toast.success(action === "added" ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
+    }
+  };
 
   // Calculate final price based on discount and selected variant
   const hasDiscount = (discountPercent ?? 0) > 0;
@@ -155,7 +185,7 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
           className="flex-1 flex justify-center items-center h-12 bg-primary text-primary-foreground font-semibold rounded-md shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined mr-2">shopping_bag</span>
-          {isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
+          {isAdding ? "Đang xử lý..." : "Thêm giỏ hàng"}
         </button>
         <button 
           onClick={handleBuyNow}
@@ -163,6 +193,13 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
           className="flex-1 flex justify-center items-center h-12 bg-background border border-primary text-primary font-semibold rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isAdding ? "Đang xử lý..." : "Mua ngay"}
+        </button>
+        <button 
+          onClick={handleToggleWishlist}
+          disabled={isTogglingHeart}
+          className="flex justify-center items-center h-12 w-12 bg-background border border-outline-variant text-muted-foreground rounded-md hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
+        >
+          <Heart className={cn("w-5 h-5 transition-colors", isWishlisted && "fill-red-500 text-red-500")} />
         </button>
       </div>
 
