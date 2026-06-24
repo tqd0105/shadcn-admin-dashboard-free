@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getWishlist, removeFromWishlist } from "@/lib/services/wishlist.service";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useCartStore } from "@/lib/store/use-cart-store";
+import { addToCart } from "@/lib/services/cart.service";
 import { IconLoader2, IconHeartBroken, IconTrash, IconShoppingCart } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,7 +11,6 @@ import { toast } from "sonner";
 
 export default function WishlistPage() {
   const { user, loading: authLoading } = useAuth();
-  const { addItem } = useCartStore();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,8 +42,13 @@ export default function WishlistPage() {
   const handleAddToCart = async (product: any) => {
     // If product has variants, it's better to direct user to product page.
     // For simplicity here, we try to add it. If it requires variant, we could link them instead.
-    await addItem(product.id, 1, null);
-    toast.success("Đã thêm vào giỏ hàng");
+    const { error } = await addToCart(product.id, 1);
+    if (error) {
+      toast.error(error.message || "Lỗi khi thêm vào giỏ");
+    } else {
+      toast.success("Đã thêm vào giỏ hàng");
+      window.dispatchEvent(new Event("cart-updated"));
+    }
   };
 
   const formatCurrency = (val: number) => {

@@ -74,6 +74,7 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (cartCount > 0 && initialLoadDone.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsBumping(true);
       const timer = setTimeout(() => setIsBumping(false), 300);
       return () => clearTimeout(timer);
@@ -82,6 +83,7 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartCount(0);
       return;
     }

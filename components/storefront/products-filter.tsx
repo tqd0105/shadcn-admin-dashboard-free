@@ -35,7 +35,9 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
   const maxPrice = searchParams.get("maxPrice") || "";
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMinPriceInput(minPrice);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMaxPriceInput(maxPrice);
   }, [minPrice, maxPrice]);
 
