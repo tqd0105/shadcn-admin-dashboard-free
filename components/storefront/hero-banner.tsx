@@ -1,25 +1,47 @@
 "use client";
 
-import { ArrowRight, PlayCircle, CheckCircle2, ShoppingCart, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getFeaturedCoupon, Coupon } from "@/lib/services/coupon.service";
+import { getPromoBanners, PromoBanner } from "@/lib/services/banner.service";
 
 export function HeroBanner() {
   const [isCopied, setIsCopied] = useState(false);
   const [featuredCoupon, setFeaturedCoupon] = useState<Coupon | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingCoupon, setLoadingCoupon] = useState(true);
+
+  // Carousel state
+  const [activeBanners, setActiveBanners] = useState<PromoBanner[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    async function fetchCoupon() {
-      const { data } = await getFeaturedCoupon();
-      setFeaturedCoupon(data);
-      setLoading(false);
+    async function fetchData() {
+      // Fetch coupon
+      const couponRes = await getFeaturedCoupon();
+      setFeaturedCoupon(couponRes.data);
+      setLoadingCoupon(false);
+
+      // Fetch dynamic active promo banners from DB
+      const bannerRes = await getPromoBanners();
+      if (bannerRes.data) {
+        setActiveBanners(bannerRes.data);
+      }
+      setLoadingBanners(false);
     }
-    fetchCoupon();
+    fetchData();
   }, []);
+
+  // Auto slide rotation
+  useEffect(() => {
+    if (activeBanners.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % activeBanners.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [activeBanners.length]);
 
   const handleCopyCode = () => {
     if (!featuredCoupon) return;
@@ -28,97 +50,147 @@ export function HeroBanner() {
     setTimeout(() => setIsCopied(false), 3000);
   };
 
+  const currentBanner = activeBanners[currentIndex];
+
+  if (loadingBanners) {
+    return (
+      <section className="relative min-h-[calc(100vh-5rem)] w-full bg-secondary/60 animate-pulse flex items-center justify-center">
+        <div className="size-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+      </section>
+    );
+  }
+
+  if (!currentBanner) return null;
+
   return (
-    <section className="relative min-h-[calc(100vh-5rem)] w-full bg-secondary overflow-hidden flex flex-col">
+    <section className="relative min-h-[calc(100vh-5rem)] w-full bg-secondary overflow-hidden flex flex-col select-none group">
+      {/* Background Image Carousel Layers */}
       <div className="absolute inset-0 z-0">
-        <img
-          alt="Hero Image"
-          className="w-full h-full object-cover object-center"
-          src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop"
-        />
-        <div className="absolute  inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+        {activeBanners.map((banner, idx) => (
+          <div
+            key={banner.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              idx === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+            }`}
+          >
+            <img
+              alt={banner.title}
+              className="size-full object-contain object-center transform transition-transform duration-[10000ms] ease-out "
+              src={banner.image_url}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
+          </div>
+        ))}
       </div>
 
-      <div className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 md:px-10 flex flex-col lg:flex-row items-center justify-between gap-12 py-20 mt-10 md:mt-0">
-        
-        {/* Lẽft Content */}
-        <div className="w-full lg:w-1/2 animate-fade-in-up z-20">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-semibold uppercase tracking-widest mb-6 border border-white/20">
-            Bộ sưu tập mới 2026
-          </span>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Chuyển động của <br /><span className="text-indigo-400">Sự Hoàn Mỹ</span>
+      {/* Main Hero Content */}
+      <div className="relative z-20 flex-1 w-full max-w-7xl mx-auto px-4 md:px-10 flex flex-col justify-center py-20 my-auto">
+        <div key={currentBanner.id} className="w-full lg:w-2/3 animate-[fade-in-up_0.6s_cubic-bezier(0.16,1,0.3,1)] space-y-6">
+          {/* Badge */}
+          {currentBanner.badge_text && (
+            <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-bold uppercase tracking-widest border border-white/20 shadow-sm">
+              {currentBanner.badge_text}
+            </span>
+          )}
+
+          {/* Title */}
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1] tracking-tight whitespace-pre-line drop-shadow-sm">
+            {currentBanner.title}
           </h1>
-          <p className="text-lg text-gray-300 mb-8 max-w-md">
-            Khám phá thiết kế tinh giản kết hợp công nghệ đỉnh cao. Trải nghiệm chuẩn mực mới của sự sang trọng đương đại.
-          </p>
-          
+
+          {/* Description */}
+          {currentBanner.description && (
+            <p className="text-base sm:text-lg text-gray-200 max-w-xl line-clamp-3 font-normal opacity-90 leading-relaxed">
+              {currentBanner.description}
+            </p>
+          )}
+
+          {/* Call to action */}
+          {currentBanner.link_url && (
+            <div className="pt-2">
+              <Link
+                href={currentBanner.link_url}
+                className="inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-all duration-300 text-sm tracking-wide uppercase"
+              >
+                Khám phá ngay
+              </Link>
+            </div>
+          )}
+
           {/* Promo Code Box */}
-          {!loading && featuredCoupon && (
-            <>
+          {!loadingCoupon && featuredCoupon && (
+            <div className="pt-6">
               <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 flex items-center justify-between max-w-md shadow-2xl">
-                <div className="flex flex-col px-4">
-                  <span className="text-gray-300 text-xs uppercase tracking-wider mb-1">{featuredCoupon.title || `Mã giảm ${featuredCoupon.discount_percent}%`}</span>
-                  <span className="text-white font-mono font-bold tracking-widest text-lg">{featuredCoupon.code}</span>
+                <div className="flex flex-col px-4 truncate">
+                  <span className="text-gray-300 text-xs uppercase tracking-wider mb-0.5 truncate">
+                    {featuredCoupon.title || `Mã giảm ${featuredCoupon.discount_percent}%`}
+                  </span>
+                  <span className="text-white font-mono font-bold tracking-widest text-lg">
+                    {featuredCoupon.code}
+                  </span>
                 </div>
-                <Button 
-                  onClick={handleCopyCode} 
-                  className={`rounded-xl px-6 py-5 font-semibold transition-colors ${
-                    isCopied 
-                      ? "bg-green-500 hover:bg-green-600 text-white" 
+                <Button
+                  onClick={handleCopyCode}
+                  className={`rounded-xl px-6 py-5 font-semibold transition-all shrink-0 shadow-md ${
+                    isCopied
+                      ? "bg-green-500 hover:bg-green-600 text-white"
                       : "bg-indigo-500 hover:bg-indigo-600 text-white"
                   }`}
                 >
-                  {isCopied ? <><CheckCircle2 className="w-5 h-5 mr-1" /> Đã chép</> : "Copy Mã"}
+                  {isCopied ? (
+                    <>
+                      <CheckCircle2 className="size-4 mr-1.5" /> Đã chép
+                    </>
+                  ) : (
+                    "Copy Mã"
+                  )}
                 </Button>
               </div>
-              <p className="text-xs text-gray-400 mt-3 ml-2 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-green-400" /> Áp dụng ngay tại trang thanh toán.
+              <p className="text-xs text-gray-400 mt-2.5 ml-2 flex items-center gap-1.5">
+                <CheckCircle2 className="size-3 text-green-400 shrink-0" /> Áp dụng ngay tại trang thanh toán.
               </p>
-            </>
+            </div>
           )}
         </div>
-
-        {/* <div className="w-full lg:w-1/2 flex justify-center lg:justify-end animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            
-            
-            <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-2xl flex flex-col gap-4 w-[280px] md:w-[320px] transform transition-transform duration-500 hover:-translate-y-2">
-              <div className="w-full h-48 md:h-56 rounded-xl overflow-hidden bg-white/5 relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=800&auto=format&fit=crop" 
-                  alt="Apple Watch Ultra" 
-                  className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
-                  HOT DEAL
-                </div>
-              </div>
-              <div className="flex flex-col gap-1 px-1">
-                <h3 className="text-white font-semibold text-lg">Smartwatch Ultra Pro</h3>
-                <div className="flex justify-between items-end mt-1">
-                  <div>
-                    <p className="text-gray-400 text-sm line-through">12.500.000₫</p>
-                    <p className="text-indigo-400 font-bold text-xl">9.990.000₫</p>
-                  </div>
-                  <Link href="/products" className="bg-white text-black p-3 rounded-full hover:bg-indigo-100 transition-colors shadow-lg">
-                    <ShoppingCart className="w-5 h-5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> */}
-
       </div>
+
+      {/* Navigation Left/Right Arrows */}
+      {activeBanners.length > 1 && (
+        <>
+          <button
+            onClick={() => setCurrentIndex((prev) => (prev - 1 + activeBanners.length) % activeBanners.length)}
+            aria-label="Previous Slide"
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 size-12 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur transition-all opacity-0 group-hover:opacity-100 hover:scale-110 border border-white/10"
+          >
+            <ChevronLeft className="size-6" />
+          </button>
+          <button
+            onClick={() => setCurrentIndex((prev) => (prev + 1) % activeBanners.length)}
+            aria-label="Next Slide"
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 size-12 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur transition-all opacity-0 group-hover:opacity-100 hover:scale-110 border border-white/10"
+          >
+            <ChevronRight className="size-6" />
+          </button>
+        </>
+      )}
 
       {/* Carousel Indicators */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-        <button aria-label="Slide 1" className="w-12 h-1 bg-white rounded-full"></button>
-        <button aria-label="Slide 2" className="w-4 h-1 bg-white/40 rounded-full hover:bg-white/60 transition-colors"></button>
-        <button aria-label="Slide 3" className="w-4 h-1 bg-white/40 rounded-full hover:bg-white/60 transition-colors"></button>
-      </div>
+      {activeBanners.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2.5 z-30">
+          {activeBanners.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              aria-label={`Slide ${idx + 1}`}
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                idx === currentIndex
+                  ? "w-10 bg-primary shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                  : "w-3 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -97,3 +97,10 @@ export async function deletePromoBanner(id: string) {
 
   return { error: null };
 }
+
+export async function updatePromoBannerOrders(items: { id: string; order_index: number }[]) {
+  for (const item of items) {
+    await supabase.from("promo_banners").update({ order_index: item.order_index }).eq("id", item.id);
+  }
+  return { error: null };
+}

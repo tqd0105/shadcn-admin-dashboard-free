@@ -345,7 +345,7 @@ function NotificationsPageContent() {
                     🛒 Giỏ hàng
                   </Button>
                   {/* Thêm nút cho Lịch sử đơn hàng */}
-                  <Button variant="outline" size="sm" type="button" onClick={() => setLink("/account/order-history")} className="h-7 text-xs bg-background">
+                  <Button variant="outline" size="sm" type="button" onClick={() => setLink("/account/orders")} className="h-7 text-xs bg-background">
                     📋 Lịch sử đơn hàng
                   </Button>
                 </div>

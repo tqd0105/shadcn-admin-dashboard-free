@@ -9,6 +9,7 @@ import {
   createPromoBanner,
   updatePromoBanner,
   deletePromoBanner,
+  updatePromoBannerOrders,
 } from "@/lib/services/banner.service";
 import { uploadImage } from "@/lib/services/storage.service";
 import { getCategories, createCategory } from "@/lib/services/category.service";
@@ -65,7 +66,122 @@ import {
   IconCheck,
 } from "@tabler/icons-react";
 import { Switch } from "@/components/ui/switch";
-import { Image } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { IconGripVertical } from "@tabler/icons-react";
+
+interface SortableRowProps {
+  banner: PromoBanner;
+  handleToggleActive: (banner: PromoBanner, checked: boolean) => void;
+  handleOpenEdit: (banner: PromoBanner) => void;
+  setBannerToDelete: (id: string) => void;
+  setIsDeleteDialogOpen: (open: boolean) => void;
+}
+
+function SortableBannerRow({
+  banner,
+  handleToggleActive,
+  handleOpenEdit,
+  setBannerToDelete,
+  setIsDeleteDialogOpen,
+}: SortableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: banner.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 1,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className={`group ${isDragging ? "bg-muted/80 shadow-lg relative" : ""}`}
+    >
+      <TableCell className="w-10 text-center p-2">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+        >
+          <IconGripVertical className="size-5" />
+        </button>
+      </TableCell>
+      <TableCell>
+        <div className="w-16 h-10 rounded overflow-hidden bg-secondary border shrink-0">
+          <img src={banner.image_url} alt={banner.title} className="size-full object-cover" />
+        </div>
+      </TableCell>
+      <TableCell className="font-medium">
+        <div>{banner.title}</div>
+        {banner.subtitle && <div className="text-xs text-muted-foreground">{banner.subtitle}</div>}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+        {banner.link_url || "-"}
+      </TableCell>
+      <TableCell className="text-center font-medium">
+        {banner.order_index}
+      </TableCell>
+      <TableCell className="text-center">
+        <Switch
+          checked={banner.is_active}
+          onCheckedChange={(checked) => handleToggleActive(banner, checked)}
+        />
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleOpenEdit(banner)}
+            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          >
+            <IconEdit className="w-4 h-4" />
+            <span className="sr-only">Sửa</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setBannerToDelete(banner.id);
+              setIsDeleteDialogOpen(true);
+            }}
+            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <IconTrash className="w-4 h-4" />
+            <span className="sr-only">Xóa</span>
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 function PromoBannersPageContent() {
   const router = useRouter();
@@ -133,6 +249,7 @@ function PromoBannersPageContent() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBanners();
   }, [debouncedSearch, page, refreshTrigger]);
 
@@ -191,6 +308,36 @@ function PromoBannersPageContent() {
   // Delete Alert States
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bannerToDelete, setBannerToDelete] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = banners.findIndex((b) => b.id === active.id);
+    const newIndex = banners.findIndex((b) => b.id === over.id);
+
+    const reordered = arrayMove(banners, oldIndex, newIndex);
+    const updatedBanners = reordered.map((b, idx) => ({ ...b, order_index: idx }));
+    setBanners(updatedBanners);
+
+    try {
+      const payload = updatedBanners.map((b) => ({ id: b.id, order_index: b.order_index }));
+      await updatePromoBannerOrders(payload);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleOpenCreate = () => {
     setDialogMode("create");
@@ -375,6 +522,7 @@ function PromoBannersPageContent() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="w-12 text-center"></TableHead>
                 <TableHead className="w-24">Hình ảnh</TableHead>
                 <TableHead>Tiêu đề</TableHead>
                 <TableHead>Link đích</TableHead>
@@ -386,7 +534,7 @@ function PromoBannersPageContent() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-48 text-center">
+                  <TableCell colSpan={7} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <IconLoader2 className="w-8 h-8 animate-spin mb-2" />
                       <p>Đang tải dữ liệu...</p>
@@ -395,13 +543,13 @@ function PromoBannersPageContent() {
                 </TableRow>
               ) : banners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-48 text-center">
+                  <TableCell colSpan={7} className="h-48 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <Image className="w-12 h-12 mb-4 opacity-20" />
+                      <ImageIcon className="w-12 h-12 mb-4 opacity-20" />
                       <p>Không tìm thấy banner nào.</p>
                       {debouncedSearch && (
-                        <Button 
-                          variant="link" 
+                        <Button
+                          variant="link"
                           onClick={() => setSearch("")}
                           className="mt-2"
                         >
@@ -412,56 +560,27 @@ function PromoBannersPageContent() {
                   </TableCell>
                 </TableRow>
               ) : (
-                banners.map((banner) => (
-                  <TableRow key={banner.id} className="group">
-                    <TableCell>
-                      <div className="w-16 h-10 rounded overflow-hidden bg-secondary border">
-                        <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <div>{banner.title}</div>
-                      {banner.subtitle && <div className="text-xs text-muted-foreground">{banner.subtitle}</div>}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {banner.link_url || "-"}
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {banner.order_index}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Switch 
-                        checked={banner.is_active} 
-                        onCheckedChange={(checked) => handleToggleActive(banner, checked)} 
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={banners.map((b) => b.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {banners.map((banner) => (
+                      <SortableBannerRow
+                        key={banner.id}
+                        banner={banner}
+                        handleToggleActive={handleToggleActive}
+                        handleOpenEdit={handleOpenEdit}
+                        setBannerToDelete={setBannerToDelete}
+                        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
                       />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEdit(banner)}
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        >
-                          <IconEdit className="w-4 h-4" />
-                          <span className="sr-only">Sửa</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setBannerToDelete(banner.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <IconTrash className="w-4 h-4" />
-                          <span className="sr-only">Xóa</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
             </TableBody>
           </Table>

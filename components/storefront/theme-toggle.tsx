@@ -60,8 +60,8 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button 
-      variant="ghost" 
+    <Button
+      variant="ghost"
       size="icon"
       onClick={handleToggle}
       className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 relative rounded-full overflow-hidden active:scale-90 group"

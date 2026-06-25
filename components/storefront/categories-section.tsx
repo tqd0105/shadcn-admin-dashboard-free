@@ -99,7 +99,7 @@ export async function CategoriesSection() {
                       {category.description || "Khám phá ngay"}
                     </span>
                     <span className="font-semibold text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full text-[10px] shrink-0">
-                      {productCount > 0 ? `${productCount} SP` : "Mới"}
+                      {productCount > 0 ? `${productCount} ` : "Mới"}
                     </span>
                   </div>
                 </div>
