@@ -13,14 +13,30 @@ export async function getOrders(
     .from("orders")
     .select("*, profiles(full_name, email), addresses(street, city, phone)", { count: "exact" });
 
-  // Currently, search by order ID or user name is tricky with standard PostgREST without a text search on joined tables,
-  // but we can filter by exact ID if it looks like a UUID.
-  if (search) {
-    // If it's a UUID format, search by ID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(search)) {
-      query = query.eq("id", search);
+  if (search && search.trim()) {
+    const cleanSearch = search.trim().toLowerCase();
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .or(`full_name.ilike.%${cleanSearch}%,email.ilike.%${cleanSearch}%`);
+    const matchedUserIds = new Set(profiles?.map((p) => p.id) || []);
+
+    let allOrdersQuery = supabase.from("orders").select("id, user_id");
+    if (options?.status && options.status !== "all") {
+      allOrdersQuery = allOrdersQuery.eq("status", options.status);
     }
+    const { data: allIds } = await allOrdersQuery;
+
+    const matchedOrderIds = (allIds || [])
+      .filter((o) => o.id.toLowerCase().includes(cleanSearch) || matchedUserIds.has(o.user_id))
+      .map((o) => o.id);
+
+    if (matchedOrderIds.length === 0) {
+      return { data: [], total: 0, page, pageSize, totalPages: 1 };
+    }
+
+    query = query.in("id", matchedOrderIds);
   }
 
   if (options?.status && options.status !== "all") {
@@ -110,3 +126,10 @@ export async function getMyOrders() {
 
   return { data, error };
 }
+
+export async function deleteOrderAdmin(id: string) {
+  await supabase.from("order_items").delete().eq("order_id", id);
+  const { error } = await supabase.from("orders").delete().eq("id", id);
+  return { error };
+}
+

@@ -132,7 +132,7 @@ export default function CheckoutPage() {
         </p>
         <div className="pt-6">
           <Button asChild size="lg">
-            <Link href="/dashboard/orders">Quản lý Đơn hàng (Admin View)</Link>
+            <Link href="/account/orders">Quản lý Đơn hàng </Link>
           </Button>
         </div>
       </div>

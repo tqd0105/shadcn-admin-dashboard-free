@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { flushSync } from "react-dom"
 
 import { Button } from "@/components/ui/button"
 
@@ -15,9 +16,9 @@ export function ThemeToggle() {
   }, [])
 
   const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const nextTheme = resolvedTheme === "dark" ? "light" : "dark"
+    const isDark = resolvedTheme === "dark"
+    const nextTheme = isDark ? "light" : "dark"
 
-    // Fallback nếu trình duyệt cũ không hỗ trợ View Transition
     if (!document.startViewTransition) {
       setTheme(nextTheme)
       return
@@ -31,7 +32,9 @@ export function ThemeToggle() {
     )
 
     const transition = document.startViewTransition(() => {
-      setTheme(nextTheme)
+      flushSync(() => {
+        setTheme(nextTheme)
+      })
     })
 
     transition.ready.then(() => {
@@ -42,14 +45,12 @@ export function ThemeToggle() {
 
       document.documentElement.animate(
         {
-          clipPath: resolvedTheme === "dark" ? [...clipPath].reverse() : clipPath,
+          clipPath,
         },
         {
           duration: 500,
           easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-          pseudoElement: resolvedTheme === "dark"
-            ? "::view-transition-old(root)"
-            : "::view-transition-new(root)",
+          pseudoElement: "::view-transition-new(root)",
         }
       )
     })

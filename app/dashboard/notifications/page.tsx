@@ -190,14 +190,14 @@ function NotificationsPageContent() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Thông báo V2</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Quản lý Thông báo</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Gửi thông báo đẩy (Broadcast & Cá nhân hóa) với đa dạng thể loại và hỗ trợ thu hồi tin nhắn.
         </p>
       </div>
 
       <Tabs defaultValue="compose" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-2 justify-center ">
           <TabsTrigger value="compose" className="gap-2">
             <IconSend className="size-4" /> Soạn tin mới
           </TabsTrigger>

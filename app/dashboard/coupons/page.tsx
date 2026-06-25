@@ -196,7 +196,7 @@ export default function CouponsPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      <div className=" rounded-xl shadow-sm border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
