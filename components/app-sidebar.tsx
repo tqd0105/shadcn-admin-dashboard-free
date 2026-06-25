@@ -14,7 +14,8 @@ import {
   IconUsers,
   IconPhoto,
   IconTicket,
-  IconHome
+  IconHome,
+  IconBell
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -45,6 +46,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Orders", url: "/dashboard/orders", icon: IconListDetails },
         { title: "Coupons", url: "/dashboard/coupons", icon: IconTicket },
         { title: "Banners", url: "/dashboard/promo-banners", icon: IconPhoto },
+        { title: "Notifications", url: "/dashboard/notifications", icon: IconBell },
       ]
     : [
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard },

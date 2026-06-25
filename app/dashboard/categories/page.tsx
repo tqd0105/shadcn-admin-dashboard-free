@@ -196,7 +196,6 @@ function CategoriesPageContent() {
           return;
         }
       }
-
       setDialogOpen(false);
       fetchCategories();
     } catch (err: any) {

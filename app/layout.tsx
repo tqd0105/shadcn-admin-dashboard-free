@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "LuxeCommerce - Mua sắm hàng hiệu",
   description: "Trải nghiệm mua sắm đẳng cấp với những sản phẩm được tuyển chọn kỹ lưỡng.",
   icons: {
-    icon: "https://cdn-icons-png.flaticon.com/512/3176/3176363.png",
+    icon: "/icons/luxecommerce.png?v=2",
   },
 };
 

@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
 import {
   Sheet,
   SheetContent,
@@ -219,9 +220,7 @@ export function SiteHeader() {
           </nav>
           
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground hover:text-primary">
-            <Bell className="w-5 h-5" />
-          </Button>
+          <NotificationDropdown userId={user?.id} />
           <Link 
             href={user ? "/cart" : "#"} 
             className="relative"

@@ -53,7 +53,6 @@ export async function updateCategory(id: string, payload: { name: string }) {
     .from("categories")
     .update({
       ...payload,
-      updated_at: new Date().toISOString(),
     })
     .eq("id", id);
 }
