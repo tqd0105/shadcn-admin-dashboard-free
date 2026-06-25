@@ -140,7 +140,7 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
         {activeTab === "desc" && (
           <div className="space-y-6">
             <div
-              className="prose max-w-none text-on-surface-variant font-body-md text-body-md"
+              className="prose dark:prose-invert max-w-none text-muted-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-a:text-primary [&_*]:dark:!text-gray-300 [&_h1,&_h2,&_h3,&_h4,&_strong,&_b]:dark:!text-white font-body-md text-body-md"
               dangerouslySetInnerHTML={{ __html: description || "<p>Chưa có mô tả chi tiết cho sản phẩm này.</p>" }}
             />
           </div>

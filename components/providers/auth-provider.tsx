@@ -4,7 +4,7 @@ import { getProfile } from "@/lib/services/profile.service";
 import { getRole } from "@/lib/services/role.service";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js"
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { isSessionValid } from "@/lib/supabase/client";
 
@@ -51,11 +51,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    const lastUserIdRef = useRef<string | null>(null);
+
     useEffect(() => {
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            setUser(prev => (prev?.id === user?.id ? prev : user));
             if (user) {
+                lastUserIdRef.current = user.id;
                 await fetchProfileAndRole(user.id);
             }
             setLoading(false);
@@ -64,23 +67,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             const currentUser = session?.user ?? null;
-            setUser(currentUser);
+            setUser(prev => (prev?.id === currentUser?.id ? prev : currentUser));
 
-            if (currentUser && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
+            if (currentUser && currentUser.id !== lastUserIdRef.current) {
+                lastUserIdRef.current = currentUser.id;
                 await fetchProfileAndRole(currentUser.id);
             }
 
             if (event === "SIGNED_OUT") {
+                lastUserIdRef.current = null;
                 setProfile(null);
                 setRole(null);
-                // Removed router.push("/login") to allow guests to view public pages.
             }
         });
 
         return () => {
             subscription?.unsubscribe();
         };
-    }, [fetchProfileAndRole, router]);
+    }, [fetchProfileAndRole]);
 
     // Periodic check for session expiration (in case Supabase does not emit SIGNED_OUT)
     useEffect(() => {
