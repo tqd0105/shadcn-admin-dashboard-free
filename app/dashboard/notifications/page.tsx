@@ -543,7 +543,7 @@ function NotificationsPageContent() {
                     return (
                       <div key={o.id} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:border-emerald-500/50 transition-all shadow-sm">
                         <div className="flex items-center gap-4">
-                          <div className={`p-2.5 rounded-xl ${isCancelled ? "bg-red-100 text-red-600 dark:bg-red-950" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950"}`}>
+                          <div className={`p-2.5 rounded-xl ${isCancelled ? "bg-red-600 text-white dark:bg-red-500 dark:text-white" : "bg-emerald-500 text-white dark:bg-emerald-400 dark:text-black"}`}>
                             <BellRing className="size-5" />
                           </div>
                           <div>

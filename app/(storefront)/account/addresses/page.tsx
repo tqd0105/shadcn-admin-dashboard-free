@@ -195,11 +195,11 @@ export default function AddressesPage() {
           {addresses.map((addr) => (
             <div key={addr.id} className={`border rounded-xl p-5 relative ${addr.is_default ? 'border-primary bg-primary/5' : ''}`}>
               {addr.is_default && (
-                <span className="absolute top-0 right-0 text-blue-400 bg-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl">
-                  MẶC ĐỊNH
+                <span className="absolute top-0 left-0 text-white bg-primary dark:bg-white dark:text-black text-[10px] font-bold px-2 py-1 rounded-br-lg rounded-tl-xl">
+                  MẶC ĐỊNH 
                 </span>
               )}
-              <div className="flex justify-between">
+              <div className="flex justify-between ">
                 <div>
                   <h3 className="font-semibold text-lg">{addr.full_name}</h3>
                   <p className="text-muted-foreground mt-1 mb-2">{addr.phone}</p>
