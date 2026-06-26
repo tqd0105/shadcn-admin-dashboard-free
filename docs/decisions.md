@@ -33,3 +33,13 @@ The circular color transition animation in `ThemeToggle` (`components/storefront
 ### Consequences
 - Flawless, symmetric 60fps circular wipe transitions across modern browsers in both directions.
 - Eliminates React state batching race conditions during DOM capture.
+
+## 2026-06-26: Customer Order Cancellation via RLS & Instant Dual Realtime Admin Sync
+
+### Context
+Customers clicking "Hủy đơn" encountered error `Cannot coerce the result to a single JSON object`, and successful order status updates did not reflect immediately on the Admin Orders table or global notifier.
+
+### Decision
+1. **Enabled Customer Order Cancellation via RLS**: Pushed policy `Users can update own orders` directly to the Supabase Cloud Postgres DB (`supabase db push`), keeping established project architecture clean without introducing new folder patterns (`lib/actions`). Simplified `updateOrderStatus` in `order.service.ts`.
+2. **Instant Dual Realtime Admin Sync**: Integrated both Supabase Broadcast Channels (`global-admin-orders-notifier`) and same-browser `BroadcastChannel` (`admin_orders_channel`) into `updateOrderStatus`. Admin Orders table (`/dashboard/orders`) and Live Bell (`AdminRealtimeNotifier`) instantly trigger on status updates.
+

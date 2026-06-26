@@ -11,7 +11,7 @@ export async function getOrders(
 ) {
   let query = supabase
     .from("orders")
-    .select("*, profiles(full_name, email), addresses(street, city, phone)", { count: "exact" });
+    .select("*, profiles(full_name, email, phone), addresses(full_name, street, city, phone)", { count: "exact" });
 
   if (search && search.trim()) {
     const cleanSearch = search.trim().toLowerCase();
@@ -77,7 +77,7 @@ export async function getOrderById(id: string) {
     .from("orders")
     .select(`
       *,
-      profiles(full_name, email),
+      profiles(full_name, email, phone),
       addresses(full_name, phone, street, city),
       coupons(code, discount_percent),
       order_items(
@@ -98,9 +98,25 @@ export async function updateOrderStatus(id: string, status: string) {
   const { data, error } = await supabase
     .from("orders")
     .update({ status })
-    .eq("id", id)
-    .select()
-    .single();
+    .eq("id", id);
+
+  if (!error) {
+    try {
+      const channel = supabase.channel("global-admin-orders-notifier");
+      channel.subscribe((st) => {
+        if (st === "SUBSCRIBED") {
+          channel.send({
+            type: "broadcast",
+            event: "ORDER_UPDATED",
+            payload: { id, status }
+          });
+        }
+      });
+      if (typeof window !== "undefined" && window.BroadcastChannel) {
+        new BroadcastChannel("admin_orders_channel").postMessage({ type: "ORDER_UPDATED", id, status });
+      }
+    } catch (err) {}
+  }
 
   return { data, error };
 }

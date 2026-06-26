@@ -8,6 +8,7 @@ import {
 
 import AuthGuard from "@/components/guards/auth-guard";
 import RoleGuard from "@/components/guards/role-guard";
+import { AdminRealtimeNotifier } from "@/components/admin-realtime-notifier";
 
 
 export default function Page({children}: { children: React.ReactNode}) {
@@ -28,6 +29,7 @@ export default function Page({children}: { children: React.ReactNode}) {
             <div className="flex flex-col gap-4  md:gap-6 p-4 lg:p-6">
               <AuthGuard>
                 <RoleGuard allowedRoles={["admin"]}>
+                  <AdminRealtimeNotifier />
                   {children}
                 </RoleGuard>
               </AuthGuard>

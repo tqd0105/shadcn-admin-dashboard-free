@@ -8,6 +8,8 @@ export interface CheckoutData {
   city: string;
   paymentMethod: string;
   couponId?: string;
+  selectedAddressId?: string;
+  saveToAddressBook?: boolean;
 }
 
 export async function placeOrder(checkoutData: CheckoutData) {
@@ -59,21 +61,40 @@ export async function placeOrder(checkoutData: CheckoutData) {
   }
 
   // 2. Create or find Address
-  // For simplicity, we just insert a new address record. Alternatively, you could check if it matches an existing one.
-  const { data: address, error: addressError } = await supabase
-    .from("addresses")
-    .insert({
-      user_id: userId,
-      full_name: checkoutData.fullName,
-      phone: checkoutData.phone,
-      street: checkoutData.street,
-      city: checkoutData.city,
-      is_default: false // Optional
-    })
-    .select()
-    .single();
+  let addressId = checkoutData.selectedAddressId;
 
-  if (addressError) return { data: null, error: addressError };
+  if (!addressId) {
+    // Tìm xem khách đã có địa chỉ nào trùng khớp SĐT và Đường cụ thể chưa
+    const { data: existing } = await supabase
+      .from("addresses")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("phone", checkoutData.phone.trim())
+      .ilike("street", checkoutData.street.trim())
+      .maybeSingle();
+
+    if (existing) {
+      addressId = existing.id;
+    } else {
+      const { count } = await supabase.from("addresses").select("*", { count: "exact", head: true }).eq("user_id", userId);
+      const isFirst = (count === 0);
+
+      const { data: newAddr, error: addressError } = await supabase
+        .from("addresses")
+        .insert({
+          user_id: userId,
+          full_name: checkoutData.fullName,
+          phone: checkoutData.phone,
+          street: checkoutData.street,
+          city: checkoutData.city,
+          is_default: isFirst
+        })
+        .select("id")
+        .single();
+      if (addressError) return { data: null, error: addressError };
+      addressId = newAddr.id;
+    }
+  }
 
   // 3. Create Order
   const { data: order, error: orderError } = await supabase
@@ -82,7 +103,7 @@ export async function placeOrder(checkoutData: CheckoutData) {
       user_id: userId,
       status: "pending",
       total_amount: totalAmount,
-      shipping_address_id: address.id,
+      shipping_address_id: addressId,
       payment_method: checkoutData.paymentMethod,
       coupon_id: checkoutData.couponId || null,
     })
@@ -122,6 +143,23 @@ export async function placeOrder(checkoutData: CheckoutData) {
     .from("cart_items")
     .delete()
     .eq("user_id", userId);
+
+  // 6. Phát tín hiệu Realtime tức thời cho Admin Dashboard (Qua cả WebSocket và BroadcastChannel)
+  try {
+    const channel = supabase.channel("global-admin-orders-notifier");
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        channel.send({
+          type: "broadcast",
+          event: "NEW_ORDER",
+          payload: order
+        });
+      }
+    });
+    if (typeof window !== "undefined" && window.BroadcastChannel) {
+      new BroadcastChannel("admin_orders_channel").postMessage({ type: "NEW_ORDER", order });
+    }
+  } catch (err) {}
 
   return { data: order, error: null };
 }

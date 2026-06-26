@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
 import { getOrders, updateOrderStatus, getOrderById, deleteOrderAdmin } from "@/lib/services/order.service";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,8 +99,33 @@ function OrdersContent() {
   }, [currentSearch, currentPage, currentStatus]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadOrders();
+
+    const channel = supabase
+      .channel("dashboard-orders-table-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        loadOrders();
+      })
+      .on("broadcast", { event: "NEW_ORDER" }, () => {
+        loadOrders();
+      })
+      .on("broadcast", { event: "ORDER_UPDATED" }, () => {
+        loadOrders();
+      })
+      .subscribe();
+
+    let bc: BroadcastChannel | null = null;
+    if (typeof window !== "undefined" && window.BroadcastChannel) {
+      bc = new BroadcastChannel("admin_orders_channel");
+      bc.onmessage = () => {
+        loadOrders();
+      };
+    }
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (bc) bc.close();
+    };
   }, [loadOrders]);
 
   const handleSearch = (e: React.FormEvent) => {

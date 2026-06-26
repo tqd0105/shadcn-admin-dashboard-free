@@ -24,6 +24,8 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   const [formData, setFormData] = useState({
     id: "",
@@ -77,19 +79,31 @@ export default function AddressesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) return;
-    const { error } = await deleteAddress(id);
+  const confirmDelete = async () => {
+    if (!deleteModalId) return;
+    setDeleting(true);
+    const { error } = await deleteAddress(deleteModalId);
+    setDeleting(false);
     if (error) {
       toast.error("Lỗi khi xóa địa chỉ");
     } else {
       toast.success("Đã xóa địa chỉ");
+      setDeleteModalId(null);
       fetchAddresses();
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+    if (!phoneRegex.test(formData.phone.trim())) {
+      toast.error("Số điện thoại không hợp lệ!", {
+        description: "Vui lòng nhập đúng định dạng số di động Việt Nam (10 chữ số, ví dụ 098... hoặc 039...)."
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     let error;
@@ -179,7 +193,7 @@ export default function AddressesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`border rounded-xl p-5 relative ${addr.is_default ? 'border-primary bg-primary/5' : 'bg-white'}`}>
+            <div key={addr.id} className={`border rounded-xl p-5 relative ${addr.is_default ? 'border-primary bg-primary/5' : ''}`}>
               {addr.is_default && (
                 <span className="absolute top-0 right-0 text-blue-400 bg-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl">
                   MẶC ĐỊNH
@@ -196,7 +210,7 @@ export default function AddressesPage() {
                   <Button variant="outline" size="icon" onClick={() => handleOpenEdit(addr)}>
                     <IconEdit className="w-4 h-4 text-gray-600" />
                   </Button>
-                  <Button variant="outline" size="icon" className="hover:bg-red-50 hover:text-red-600 hover:border-red-200" onClick={() => handleDelete(addr.id)}>
+                  <Button variant="outline" size="icon" className="hover:bg-red-50 hover:text-red-600 hover:border-red-200" onClick={() => setDeleteModalId(addr.id)}>
                     <IconTrash className="w-4 h-4" />
                   </Button>
                 </div>
@@ -205,6 +219,26 @@ export default function AddressesPage() {
           ))}
         </div>
       )}
+
+      {/* Modal Xác nhận xóa địa chỉ */}
+      <Dialog open={!!deleteModalId} onOpenChange={(open) => { if (!open) setDeleteModalId(null); }}>
+        <DialogContent className="max-w-sm text-center p-6 space-y-4">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-destructive flex items-center justify-center gap-2">
+              <IconTrash className="w-6 h-6" /> Xác nhận xóa địa chỉ?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Địa chỉ này sẽ bị xóa vĩnh viễn khỏi sổ địa chỉ của bạn. Hành động này không thể khôi phục lại.
+          </p>
+          <DialogFooter className="flex gap-2 sm:justify-center pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteModalId(null)}>Hủy bỏ</Button>
+            <Button variant="destructive" className="flex-1 font-bold shadow-md shadow-destructive/20" disabled={deleting} onClick={confirmDelete}>
+              {deleting ? <IconLoader2 className="w-4 h-4 animate-spin mr-1" /> : null} Xóa ngay
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

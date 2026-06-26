@@ -39,6 +39,8 @@ export default function CheckoutPage() {
   });
 
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [saveNewAddress, setSaveNewAddress] = useState<boolean>(true);
   const [createdOrder, setCreatedOrder] = useState<any>(null);
   const [qrModalOpen, setQrModalOpen] = useState(false);
 
@@ -60,6 +62,7 @@ export default function CheckoutPage() {
       setSavedAddresses(data);
       const defaultAddr = data.find((a: any) => a.is_default) || data[0];
       if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
         setFormData(prev => ({
           ...prev,
           fullName: defaultAddr.full_name || prev.fullName,
@@ -136,7 +139,9 @@ export default function CheckoutPage() {
     setSubmitting(true);
     const { data: order, error } = await placeOrder({
       ...formData,
-      couponId: appliedCoupon ? appliedCoupon.id : undefined
+      couponId: appliedCoupon ? appliedCoupon.id : undefined,
+      selectedAddressId: selectedAddressId || undefined,
+      saveToAddressBook: !selectedAddressId ? saveNewAddress : false
     });
     setSubmitting(false);
 
@@ -229,8 +234,11 @@ export default function CheckoutPage() {
                 </Label>
                 <select
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground"
+                  value={selectedAddressId}
                   onChange={(e) => {
-                    const addr = savedAddresses.find(a => a.id === e.target.value);
+                    const val = e.target.value;
+                    setSelectedAddressId(val);
+                    const addr = savedAddresses.find(a => a.id === val);
                     if (addr) {
                       setFormData(prev => ({
                         ...prev,
@@ -293,6 +301,21 @@ export default function CheckoutPage() {
                 />
               </div>
             </div>
+
+            {!selectedAddressId && (
+              <div className="flex items-center gap-2 pt-2 border-t">
+                <input
+                  type="checkbox"
+                  id="saveNewAddr"
+                  checked={saveNewAddress}
+                  onChange={e => setSaveNewAddress(e.target.checked)}
+                  className="w-4 h-4 rounded border-input text-primary focus:ring-primary cursor-pointer accent-primary"
+                />
+                <Label htmlFor="saveNewAddr" className="text-xs cursor-pointer text-muted-foreground font-normal">
+                  Lưu địa chỉ mới này vào Sổ địa chỉ để mua sắm nhanh hơn lần sau
+                </Label>
+              </div>
+            )}
           </div>
 
           {/* Phương thức thanh toán */}

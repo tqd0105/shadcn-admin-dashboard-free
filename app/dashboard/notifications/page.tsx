@@ -32,8 +32,10 @@ import {
 import { toast } from "sonner";
 import { IconLoader2, IconSend, IconSearch, IconLink, IconHistory, IconSparkles, IconTrash, IconUser, IconUsers } from "@tabler/icons-react";
 import { broadcastNotification, sendTargetedNotification, getBroadcastHistory, deleteBroadcast, searchUsersForNotification, NotificationType, Notification } from "@/lib/services/notification.service";
-import { getProduct } from "@/lib/services/product.service";
 import { Badge } from "@/components/ui/badge";
+import { getProduct } from "@/lib/services/product.service";
+import { getOrders } from "@/lib/services/order.service";
+import { BellRing, ExternalLink } from "lucide-react";
 
 function NotificationsPageContent() {
   const [sendMode, setSendMode] = useState<"broadcast" | "targeted">("broadcast");
@@ -41,6 +43,16 @@ function NotificationsPageContent() {
   const [userSearch, setUserSearch] = useState("");
   const [userResults, setUserResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
+
+  const [orderAlerts, setOrderAlerts] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  const fetchOrderAlerts = async () => {
+    setLoadingOrders(true);
+    const { data } = await getOrders("", 1, 50);
+    if (data) setOrderAlerts(data);
+    setLoadingOrders(false);
+  };
 
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -197,12 +209,15 @@ function NotificationsPageContent() {
       </div>
 
       <Tabs defaultValue="compose" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 justify-center ">
+        <TabsList className="grid w-full grid-cols-3 justify-center">
           <TabsTrigger value="compose" className="gap-2">
             <IconSend className="size-4" /> Soạn tin mới
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <IconHistory className="size-4" /> Lịch sử đã gửi
+          </TabsTrigger>
+          <TabsTrigger value="system-alerts" onClick={fetchOrderAlerts} className="gap-2 relative text-emerald-600 font-bold data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all">
+            <BellRing className="size-4" /> Nhật ký Đơn hàng
           </TabsTrigger>
         </TabsList>
 
@@ -497,6 +512,74 @@ function NotificationsPageContent() {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="system-alerts">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-emerald-600">
+                <BellRing className="size-5" /> Nhật Ký Đơn Hàng & Chuông Báo Hệ Thống
+              </CardTitle>
+              <CardDescription>
+                Toàn bộ lịch sử các thông báo đơn hàng mới được đẩy Realtime tới Admin. Nếu chưa thấy chuông báo, bạn có thể xem lại tại đây.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingOrders ? (
+                <div className="flex justify-center py-8">
+                  <IconLoader2 className="size-6 animate-spin text-primary" />
+                </div>
+              ) : orderAlerts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Chưa có đơn hàng nào được ghi nhận.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {orderAlerts.map((o) => {
+                    const shortId = o.id ? o.id.split("-")[0].toUpperCase() : "ORD";
+                    const isCancelled = o.status === "cancelled";
+                    return (
+                      <div key={o.id} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:border-emerald-500/50 transition-all shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-xl ${isCancelled ? "bg-red-100 text-red-600 dark:bg-red-950" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950"}`}>
+                            <BellRing className="size-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm">#{shortId}</span>
+                              <Badge variant={isCancelled ? "destructive" : "default"} className="text-[10px] h-4">
+                                {isCancelled ? "Đã hủy đơn" : "Đơn mới nhận"}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Khách hàng: <span className="font-medium text-foreground">{o.profiles?.full_name || o.addresses?.full_name || o.profiles?.email?.split("@")[0] || "Khách mua"}</span> 
+                            </p>
+                            {/* Hiển thị số điện thoại */}
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Số điện thoại: <span className="font-medium text-foreground">{o.addresses?.phone || o.profiles?.phone || "Chưa cập nhật SĐT"}</span> 
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+                              {formatDate(o.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-bold text-base text-emerald-600 dark:text-emerald-400">
+                            +{Number(o.total_amount || 0).toLocaleString("vi-VN")} đ
+                          </span>
+                          <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs h-8">
+                            <a href="/dashboard/orders">
+                              Xem đơn <ExternalLink className="size-3" />
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

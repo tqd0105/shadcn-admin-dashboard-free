@@ -11,6 +11,12 @@ export async function getAddresses() {
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: false });
 
+  // Tự động khắc phục dữ liệu cũ: Nếu danh sách có địa chỉ nhưng chưa có cái nào là mặc định, gán cái đầu tiên làm mặc định!
+  if (data && data.length > 0 && !data.some(a => a.is_default)) {
+    data[0].is_default = true;
+    supabase.from("addresses").update({ is_default: true }).eq("id", data[0].id).then();
+  }
+
   return { data, error };
 }
 
@@ -18,15 +24,22 @@ export async function addAddress(addressData: { full_name: string; phone: string
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) return { data: null, error: userError || new Error("User not authenticated") };
 
-  // If new address is default, unset others
-  if (addressData.is_default) {
+  // Nếu khách chưa có địa chỉ nào, tự động chọn địa chỉ đầu tiên này làm mặc định (is_default = true)
+  const { count } = await supabase.from("addresses").select("*", { count: "exact", head: true }).eq("user_id", userData.user.id);
+  const shouldBeDefault = addressData.is_default || (count === 0);
+
+  if (shouldBeDefault) {
     await supabase.from("addresses").update({ is_default: false }).eq("user_id", userData.user.id);
   }
+
+  const cleanData = { ...addressData } as any;
+  delete cleanData.id;
 
   const { data, error } = await supabase
     .from("addresses")
     .insert({
-      ...addressData,
+      ...cleanData,
+      is_default: shouldBeDefault,
       user_id: userData.user.id
     })
     .select()
@@ -43,9 +56,12 @@ export async function updateAddress(id: string, addressData: { full_name: string
     await supabase.from("addresses").update({ is_default: false }).eq("user_id", userData.user.id);
   }
 
+  const cleanData = { ...addressData } as any;
+  delete cleanData.id;
+
   const { data, error } = await supabase
     .from("addresses")
-    .update(addressData)
+    .update(cleanData)
     .eq("id", id)
     .eq("user_id", userData.user.id) // Ensure security
     .select()

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, ShoppingCart, Heart, Bell, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield } from "lucide-react";
+import { Search, ShoppingCart, Heart, Bell, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield, MapPin, Settings, Sparkles, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
@@ -130,18 +130,176 @@ export function SiteHeader() {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                <nav className="flex flex-col gap-4 mt-8">
-                  <Link href="/" className="text-lg font-medium">Trang chủ</Link>
-                  <Link href="/products" className="text-lg font-medium">Sản phẩm</Link>
-                  <Link href="/account/wishlist" className="text-lg font-medium">Yêu thích</Link>
-                  <div className="h-px bg-border my-4"></div>
-                  {!user && (
-                    <Button onClick={() => openModal('login')} className="w-full">
-                      Đăng nhập / Đăng ký
-                    </Button>
+              <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 flex flex-col h-full bg-background overflow-hidden border-r">
+                {/* 1. Header Khu Vực Tài Khoản */}
+                <div className="p-6 pb-5 bg-muted/30 border-b">
+                  {user ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
+                          <AvatarImage src={profile?.avatar_url} />
+                          <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                            {user.email?.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-base truncate text-foreground">
+                            {profile?.full_name || user.user_metadata?.full_name || "Khách hàng"}
+                          </h4>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            {role === "admin" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/15 text-destructive border border-destructive/20">
+                                <Shield className="w-3 h-3" /> Quản trị viên
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
+                                Thành viên
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Nút vào Bảng Quản Trị dành riêng cho Admin */}
+                      {role === "admin" && (
+                        <SheetClose asChild>
+                          <Link
+                            href="/dashboard"
+                            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold text-sm shadow-md shadow-red-500/20 hover:opacity-95 transition-opacity"
+                          >
+                            <LayoutDashboard className="w-4 h-4" /> Bảng Quản Trị Admin
+                          </Link>
+                        </SheetClose>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-2 space-y-3">
+                      
+                      <div>
+                        <h4 className="font-bold text-base text-foreground uppercase">Chào mừng đến LuxeCommerce</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Đăng nhập để nhận ưu đãi & theo dõi đơn hàng
+                        </p>
+                      </div>
+                      <SheetClose asChild>
+                        <Button
+                          onClick={() => openModal("login")}
+                          className="w-full font-bold shadow-md shadow-primary/20"
+                          size="lg"
+                        >
+                          Đăng nhập / Đăng ký
+                        </Button>
+                      </SheetClose>
+                    </div>
                   )}
-                </nav>
+                </div>
+
+                {/* 2. Menu Điều Hướng Cuộn */}
+                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+                  {/* Khám Phá */}
+                  <div className="space-y-1">
+                    <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
+                      Khám phá
+                    </p>
+                    <SheetClose asChild>
+                      <Link
+                        href="/"
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
+                          pathname === "/" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                        )}
+                      >
+                        <HomeIcon className="w-4 h-4" /> Trang chủ
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        href="/products"
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
+                          pathname?.startsWith("/products") ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                        )}
+                      >
+                        <Package className="w-4 h-4" /> Tất cả sản phẩm
+                      </Link>
+                    </SheetClose>
+                    {/* <SheetClose asChild>
+                      <Link
+                        href="/account/wishlist"
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
+                          pathname === "/account/wishlist" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                        )}
+                      >
+                        <Heart className="w-4 h-4 text-rose-500" /> Sản phẩm yêu thích
+                      </Link>
+                    </SheetClose> */}
+                  </div>
+
+                  {/* Cá Nhân (Chỉ hiện khi đăng nhập) */}
+                  {user && (
+                    <div className="space-y-1 pt-2 border-t">
+                      <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
+                        Tài khoản của tôi
+                      </p>
+                      <SheetClose asChild>
+                        <Link
+                          href="/cart"
+                          className="flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                        >
+                          <span className="flex items-center gap-3">
+                            <ShoppingCart className="w-4 h-4 text-blue-500" /> Giỏ hàng
+                          </span>
+                          {cartCount > 0 && (
+                            <span className="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                              {cartCount}
+                            </span>
+                          )}
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/account/orders"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                        >
+                          <BoxIcon className="w-4 h-4 text-amber-500" /> Lịch sử đơn hàng
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/account/addresses"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                        >
+                          <MapPin className="w-4 h-4 text-emerald-500" /> Sổ địa chỉ nhận hàng
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/account/settings"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                        >
+                          <Settings className="w-4 h-4 text-gray-500" /> Cài đặt tài khoản
+                        </Link>
+                      </SheetClose>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Chân Drawer */}
+                {user && (
+                  <div className="p-4 border-t bg-muted/20">
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-bold text-sm h-11 px-4 rounded-xl"
+                        onClick={logout}
+                      >
+                        <LogOut className="w-4 h-4 mr-3" /> Đăng xuất tài khoản
+                      </Button>
+                    </SheetClose>
+                  </div>
+                )}
               </SheetContent>
             </Sheet>
           </div>
