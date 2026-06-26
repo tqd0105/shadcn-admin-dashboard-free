@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Search from "./search";
 import Logo from "./logo";
 import { SidebarNavLink } from "./sidebar";
@@ -29,6 +29,7 @@ export default function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="flex flex-col overflow-auto">
+            <SheetTitle className="sr-only">Menu Điều Hướng Admin</SheetTitle>
             <Logo className="px-0" />
             <nav className="grid gap-2 text-lg font-medium">
               {page_routes.map((route) => (

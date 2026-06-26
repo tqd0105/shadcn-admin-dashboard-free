@@ -82,6 +82,20 @@ function OrdersContent() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Helper đọc unread ids từ localStorage
+  const getUnreadFromStorage = () => {
+    if (typeof window === "undefined") return new Set<string>();
+    try {
+      const list = JSON.parse(localStorage.getItem("admin_unread_order_ids") || "[]");
+      return new Set<string>(list);
+    } catch {
+      return new Set<string>();
+    }
+  };
+
+  // Live Glowing Pool cho các đơn mới nổ trong phiên làm việc (bền vững qua F5)
+  const [liveOrderIds, setLiveOrderIds] = useState<Set<string>>(getUnreadFromStorage);
+
   const loadOrders = useCallback(async () => {
     setLoading(true);
     const { data, total, totalPages, error } = await getOrders(
@@ -95,6 +109,7 @@ function OrdersContent() {
       setTotal(total);
       setTotalPages(totalPages);
     }
+    setLiveOrderIds(getUnreadFromStorage());
     setLoading(false);
   }, [currentSearch, currentPage, currentStatus]);
 
@@ -103,10 +118,19 @@ function OrdersContent() {
 
     const channel = supabase
       .channel("dashboard-orders-table-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
+        if (payload.new?.id) {
+          setLiveOrderIds((prev) => new Set(prev).add(payload.new.id));
+        }
+        loadOrders();
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
         loadOrders();
       })
-      .on("broadcast", { event: "NEW_ORDER" }, () => {
+      .on("broadcast", { event: "NEW_ORDER" }, (payload) => {
+        if (payload.payload?.id) {
+          setLiveOrderIds((prev) => new Set(prev).add(payload.payload.id));
+        }
         loadOrders();
       })
       .on("broadcast", { event: "ORDER_UPDATED" }, () => {
@@ -114,15 +138,41 @@ function OrdersContent() {
       })
       .subscribe();
 
+    const handleLocalOrder = (event: any) => {
+      if (event.detail?.id) {
+        try {
+          const list = JSON.parse(localStorage.getItem("admin_unread_order_ids") || "[]");
+          if (!list.includes(event.detail.id)) {
+            list.push(event.detail.id);
+            localStorage.setItem("admin_unread_order_ids", JSON.stringify(list));
+          }
+        } catch {}
+        setLiveOrderIds(getUnreadFromStorage());
+        loadOrders();
+      }
+    };
+    window.addEventListener("ADMIN_LOCAL_NEW_ORDER", handleLocalOrder);
+
     let bc: BroadcastChannel | null = null;
     if (typeof window !== "undefined" && window.BroadcastChannel) {
       bc = new BroadcastChannel("admin_orders_channel");
-      bc.onmessage = () => {
+      bc.onmessage = (event) => {
+        if (event.data?.type === "NEW_ORDER" && event.data.order?.id) {
+          try {
+            const list = JSON.parse(localStorage.getItem("admin_unread_order_ids") || "[]");
+            if (!list.includes(event.data.order.id)) {
+              list.push(event.data.order.id);
+              localStorage.setItem("admin_unread_order_ids", JSON.stringify(list));
+            }
+          } catch {}
+          setLiveOrderIds(getUnreadFromStorage());
+        }
         loadOrders();
       };
     }
 
     return () => {
+      window.removeEventListener("ADMIN_LOCAL_NEW_ORDER", handleLocalOrder);
       supabase.removeChannel(channel);
       if (bc) bc.close();
     };
@@ -161,6 +211,12 @@ function OrdersContent() {
   };
 
   const handleViewDetails = async (id: string) => {
+    try {
+      const unread = JSON.parse(localStorage.getItem("admin_unread_order_ids") || "[]");
+      const next = unread.filter((item: string) => item !== id);
+      localStorage.setItem("admin_unread_order_ids", JSON.stringify(next));
+    } catch {}
+    setLiveOrderIds(getUnreadFromStorage());
     setDetailOpen(true);
     setLoadingDetail(true);
     const { data, error } = await getOrderById(id);
@@ -222,6 +278,32 @@ function OrdersContent() {
         </div>
       </div>
 
+      {/* Floating Explosion Banner khi có nhiều đơn hàng mới nổ trong phiên */}
+      {liveOrderIds.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-500/15 backdrop-blur-md shadow-lg animate-in slide-in-from-top-2 duration-500">
+          <div className="flex items-center gap-2.5 text-emerald-800 dark:text-emerald-300">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs sm:text-sm font-bold">
+              ✨ Có {liveOrderIds.size} đơn hàng mới vừa được đặt mua! Vui lòng kiểm tra các đơn hàng được đánh dấu bên dưới!
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              try { localStorage.removeItem("admin_unread_order_ids"); } catch {}
+              setLiveOrderIds(new Set());
+            }}
+            className="h-7 border-emerald-500/50 hover:bg-emerald-500 hover:text-white text-xs font-bold shrink-0 cursor-pointer transition-all shadow-sm"
+          >
+            Đánh dấu đã đọc tất cả
+          </Button>
+        </div>
+      )}
+
       <div className="rounded-md border bg-card overflow-x-auto shadow-sm">
         <Table className="min-w-[700px]">
           <TableHeader>
@@ -248,11 +330,27 @@ function OrdersContent() {
                 </TableCell>
               </TableRow>
             ) : (
-              orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-xs uppercase" title={order.id}>
-                    {order.id.split("-")[0]}
-                  </TableCell>
+              orders.map((order) => {
+                const isLiveNew = liveOrderIds.has(order.id);
+                return (
+                  <TableRow
+                    key={order.id}
+                    className={
+                      isLiveNew
+                        ? "bg-emerald-500/15 dark:bg-emerald-500/20 border-l-4 border-l-emerald-500 transition-colors duration-700 hover:bg-emerald-500/25"
+                        : ""
+                    }
+                  >
+                    <TableCell className="font-mono text-xs uppercase" title={order.id}>
+                      <div className="flex items-center gap-1.5">
+                        {isLiveNew && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500 text-white animate-pulse shadow-sm shrink-0">
+                            MỚI
+                          </span>
+                        )}
+                        <span>{order.id.split("-")[0]}</span>
+                      </div>
+                    </TableCell>
                   <TableCell>
                     <div className="font-medium">{order.profiles?.full_name || "Chưa xác định tên"}</div>
                     <div className="text-xs text-muted-foreground">{order.profiles?.email}</div>
@@ -291,7 +389,8 @@ function OrdersContent() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+            })
             )}
           </TableBody>
         </Table>

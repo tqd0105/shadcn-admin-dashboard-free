@@ -43,3 +43,15 @@ Customers clicking "Hủy đơn" encountered error `Cannot coerce the result to 
 1. **Enabled Customer Order Cancellation via RLS**: Pushed policy `Users can update own orders` directly to the Supabase Cloud Postgres DB (`supabase db push`), keeping established project architecture clean without introducing new folder patterns (`lib/actions`). Simplified `updateOrderStatus` in `order.service.ts`.
 2. **Instant Dual Realtime Admin Sync**: Integrated both Supabase Broadcast Channels (`global-admin-orders-notifier`) and same-browser `BroadcastChannel` (`admin_orders_channel`) into `updateOrderStatus`. Admin Orders table (`/dashboard/orders`) and Live Bell (`AdminRealtimeNotifier`) instantly trigger on status updates.
 
+## 2026-06-26: Guaranteed Realtime Broadcast Delivery, StrictMode Fix & Glassmorphic Live Pool
+
+### Context
+Admin Realtime notifications did not fire because: (1) Supabase Realtime WebSocket server silently drops `postgres_changes` events when table RLS policies contain subqueries (`SELECT ... FROM profiles`), (2) `createOrder` and `updateOrderStatus` navigated away before async `channel.subscribe()` finished sending broadcast payloads, and (3) React StrictMode unmount/remount in `AdminRealtimeNotifier` locked `initialized.current = true` while destroying socket connections.
+
+### Decision
+1. **Guaranteed Broadcast Delivery with Timeout**: Refactored `checkout.service.ts` and `order.service.ts` to await `channel.subscribe(...)` and `channel.send(...)` wrapped in a Promise with a 500ms fallback timeout before page navigation.
+2. **Removed StrictMode Initialization Lock**: Removed `initialized.current` check in `AdminRealtimeNotifier`, ensuring fresh WebSocket sockets establish on remount.
+3. **Sleek Floating Glassmorphic Pill Toasts**: Upgraded Sonner notification UI (`toast.custom`) into compact `max-w-[330px]` floating pills with live pulsing indicators and micro-bounce icons.
+4. **Live Glowing Rows & Explosion Banner (`/dashboard/orders`)**: Created an in-memory `Set<string>` pool (`liveOrderIds`). Incoming orders automatically highlight with emerald tinted backgrounds (`bg-emerald-500/15`), pulsing "MỚI" badges, and a floating multi-order summary banner. Clicking "Xem chi tiết" acknowledges and removes the row glow smoothly.
+
+

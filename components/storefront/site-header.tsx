@@ -23,6 +23,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
+  SheetTitle,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
@@ -131,6 +132,7 @@ export function SiteHeader() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 flex flex-col h-full bg-background overflow-hidden border-r">
+                <SheetTitle className="sr-only">Menu Điều Hướng</SheetTitle>
                 {/* 1. Header Khu Vực Tài Khoản */}
                 <div className="p-6 pb-5 bg-muted/30 border-b">
                   {user ? (

@@ -102,19 +102,24 @@ export async function updateOrderStatus(id: string, status: string) {
 
   if (!error) {
     try {
-      const channel = supabase.channel("global-admin-orders-notifier");
-      channel.subscribe((st) => {
-        if (st === "SUBSCRIBED") {
-          channel.send({
-            type: "broadcast",
-            event: "ORDER_UPDATED",
-            payload: { id, status }
-          });
-        }
-      });
       if (typeof window !== "undefined" && window.BroadcastChannel) {
         new BroadcastChannel("admin_orders_channel").postMessage({ type: "ORDER_UPDATED", id, status });
       }
+      const channel = supabase.channel("global-admin-orders-notifier");
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => resolve(), 500);
+        channel.subscribe(async (st) => {
+          if (st === "SUBSCRIBED") {
+            await channel.send({
+              type: "broadcast",
+              event: "ORDER_UPDATED",
+              payload: { id, status }
+            });
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+      });
     } catch (err) {}
   }
 

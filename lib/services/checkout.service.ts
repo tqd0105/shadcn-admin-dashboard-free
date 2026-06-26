@@ -144,21 +144,30 @@ export async function placeOrder(checkoutData: CheckoutData) {
     .delete()
     .eq("user_id", userId);
 
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cart-updated"));
+  }
+
   // 6. Phát tín hiệu Realtime tức thời cho Admin Dashboard (Qua cả WebSocket và BroadcastChannel)
   try {
-    const channel = supabase.channel("global-admin-orders-notifier");
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        channel.send({
-          type: "broadcast",
-          event: "NEW_ORDER",
-          payload: order
-        });
-      }
-    });
     if (typeof window !== "undefined" && window.BroadcastChannel) {
       new BroadcastChannel("admin_orders_channel").postMessage({ type: "NEW_ORDER", order });
     }
+    const channel = supabase.channel("global-admin-orders-notifier");
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(() => resolve(), 500);
+      channel.subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.send({
+            type: "broadcast",
+            event: "NEW_ORDER",
+            payload: order
+          });
+          clearTimeout(timer);
+          resolve();
+        }
+      });
+    });
   } catch (err) {}
 
   return { data: order, error: null };
