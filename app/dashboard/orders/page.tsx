@@ -115,7 +115,29 @@ function OrdersContent() {
       setTotal(total);
       setTotalPages(totalPages);
     }
-    setLiveOrderIds(getUnreadFromStorage());
+
+    // Lọc bỏ các ID đơn hàng unread đã bị xóa khỏi CSDL
+    const unreadList = Array.from(getUnreadFromStorage());
+    if (unreadList.length > 0) {
+      const { data: existingOrders } = await supabase
+        .from("orders")
+        .select("id")
+        .in("id", unreadList);
+      if (existingOrders) {
+        const validIds = new Set(existingOrders.map((o) => o.id));
+        const cleanedList = unreadList.filter((id) => validIds.has(id));
+        if (cleanedList.length !== unreadList.length) {
+          try {
+            localStorage.setItem("admin_unread_order_ids", JSON.stringify(cleanedList));
+          } catch {}
+        }
+        setLiveOrderIds(validIds);
+      } else {
+        setLiveOrderIds(getUnreadFromStorage());
+      }
+    } else {
+      setLiveOrderIds(new Set());
+    }
     setLoading(false);
   }, [currentSearch, currentPage, currentStatus, currentSort, currentDate]);
 
@@ -227,6 +249,16 @@ function OrdersContent() {
     if (error) {
       toast.error("Lỗi khi xóa đơn hàng!");
     } else {
+      try {
+        const unread = JSON.parse(localStorage.getItem("admin_unread_order_ids") || "[]");
+        const next = unread.filter((item: string) => item !== deleteId);
+        localStorage.setItem("admin_unread_order_ids", JSON.stringify(next));
+      } catch {}
+      setLiveOrderIds((prev) => {
+        const next = new Set(prev);
+        if (deleteId) next.delete(deleteId);
+        return next;
+      });
       toast.success("Đã xóa đơn hàng thành công!");
       loadOrders();
     }

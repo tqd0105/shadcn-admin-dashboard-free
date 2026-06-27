@@ -9,6 +9,7 @@ import { ShoppingBag, AlertTriangle, ArrowRight, RefreshCw } from "lucide-react"
 export function AdminRealtimeNotifier() {
   const router = useRouter();
   const notifiedIds = useRef(new Set<string>());
+  const notifiedUpdates = useRef(new Map<string, number>());
   const audioCtxRef = useRef<any>(null);
 
   // Mở khóa AudioContext khi Admin có bất kỳ thao tác click/phím nào để lách luật chặn âm thanh
@@ -36,15 +37,17 @@ export function AdminRealtimeNotifier() {
       gain.connect(ctx.destination);
 
       const t = ctx.currentTime + delaySec;
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(659.25, t); // Nốt E5
-      osc.frequency.setValueAtTime(783.99, t + 0.1); // Nốt G5
+      osc.type = "square"; // Sóng vuông 8-bit tạo âm thanh Mario Coin
+      osc.frequency.setValueAtTime(987.77, t);
+      osc.frequency.setValueAtTime(1318.51, t + 0.08);
 
-      gain.gain.setValueAtTime(0.3, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      // Khởi tạo từ 0 rồi tăng mượt lên 0.25 trong 10ms (chống hiện tượng vỡ tiếng pop/crackle của loa)
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.linearRampToValueAtTime(0.25, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
 
       osc.start(t);
-      osc.stop(t + 0.45);
+      osc.stop(t + 0.5);
     } catch (err) {
       console.warn("Lỗi phát âm thanh:", err);
     }
@@ -52,8 +55,9 @@ export function AdminRealtimeNotifier() {
 
   // Phát chuông báo 2 tiếng liên tiếp (Ting Ting... Ting Ting)
   const playCashChime = () => {
-    playSingleChime(0);   
+    playSingleChime(0);
     playSingleChime(0.55);
+    playSingleChime(1.1);
   };
 
   const triggerOrderNotification = (order: any) => {
@@ -70,7 +74,7 @@ export function AdminRealtimeNotifier() {
           unread.push(order.id);
           localStorage.setItem("admin_unread_order_ids", JSON.stringify(unread));
         }
-      } catch {}
+      } catch { }
       window.dispatchEvent(new CustomEvent("ADMIN_LOCAL_NEW_ORDER", { detail: order }));
     }
 
@@ -111,6 +115,12 @@ export function AdminRealtimeNotifier() {
 
   const triggerUpdateNotification = (data: { id: string; status: string }) => {
     if (!data?.id) return;
+    const key = `${data.id}_${data.status}`;
+    const now = Date.now();
+    const lastNotified = notifiedUpdates.current.get(key) || 0;
+    if (now - lastNotified < 2000) return; // Chống trùng lặp thông báo trong 2 giây
+    notifiedUpdates.current.set(key, now);
+
     playSingleChime(0);
 
     const shortId = data.id.split("-")[0].toUpperCase();
@@ -157,6 +167,12 @@ export function AdminRealtimeNotifier() {
     }
   };
 
+  // Sử dụng ref để đảm bảo Hot Reload luôn nhận được code âm thanh mới nhất mà không bị cache closure cũ
+  const triggerOrderRef = useRef(triggerOrderNotification);
+  triggerOrderRef.current = triggerOrderNotification;
+  const triggerUpdateRef = useRef(triggerUpdateNotification);
+  triggerUpdateRef.current = triggerUpdateNotification;
+
   useEffect(() => {
     const unlock = () => {
       const ctx = getAudioCtx();
@@ -170,9 +186,9 @@ export function AdminRealtimeNotifier() {
       bc = new BroadcastChannel("admin_orders_channel");
       bc.onmessage = (event) => {
         if (event.data?.type === "NEW_ORDER" && event.data.order) {
-          triggerOrderNotification(event.data.order);
+          triggerOrderRef.current(event.data.order);
         } else if (event.data?.type === "ORDER_UPDATED") {
-          triggerUpdateNotification(event.data);
+          triggerUpdateRef.current(event.data);
         }
       };
     }
@@ -180,16 +196,16 @@ export function AdminRealtimeNotifier() {
     const channel = supabase
       .channel("global-admin-orders-notifier")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
-        triggerOrderNotification(payload.new);
+        triggerOrderRef.current(payload.new);
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (payload) => {
-        triggerUpdateNotification(payload.new as any);
+        triggerUpdateRef.current(payload.new as any);
       })
       .on("broadcast", { event: "NEW_ORDER" }, (payload) => {
-        if (payload.payload) triggerOrderNotification(payload.payload);
+        if (payload.payload) triggerOrderRef.current(payload.payload);
       })
       .on("broadcast", { event: "ORDER_UPDATED" }, (payload) => {
-        if (payload.payload) triggerUpdateNotification(payload.payload);
+        if (payload.payload) triggerUpdateRef.current(payload.payload);
       })
       .subscribe();
 
