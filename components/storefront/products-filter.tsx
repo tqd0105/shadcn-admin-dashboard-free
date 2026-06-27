@@ -35,8 +35,10 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
   const maxPrice = searchParams.get("maxPrice") || "";
 
   useEffect(() => {
-    setMinPriceInput(minPrice);
-    setMaxPriceInput(maxPrice);
+    queueMicrotask(() => {
+      setMinPriceInput(minPrice);
+      setMaxPriceInput(maxPrice);
+    });
   }, [minPrice, maxPrice]);
 
   const createQueryString = useCallback(

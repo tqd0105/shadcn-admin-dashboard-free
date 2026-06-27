@@ -32,8 +32,10 @@ export function NotificationDropdown({ userId }: { userId?: string }) {
 
   useEffect(() => {
     if (!userId) {
-      setNotifications([]);
-      setUnreadCount(0);
+      queueMicrotask(() => {
+        setNotifications([]);
+        setUnreadCount(0);
+      });
       return;
     }
 
@@ -126,7 +128,7 @@ export function NotificationDropdown({ userId }: { userId?: string }) {
     const date = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     if (diff < 86400000) {
       const hours = Math.floor(diff / 3600000);
       if (hours === 0) {
@@ -135,7 +137,7 @@ export function NotificationDropdown({ userId }: { userId?: string }) {
       }
       return `${hours} giờ trước`;
     }
-    
+
     return date.toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "short",
@@ -169,7 +171,7 @@ export function NotificationDropdown({ userId }: { userId?: string }) {
           )}
         </div>
         <DropdownMenuSeparator className="m-0" />
-        
+
         <ScrollArea className="h-[350px]">
           {!userId ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center text-muted-foreground">
@@ -209,7 +211,7 @@ export function NotificationDropdown({ userId }: { userId?: string }) {
                       {formatDate(notification.created_at)}
                     </p>
                   </div>
-                  
+
                   {/* Chấm đỏ chưa đọc */}
                   {!notification.is_read && (
                     <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5 group-hover:opacity-0 transition-opacity" />

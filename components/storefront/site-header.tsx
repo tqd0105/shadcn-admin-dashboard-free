@@ -177,7 +177,7 @@ export function SiteHeader() {
                     </div>
                   ) : (
                     <div className="text-center py-2 space-y-3">
-                      
+
                       <div>
                         <h4 className="font-bold text-base text-foreground uppercase">Chào mừng đến LuxeCommerce</h4>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -289,8 +289,12 @@ export function SiteHeader() {
                 </div>
 
                 {/* 3. Chân Drawer */}
-                {user && (
-                  <div className="p-4 border-t bg-muted/20">
+                <div className="p-4 border-t bg-muted/20 space-y-3 mt-auto">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-sm font-semibold text-foreground/80">Giao diện (Sáng/Tối)</span>
+                    <ThemeToggle />
+                  </div>
+                  {user && (
                     <SheetClose asChild>
                       <Button
                         variant="ghost"
@@ -300,8 +304,8 @@ export function SiteHeader() {
                         <LogOut className="w-4 h-4 mr-3" /> Đăng xuất tài khoản
                       </Button>
                     </SheetClose>
-                  </div>
-                )}
+                  )}
+                </div>
               </SheetContent>
             </Sheet>
           </div>
@@ -341,8 +345,8 @@ export function SiteHeader() {
                     const price = product.price;
                     const salePrice = product.discount_percent ? Math.round(price * (1 - product.discount_percent / 100)) : price;
                     return (
-                      <Link 
-                        key={product.id} 
+                      <Link
+                        key={product.id}
                         href={`/product/${product.id}`}
                         className="flex items-center gap-3 px-4 py-2 hover:bg-secondary/80 transition-colors"
                         onClick={() => setShowSuggestions(false)}
@@ -373,16 +377,21 @@ export function SiteHeader() {
         {/* Actions (Right) */}
         <div className="flex items-center gap-2 flex-shrink-0 order-2 md:order-3">
           {/* Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-6 mr-4">
+          <nav className="hidden lg:flex items-center gap-6 ">
             <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/">Trang chủ</Link>
             <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/products">Sản phẩm</Link>
             <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/account/wishlist" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/account/wishlist">Yêu thích</Link>
+            <div className="flex items-center ">
+              <ThemeToggle />
+            </div>
           </nav>
-          
-          <ThemeToggle />
-          <NotificationDropdown userId={user?.id} />
-          <Link 
-            href={user ? "/cart" : "#"} 
+
+          {/* 1. Khi ĐÃ đăng nhập: Thông báo nằm ở trái ngoài cùng của cụm icon */}
+          {user && <NotificationDropdown userId={user.id} />}
+
+          {/* 2. Icon Giỏ hàng (luôn nằm ở giữa khi đăng nhập, hoặc trái của nút Đăng nhập khi chưa đăng nhập) */}
+          <Link
+            href={user ? "/cart" : "#"}
             className="relative"
             onClick={(e) => {
               if (!user) {
@@ -391,25 +400,28 @@ export function SiteHeader() {
               }
             }}
           >
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className={cn(
                 "text-muted-foreground hover:text-primary relative transition-all duration-300",
                 isBumping ? "scale-125 text-primary" : "scale-100"
               )}
             >
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
-                {cartCount}
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
+                  {cartCount}
+                </span>
+              )}
             </Button>
           </Link>
-          
+
+          {/* 3. Phải ngoài cùng: Avatar (nếu đăng nhập) hoặc Nút Đăng nhập (nếu chưa) */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="hidden md:inline-flex rounded-full border-2 border-transparent hover:border-primary/20 transition-all ml-2 h-9 w-9 p-0">
+                <Button variant="ghost" size="icon" className="inline-flex rounded-full border-2 border-transparent hover:border-primary/20 transition-all ml-1.5 md:ml-2 h-9 w-9 p-0 shrink-0">
                   <Avatar className="h-full w-full">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
                     <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
@@ -434,7 +446,7 @@ export function SiteHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border/50 mb-2" />
-                
+
                 <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-secondary focus:bg-secondary outline-none">
                   <Link href="/account" className="flex items-center w-full">
                     <div className="  flex items-center justify-center mr-3 shrink-0">
@@ -446,7 +458,7 @@ export function SiteHeader() {
                     </div>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-secondary focus:bg-secondary outline-none mt-1">
                   <Link href="/account/orders" className="flex items-center w-full">
                     <div className="  flex items-center justify-center mr-3 shrink-0">
@@ -458,7 +470,7 @@ export function SiteHeader() {
                     </div>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 {role === "admin" && (
                   <>
                     <DropdownMenuSeparator className="bg-border/50 my-2" />
@@ -475,9 +487,9 @@ export function SiteHeader() {
                     </DropdownMenuItem>
                   </>
                 )}
-                
+
                 <DropdownMenuSeparator className="bg-border/50 my-2" />
-                
+
                 <DropdownMenuItem onClick={() => logout()} className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-950/50 outline-none w-full">
                   <div className=" flex items-center justify-center mr-3 shrink-0">
                     <Image src="/icons/logout.png" alt="Đăng xuất" width={25} height={25} className="object-contain" />
@@ -487,8 +499,8 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button 
-              className="hidden md:inline-flex rounded-full ml-2"
+            <Button
+              className="inline-flex rounded-full ml-1.5 md:ml-2 font-bold px-3.5 py-1.5 h-8 text-xs md:h-9 md:px-4 md:text-sm shadow-md shadow-primary/20 transition-all active:scale-95 shrink-0"
               onClick={() => openModal('login')}
             >
               Đăng nhập

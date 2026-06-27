@@ -7,6 +7,7 @@ export async function getOrders(
   options?: {
     status?: string;
     sort?: string;
+    date?: string;
   }
 ) {
   let query = supabase
@@ -43,11 +44,28 @@ export async function getOrders(
     query = query.eq("status", options.status);
   }
 
+  // Date Filtering
+  if (options?.date && options.date !== "all") {
+    const now = new Date();
+    if (options.date === "today") {
+      const todayStart = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+      query = query.gte("created_at", todayStart);
+    } else if (options.date === "7days") {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      query = query.gte("created_at", sevenDaysAgo);
+    } else if (options.date === "30days") {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      query = query.gte("created_at", thirtyDaysAgo);
+    }
+  }
+
   // Sorting
-  if (options?.sort === 'amount_asc') {
+  if (options?.sort === "amount_asc") {
     query = query.order("total_amount", { ascending: true });
-  } else if (options?.sort === 'amount_desc') {
+  } else if (options?.sort === "amount_desc") {
     query = query.order("total_amount", { ascending: false });
+  } else if (options?.sort === "oldest") {
+    query = query.order("created_at", { ascending: true });
   } else {
     // default: newest
     query = query.order("created_at", { ascending: false });

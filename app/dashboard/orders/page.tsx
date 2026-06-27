@@ -47,6 +47,10 @@ import {
   IconEye,
   IconPackage,
   IconTrash,
+  IconFilter,
+  IconCalendar,
+  IconArrowsSort,
+  IconX,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 
@@ -66,6 +70,8 @@ function OrdersContent() {
   const currentSearch = searchParams.get("search") || "";
   const currentPage = Number(searchParams.get("page")) || 1;
   const currentStatus = searchParams.get("status") || "all";
+  const currentSort = searchParams.get("sort") || "newest";
+  const currentDate = searchParams.get("date") || "all";
 
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +108,7 @@ function OrdersContent() {
       currentSearch,
       currentPage,
       10,
-      { status: currentStatus }
+      { status: currentStatus, sort: currentSort, date: currentDate }
     );
     if (!error && data) {
       setOrders(data);
@@ -111,7 +117,23 @@ function OrdersContent() {
     }
     setLiveOrderIds(getUnreadFromStorage());
     setLoading(false);
-  }, [currentSearch, currentPage, currentStatus]);
+  }, [currentSearch, currentPage, currentStatus, currentSort, currentDate]);
+
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "all" && value !== "newest" && value !== "") {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const clearAllFilters = () => {
+    setSearchInput("");
+    router.push(pathname);
+  };
 
   useEffect(() => {
     loadOrders();
@@ -240,41 +262,103 @@ function OrdersContent() {
         <p className="text-muted-foreground">Theo dõi và cập nhật trạng thái đơn hàng.</p>
       </div>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <form onSubmit={handleSearch} className="flex flex-1 items-center gap-2">
-          <div className="relative w-full max-w-sm">
-            <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Tìm theo Mã UUID..."
-              className="pl-8"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-          </div>
-          <Button type="submit" variant="secondary">Tìm</Button>
-        </form>
+      {/* Bộ lọc Nhanh dạng Thẻ Trạng Thái (Status Quick Tabs) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b">
+        <button
+          onClick={() => updateFilter("status", "all")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs shrink-0 transition-all cursor-pointer ${
+            currentStatus === "all"
+              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]"
+              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <IconFilter className="w-3.5 h-3.5" /> Tất cả đơn hàng
+        </button>
+        {Object.entries(STATUS_MAP).map(([key, info]) => {
+          const isActive = currentStatus === key;
+          return (
+            <button
+              key={key}
+              onClick={() => updateFilter("status", key)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs shrink-0 transition-all cursor-pointer border ${
+                isActive
+                  ? `${info.color} shadow-sm font-extrabold ring-2 ring-primary/20 scale-[1.02]`
+                  : "bg-background/80 text-muted-foreground border-border/50 hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              {info.label}
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="flex items-center gap-2">
-          <Select
-            value={currentStatus}
-            onValueChange={(val) => {
-              const params = new URLSearchParams(searchParams.toString());
-              if (val !== "all") params.set("status", val);
-              else params.delete("status");
-              params.set("page", "1");
-              router.push(`${pathname}?${params.toString()}`);
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả trạng thái</SelectItem>
-              {Object.entries(STATUS_MAP).map(([key, info]) => (
-                <SelectItem key={key} value={key}>{info.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Thanh Bộ Lọc Kết Hợp (Search + Date + Sort + Reset) */}
+      <div className="flex flex-col gap-3 p-4 rounded-2xl bg-card border shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <form onSubmit={handleSearch} className="flex flex-1 items-center gap-2 min-w-[260px]">
+            <div className="relative w-full max-w-md">
+              <IconSearch className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm theo Mã UUID, tên khách, email..."
+                className="pl-9 bg-background rounded-xl border-border/80 focus:border-primary h-10 text-sm"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
+            <Button type="submit" variant="secondary" className="h-10 px-4 rounded-xl font-bold shrink-0 cursor-pointer">
+              Tìm kiếm
+            </Button>
+          </form>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Bộ lọc thời gian */}
+            <div className="flex items-center">
+              <Select value={currentDate} onValueChange={(val) => updateFilter("date", val)}>
+                <SelectTrigger className="w-[160px] h-10 rounded-xl bg-background border-border/80 font-medium text-xs">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <IconCalendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <SelectValue placeholder="Thời gian" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Mọi thời điểm</SelectItem>
+                  <SelectItem value="today">Hôm nay</SelectItem>
+                  <SelectItem value="7days">7 ngày qua</SelectItem>
+                  <SelectItem value="30days">30 ngày qua</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sắp xếp */}
+            <div className="flex items-center">
+              <Select value={currentSort} onValueChange={(val) => updateFilter("sort", val)}>
+                <SelectTrigger className="w-[170px] h-10 rounded-xl bg-background border-border/80 font-medium text-xs">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <IconArrowsSort className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <SelectValue placeholder="Sắp xếp" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Mới nhất trước</SelectItem>
+                  <SelectItem value="oldest">Cũ nhất trước</SelectItem>
+                  <SelectItem value="amount_desc">Giá trị cao nhất</SelectItem>
+                  <SelectItem value="amount_asc">Giá trị thấp nhất</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Nút xóa bộ lọc */}
+            {(currentStatus !== "all" || currentDate !== "all" || currentSort !== "newest" || currentSearch !== "") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="h-10 px-3 rounded-xl text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 gap-1.5 shrink-0 cursor-pointer transition-all"
+              >
+                <IconX className="w-4 h-4" /> Xóa bộ lọc
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
