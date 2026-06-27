@@ -309,7 +309,7 @@ export function SiteHeader() {
               </SheetContent>
             </Sheet>
           </div>
-          <Link href="/" className="text-xl font-bold tracking-tight flex-shrink-0 text-primary flex items-center gap-2">
+          <Link href="/" className="text-lg md:text-xl font-bold tracking-tight flex-shrink-0 text-primary flex items-center gap-2">
             LuxeCommerce
           </Link>
         </div>
@@ -389,10 +389,10 @@ export function SiteHeader() {
           {/* 1. Khi ĐÃ đăng nhập: Thông báo nằm ở trái ngoài cùng của cụm icon */}
           {user && <NotificationDropdown userId={user.id} />}
 
-          {/* 2. Icon Giỏ hàng (luôn nằm ở giữa khi đăng nhập, hoặc trái của nút Đăng nhập khi chưa đăng nhập) */}
+          {/* 2. Icon Giỏ hàng (luôn nằm ở giữa khi đăng nhập, hoặc trái của nút Đăng nhập khi chưa đăng nhập - Ẩn trên mobile nếu chưa đăng nhập) */}
           <Link
             href={user ? "/cart" : "#"}
-            className="relative"
+            className={cn("relative", !user && "hidden md:inline-block")}
             onClick={(e) => {
               if (!user) {
                 e.preventDefault();
