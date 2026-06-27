@@ -130,14 +130,14 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
             />
             Làm mới số liệu
           </Button>
-          <Button
+          {/* <Button
             size="sm"
             className="rounded-xl font-semibold shadow-md shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
             onClick={() => alert("Chức năng xuất báo cáo PDF/Excel đang được tổng hợp!")}
           >
             <FileSpreadsheet className="w-4 h-4 mr-2" />
             Xuất báo cáo
-          </Button>
+          </Button> */}
         </div>
       </div>
 
