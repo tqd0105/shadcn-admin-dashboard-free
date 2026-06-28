@@ -188,15 +188,15 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
         <button 
           onClick={handleAddToCart}
           disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="flex-1 flex justify-center items-center h-12 bg-primary text-primary-foreground font-semibold rounded-md shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex justify-center items-center h-12 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined mr-2">shopping_bag</span>
-          {isAdding ? "Đang xử lý..." : "Thêm giỏ hàng"}
+          {isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
         </button>
         <button 
           onClick={handleBuyNow}
           disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="flex-1 flex justify-center items-center h-12 bg-background border border-primary text-primary font-semibold rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex justify-center items-center h-12 py-3 bg-background border border-primary text-primary font-semibold rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isAdding ? "Đang xử lý..." : "Mua ngay"}
         </button>

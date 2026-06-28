@@ -99,32 +99,34 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
 
   return (
     <div className="mt-16 border border-outline-variant rounded-lg bg-surface-container-lowest overflow-hidden">
-      <div className="flex border-b border-outline-variant bg-surface-container-low flex-wrap">
+      <div className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-b border-outline-variant bg-surface-container-low">
         <button
           className={cn(
-            "flex-1 py-4 font-label-md text-label-md transition-colors min-w-[120px]",
+            "flex-1 shrink-0 py-3.5 sm:py-4 px-2 sm:px-4 text-xs sm:text-lg transition-colors text-center whitespace-nowrap",
             activeTab === "desc"
               ? "font-semibold text-primary border-b-2 border-primary bg-surface-container-lowest"
               : "font-medium text-on-surface-variant border-b-2 border-transparent hover:text-primary"
           )}
           onClick={() => setActiveTab("desc")}
         >
-          Mô tả sản phẩm
+          <span className="sm:hidden">Mô tả</span>
+          <span className="hidden sm:inline">Mô tả sản phẩm</span>
         </button>
         <button
           className={cn(
-            "flex-1 py-4 font-label-md text-label-md transition-colors min-w-[120px]",
+            "flex-1 shrink-0 py-3.5 sm:py-4 px-2 sm:px-4 text-xs sm:text-lg transition-colors text-center whitespace-nowrap",
             activeTab === "specs"
               ? "font-semibold text-primary border-b-2 border-primary bg-surface-container-lowest"
               : "font-medium text-on-surface-variant border-b-2 border-transparent hover:text-primary"
           )}
           onClick={() => setActiveTab("specs")}
         >
-          Thông số kỹ thuật
+          <span className="sm:hidden">Thông số</span>
+          <span className="hidden sm:inline">Thông số kỹ thuật</span>
         </button>
         <button
           className={cn(
-            "flex-1 py-4 font-label-md text-label-md transition-colors min-w-[120px]",
+            "flex-1 shrink-0 py-3.5 sm:py-4 px-2 sm:px-4 text-xs sm:text-lg transition-colors text-center whitespace-nowrap",
             activeTab === "reviews"
               ? "font-semibold text-primary border-b-2 border-primary bg-surface-container-lowest"
               : "font-medium text-on-surface-variant border-b-2 border-transparent hover:text-primary"
