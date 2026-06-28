@@ -204,7 +204,7 @@ export default function UsersDataTable({
             onClick={() => onPageChange(pageIndex - 1)}
             disabled={!table.getCanPreviousPage() || loading}
           >
-            Trang trước
+            Previous
           </Button>
           <Button
             variant="outline"
@@ -212,7 +212,7 @@ export default function UsersDataTable({
             onClick={() => onPageChange(pageIndex + 1)}
             disabled={!table.getCanNextPage() || loading}
           >
-            Trang sau
+            Next
           </Button>
         </div>
       </div>
