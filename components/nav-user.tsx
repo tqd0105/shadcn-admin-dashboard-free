@@ -109,7 +109,7 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || authUser?.email || "User"} />
+                <AvatarImage src={profile?.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || ""} alt={profile?.full_name || authUser?.email || "User"} />
                 <AvatarFallback className="rounded-lg">
                   {profile?.full_name?.substring(0, 2)?.toUpperCase() || authUser?.email?.substring(0, 2)?.toUpperCase() || "U"}
                 </AvatarFallback>
@@ -132,7 +132,7 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || authUser?.email || "User"} />
+                  <AvatarImage src={profile?.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || ""} alt={profile?.full_name || authUser?.email || "User"} />
                   <AvatarFallback className="rounded-lg">
                     {profile?.full_name?.substring(0, 2)?.toUpperCase() || authUser?.email?.substring(0, 2)?.toUpperCase() || "U"}
                   </AvatarFallback>

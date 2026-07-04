@@ -139,7 +139,7 @@ export function SiteHeader() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
-                          <AvatarImage src={profile?.avatar_url} />
+                          <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
                           <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                             {user.email?.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -427,7 +427,7 @@ export function SiteHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="inline-flex rounded-full border-2 border-transparent hover:border-primary/20 transition-all ml-1.5 md:ml-2 h-9 w-9 p-0 shrink-0">
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
                     <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -437,7 +437,7 @@ export function SiteHeader() {
               <DropdownMenuContent align="end" className="w-64 p-2 rounded-xl shadow-xl border-border/50 z-[100]">
                 <DropdownMenuLabel className="font-normal p-2 bg-muted/50 rounded-lg mb-2 flex justify-center items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>

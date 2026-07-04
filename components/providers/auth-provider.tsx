@@ -1,6 +1,6 @@
 "use client";
 
-import { getProfile } from "@/lib/services/profile.service";
+import { getProfile, updateProfile } from "@/lib/services/profile.service";
 import { getRole } from "@/lib/services/role.service";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js"
@@ -38,15 +38,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(null);
         router.push("/");
     }, [router]);
-    const fetchProfileAndRole = useCallback(async (userId: string) => {
-        const { data, error } = await getProfile(userId);
+    const fetchProfileAndRole = useCallback(async (userObj: User) => {
+        const { data, error } = await getProfile(userObj.id);
         if (error) {
             console.error(error);
             return;
         }
-        setProfile(data);
-        if (data?.role_id) {
-            const { data: role } = await getRole(data.role_id);
+        
+        let currentProfile = data;
+        const meta = userObj.user_metadata;
+        if (meta && currentProfile) {
+            const googleName = meta.full_name || meta.name;
+            const googleAvatar = meta.avatar_url || meta.picture;
+            const emailPrefix = currentProfile.email?.split('@')[0];
+            
+            const needsNameUpdate = googleName && (!currentProfile.full_name || currentProfile.full_name === emailPrefix);
+            const needsAvatarUpdate = googleAvatar && !currentProfile.avatar_url;
+
+            if (needsNameUpdate || needsAvatarUpdate) {
+                const { data: updated } = await updateProfile(userObj.id, {
+                    full_name: needsNameUpdate ? googleName : currentProfile.full_name,
+                    avatar_url: needsAvatarUpdate ? googleAvatar : currentProfile.avatar_url,
+                });
+                if (updated) currentProfile = updated;
+            }
+        }
+
+        setProfile(currentProfile);
+        if (currentProfile?.role_id) {
+            const { data: role } = await getRole(currentProfile.role_id);
             if (role) setRole(role.name);
         }
     }, []);
@@ -59,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(prev => (prev?.id === user?.id ? prev : user));
             if (user) {
                 lastUserIdRef.current = user.id;
-                await fetchProfileAndRole(user.id);
+                await fetchProfileAndRole(user);
             }
             setLoading(false);
         };
@@ -71,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (currentUser && currentUser.id !== lastUserIdRef.current) {
                 lastUserIdRef.current = currentUser.id;
-                await fetchProfileAndRole(currentUser.id);
+                await fetchProfileAndRole(currentUser);
             }
 
             if (event === "SIGNED_OUT") {
