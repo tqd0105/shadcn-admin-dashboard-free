@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Prompt } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import Providers from "@/components/providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const prompt = Prompt({ subsets: ["latin", "thai", "vietnamese"], weight: [ "300", "400", "500", "600", "700", "800", "900"] });
 
 export const metadata: Metadata = {
   title: "LuxeCommerce - Mua sắm hàng hiệu",
@@ -26,7 +26,7 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className={inter.className}>
+      <body className={prompt.className}>
         <NextTopLoader 
           color="#ff00ffff" 
           initialPosition={0.7} 

@@ -116,7 +116,9 @@ export async function updateOrderStatus(id: string, status: string) {
   const { data, error } = await supabase
     .from("orders")
     .update({ status })
-    .eq("id", id);
+    .eq("id", id)
+    .select("*, profiles(full_name, email, phone), addresses(full_name, street, city, phone)")
+    .single();
 
   if (!error) {
     try {
@@ -139,6 +141,42 @@ export async function updateOrderStatus(id: string, status: string) {
         });
       });
     } catch (err) {}
+
+    // Gửi email thông báo khi đơn hàng chuyển trạng thái "Đã giao hàng" (delivered)
+    if (status === "delivered" && data) {
+      try {
+        const recipientEmail = data.profiles?.email;
+        if (recipientEmail) {
+          const emailPayload = {
+            to: recipientEmail,
+            orderId: data.id,
+            fullName: data.profiles?.full_name || data.addresses?.full_name || "Quý khách",
+            phone: data.addresses?.phone || data.profiles?.phone,
+            address: data.addresses ? `${data.addresses.street}, ${data.addresses.city}` : "Đã nhận tại cửa hàng/đã giao",
+            totalAmount: data.total_amount || 0,
+            deliveredAt: new Date().toISOString(),
+          };
+
+          console.log("📤 [Order Service] Đang gửi yêu cầu email thông báo giao hàng đến:", recipientEmail);
+          const res = await fetch("/api/email/order-delivered", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(emailPayload),
+          });
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            console.error("❌ [Order Service] Lỗi từ API gửi email giao hàng:", res.status, errData);
+          } else {
+            console.log("✅ [Order Service] Đã gửi email thông báo giao hàng thành công!");
+          }
+        } else {
+          console.warn("⚠️ [Order Service] Không tìm thấy email của khách hàng để gửi thông báo giao hàng.");
+        }
+      } catch (err) {
+        console.error("❌ [Order Service] Ngoại lệ khi gọi API gửi email giao hàng:", err);
+      }
+    }
   }
 
   return { data, error };
