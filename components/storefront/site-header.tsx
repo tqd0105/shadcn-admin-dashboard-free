@@ -380,7 +380,11 @@ export function SiteHeader() {
           <nav className="hidden lg:flex items-center gap-6 ">
             <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/">Trang chủ</Link>
             <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/products">Sản phẩm</Link>
-            <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/account/wishlist" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/account/wishlist">Yêu thích</Link>
+            {user ? (
+              <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/account/wishlist" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/account/wishlist">Yêu thích</Link>
+            ) : (
+              <button onClick={() => openModal('login')} className="text-sm font-medium transition-colors duration-200 text-muted-foreground hover:text-primary cursor-pointer">Yêu thích</button>
+            )}
             <div className="flex items-center ">
               <ThemeToggle />
             </div>
