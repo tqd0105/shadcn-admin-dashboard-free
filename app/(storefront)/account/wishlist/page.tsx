@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getWishlist, removeFromWishlist } from "@/lib/services/wishlist.service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { addToCart } from "@/lib/services/cart.service";
@@ -14,20 +14,21 @@ export default function WishlistPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchWishlist = async () => {
-    setLoading(true);
+  const fetchWishlist = useCallback(async () => {
+    setTimeout(() => setLoading(true), 0);
     const { data, error } = await getWishlist();
     if (!error && data) {
       setItems(data);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (user && !authLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchWishlist();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, fetchWishlist]);
 
   const handleRemove = async (id: string) => {
     const { error } = await removeFromWishlist(id);

@@ -44,11 +44,8 @@ export function WishlistModal({
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadGroups();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNote("");
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCreatingGroup(false);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNewGroupName("");
     }
   }, [isOpen]);

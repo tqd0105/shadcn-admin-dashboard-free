@@ -85,6 +85,9 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error("❌ [Email Service] Lỗi khi gửi email:", error);
-    return { success: false, error: error?.message || error };
+    const errStr = typeof error === "string" 
+      ? error 
+      : (error?.message || error?.code || error?.response || error?.toString() || "Lỗi gửi email không xác định");
+    return { success: false, error: errStr };
   }
 }

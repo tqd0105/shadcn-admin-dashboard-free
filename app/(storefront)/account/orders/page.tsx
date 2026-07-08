@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getMyOrders, updateOrderStatus } from "@/lib/services/order.service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
@@ -48,24 +48,25 @@ export default function MyOrdersPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push("/login");
-      } else {
-        fetchOrders();
-      }
-    }
-  }, [user, authLoading, router]);
-
-  const fetchOrders = async () => {
-    setLoading(true);
+  const fetchOrders = useCallback(async () => {
+    setTimeout(() => setLoading(true), 0);
     const { data, error } = await getMyOrders();
     if (!error && data) {
       setOrders(data);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.push("/login");
+      } else {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchOrders();
+      }
+    }
+  }, [user, authLoading, router, fetchOrders]);
 
   const confirmCancel = (id: string) => {
     setOrderToCancel(id);

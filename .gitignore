@@ -38,3 +38,8 @@ CLAUDE.md
 AGENTS.md
 config.toml
 .claude
+
+# AI IDE & MCP Tools Configuration
+/mcps/
+/.agents/
+skills-lock.json

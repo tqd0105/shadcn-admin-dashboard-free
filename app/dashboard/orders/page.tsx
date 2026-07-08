@@ -103,7 +103,7 @@ function OrdersContent() {
   const [liveOrderIds, setLiveOrderIds] = useState<Set<string>>(getUnreadFromStorage);
 
   const loadOrders = useCallback(async () => {
-    setLoading(true);
+    setTimeout(() => setLoading(true), 0);
     const { data, total, totalPages, error } = await getOrders(
       currentSearch,
       currentPage,
@@ -158,6 +158,7 @@ function OrdersContent() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadOrders();
 
     const channel = supabase

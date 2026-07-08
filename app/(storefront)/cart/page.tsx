@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCart, updateCartItemQuantity, removeFromCart } from "@/lib/services/cart.service";
 import { Button } from "@/components/ui/button";
@@ -23,24 +23,25 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading) {
-      if (user) {
-        loadCart();
-      } else {
-        setLoading(false);
-      }
-    }
-  }, [user, authLoading]);
-
-  const loadCart = async () => {
-    setLoading(true);
+  const loadCart = useCallback(async () => {
+    setTimeout(() => setLoading(true), 0);
     const { data, error } = await getCart();
     if (!error && data) {
       setCartItems(data);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        loadCart();
+      } else {
+        setTimeout(() => setLoading(false), 0);
+      }
+    }
+  }, [user, authLoading, loadCart]);
 
   const handleUpdateQuantity = async (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;

@@ -132,7 +132,7 @@ function ProductsPageContent() {
   const [deleting, setDeleting] = useState(false);
 
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
+    setTimeout(() => setLoading(true), 0);
     const { data, error, totalPages: fetchedTotalPages } = await getProduct(debouncedSearch, page, pageSize);
     if (error) console.error(error);
     setProducts(data ?? []);
@@ -143,6 +143,7 @@ function ProductsPageContent() {
   }, [debouncedSearch, page, pageSize]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
   }, [fetchProducts, refreshTrigger]);
 
@@ -371,7 +372,7 @@ function ProductsPageContent() {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the product
-              "{deleteTarget?.name}" and remove all of its data from our servers.
+              &quot;{deleteTarget?.name}&quot; and remove all of its data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

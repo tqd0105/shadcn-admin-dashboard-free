@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCart } from "@/lib/services/cart.service";
 import { placeOrder } from "@/lib/services/checkout.service";
@@ -42,21 +42,8 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [saveNewAddress, setSaveNewAddress] = useState<boolean>(true);
   const [createdOrder, setCreatedOrder] = useState<any>(null);
-  const [qrModalOpen, setQrModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading) {
-      if (user) {
-        setFormData(prev => ({ ...prev, fullName: user.user_metadata?.full_name || "" }));
-        loadCart();
-        loadAddresses();
-      } else {
-        router.push("/login");
-      }
-    }
-  }, [user, authLoading, router]);
-
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     const { data } = await getAddresses();
     if (data && data.length > 0) {
       setSavedAddresses(data);
@@ -72,16 +59,31 @@ export default function CheckoutPage() {
         }));
       }
     }
-  };
+  }, []);
 
-  const loadCart = async () => {
-    setLoading(true);
+  const loadCart = useCallback(async () => {
+    setTimeout(() => setLoading(true), 0);
     const { data, error } = await getCart();
     if (!error && data) {
       setCartItems(data);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) {
+        setTimeout(() => {
+          setFormData(prev => ({ ...prev, fullName: user.user_metadata?.full_name || "" }));
+        }, 0);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        loadCart();
+        loadAddresses();
+      } else {
+        router.push("/login");
+      }
+    }
+  }, [user, authLoading, router, loadCart, loadAddresses]);
 
   const getSubtotal = () => {
     return cartItems.reduce((total, item) => {
@@ -152,31 +154,15 @@ export default function CheckoutPage() {
     } else {
       setCreatedOrder(order);
       if (formData.paymentMethod === "banking") {
-        setQrModalOpen(true);
+        toast.info("Đang chuyển đến cổng thanh toán QR...", {
+          description: "Vui lòng hoàn tất chuyển khoản trong 10 phút."
+        });
+        router.push(`/checkout/payment/${order.id}`);
       } else {
         toast.success("Đặt hàng thành công!");
         setSuccess(true);
       }
     }
-  };
-
-  const handleCancelPayment = async () => {
-    setQrModalOpen(false);
-    if (createdOrder?.id) {
-      await supabase.from("orders").update({ status: "cancelled" }).eq("id", createdOrder.id);
-      if (user && cartItems.length > 0) {
-        const restorePayload = cartItems.map(item => ({
-          user_id: user.id,
-          product_id: item.product_id,
-          variant_id: item.variant_id || null,
-          quantity: item.quantity
-        }));
-        await supabase.from("cart_items").insert(restorePayload);
-      }
-    }
-    toast.info("Đã hủy thanh toán!", {
-      description: "Các sản phẩm đã được hoàn lại vào giỏ hàng của bạn."
-    });
   };
 
   if (authLoading || loading) {
@@ -333,7 +319,7 @@ export default function CheckoutPage() {
               <div className="flex items-center space-x-3 border p-4 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
                 <RadioGroupItem value="banking" id="banking" />
                 <Label htmlFor="banking" className="cursor-pointer font-medium flex-1 flex items-center justify-between">
-                  <span>Chuyển khoản VietQR / MoMo</span>
+                  <span>Chuyển khoản ngân hàng</span>
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Quét QR tự động</span>
                 </Label>
               </div>
@@ -433,43 +419,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
-
-      {/* Modal Quét Mã Chuyển Khoản VietQR */}
-      <Dialog open={qrModalOpen} onOpenChange={(open) => { if (!open) handleCancelPayment(); }}>
-        <DialogContent className="max-w-md text-center p-6 space-y-4">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-primary flex items-center justify-center gap-2">
-              Thanh toán Chuyển khoản (Demo)
-            </DialogTitle>
-          </DialogHeader>
-          <div className="bg-muted/60 p-4 rounded-xl space-y-2 text-sm text-left border">
-            <div className="flex justify-between"><span>Ngân hàng:</span> <strong>Techcombank</strong></div>
-            <div className="flex justify-between"><span>Số tài khoản:</span> <strong className="tracking-wider">123456789</strong></div>
-            <div className="flex justify-between"><span>Chủ tài khoản:</span> <strong>Trần Quang Dũng</strong></div>
-            <div className="flex justify-between border-t pt-2"><span>Số tiền:</span> <strong className="text-primary text-base font-bold">{createdOrder ? formatCurrency(createdOrder.total_amount) : ""}</strong></div>
-            <div className="flex justify-between items-center"><span>Nội dung CK:</span> <strong className="text-amber-600 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded tracking-wide">THANHTOAN {createdOrder?.id.split("-")[0].toUpperCase()}</strong></div>
-          </div>
-          <div className="border p-3 rounded-2xl bg-white inline-block mx-auto shadow-md">
-            <img
-              src={`https://img.vietqr.io/image/TCB-123456789-compact2.png?accountName=TRAN%20QUANG%20DUNG&amount=${createdOrder?.total_amount || 0}&addInfo=THANHTOAN%20${createdOrder?.id.split("-")[0].toUpperCase() || ""}&accountName=LUXE%20COMMERCE`}
-              alt="VietQR Chuyển khoản"
-              className="w-56 h-56 mx-auto object-contain"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground px-2">
-            Mở App Ngân hàng hoặc MoMo quét mã QR trên để thanh toán.
-          </p>
-          <DialogFooter className="sm:justify-center pt-2">
-            <Button size="lg" className="w-full font-bold shadow-lg shadow-primary/25" onClick={() => {
-              setQrModalOpen(false);
-              toast.success("Đã ghi nhận thanh toán!", { description: "Đơn hàng của bạn đang được xác nhận." });
-              setSuccess(true);
-            }}>
-              <IconCheck className="w-5 h-5 mr-2" /> Tôi đã chuyển khoản xong
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

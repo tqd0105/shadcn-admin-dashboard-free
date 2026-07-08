@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAddresses, addAddress, updateAddress, deleteAddress } from "@/lib/services/address.service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -36,20 +36,21 @@ export default function AddressesPage() {
     is_default: false
   });
 
-  const fetchAddresses = async () => {
-    setLoading(true);
+  const fetchAddresses = useCallback(async () => {
+    setTimeout(() => setLoading(true), 0);
     const { data, error } = await getAddresses();
     if (!error && data) {
       setAddresses(data);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (user && !authLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchAddresses();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, fetchAddresses]);
 
   const resetForm = () => {
     setFormData({

@@ -1,5 +1,6 @@
 import { supabase } from "../supabase/client";
 import { getCart } from "./cart.service";
+import { createPayment } from "./payment.service";
 
 export interface CheckoutData {
   fullName: string;
@@ -210,9 +211,9 @@ export async function placeOrder(checkoutData: CheckoutData) {
         body: JSON.stringify(emailPayload),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        console.error("❌ [Checkout Service] Lỗi từ API gửi email:", res.status, errData);
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok || !resData.success) {
+        console.warn("⚠️ [Checkout Service] Không thể gửi email xác nhận (Đơn hàng vẫn đặt thành công):", resData.error || resData.warning || res.statusText);
       } else {
         console.log("✅ [Checkout Service] Đã gửi email xác nhận đặt hàng thành công!");
       }
@@ -223,7 +224,20 @@ export async function placeOrder(checkoutData: CheckoutData) {
     console.error("❌ [Checkout Service] Ngoại lệ khi gọi API gửi email:", err);
   }
 
-  return { data: order, error: null };
+  // 8. Tự động khởi tạo phiên thanh toán chuyển khoản (Nếu khách chọn chuyển khoản ngân hàng)
+  let payment = null;
+  if (checkoutData.paymentMethod === "banking") {
+    console.log("💳 [Checkout Service] Khách hàng chọn Chuyển khoản, đang sinh mã thanh toán...");
+    const { data: createdPayment, error: payError } = await createPayment(order.id, order.total_amount);
+    if (payError) {
+      console.error("❌ [Checkout Service] Lỗi khi tạo phiên thanh toán:", payError);
+    } else {
+      payment = createdPayment;
+      console.log("✅ [Checkout Service] Đã tạo phiên thanh toán:", payment?.payment_code);
+    }
+  }
+
+  return { data: order, payment, error: null };
 }
 
 

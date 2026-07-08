@@ -50,3 +50,11 @@ Tổng hợp các quy tắc nghiệp vụ (Business Logic) hiện tại được
 ## Quy tắc Đánh giá (Reviews)
 - Mọi người đều có thể đọc đánh giá (`Anyone can view reviews`).
 - Nhưng chỉ có người dùng đăng nhập mới được thêm đánh giá (`auth.uid() = user_id`) và Rating bắt buộc giới hạn `1 <= rating <= 5` (Database Check Constraint).
+
+## Quy tắc Thanh toán Chuyển khoản tự động (Auto-Payment Verification)
+- **Mã thanh toán & Thời hạn:** Khi chọn phương thức thanh toán chuyển khoản ngân hàng (`bank_transfer`), hệ thống tự động tạo mã thanh toán duy nhất theo cấu trúc `LX-[A-Z0-9]{6}` và thiết lập thời hạn hiệu lực là 10 phút (`expires_at`).
+- **Idempotency (Không xử lý lặp):** Mỗi giao dịch ngân hàng vào từ email (Gmail API) chỉ được ghi nhận tối đa một lần trong bảng `bank_transactions` thông qua ràng buộc `UNIQUE(bank_tran_id)`. Nếu mã giao dịch đã tồn tại, hệ thống tự động bỏ qua để tránh cộng dồn tiền hoặc kích hoạt nhầm.
+- **Quy tắc Đối chiếu (Matching Logic):**
+  1. Nếu nội dung chuyển khoản chứa chính xác mã `LX-XXXXXX` và số tiền `amount >= expected_amount` của đơn đang `PENDING` chưa hết hạn, thanh toán chuyển sang trạng thái `MATCHED`, đơn hàng chuyển sang `PROCESSING` và tự động gửi email xác nhận.
+  2. Nếu tìm thấy mã đơn nhưng số tiền `amount < expected_amount`, giao dịch được ghi nhận ở trạng thái `UNMATCHED` và yêu cầu admin kiểm tra thủ công.
+- **Hủy thanh toán:** Người dùng có quyền bấm "Hủy thanh toán" tại màn hình VietQR. Khi đó đơn hàng sẽ được hủy (hoặc đánh dấu hủy) và toàn bộ sản phẩm sẽ được khôi phục về giỏ hàng (`cart_items`) để người dùng có thể điều chỉnh lại.

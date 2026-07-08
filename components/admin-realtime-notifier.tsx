@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -60,7 +60,7 @@ export function AdminRealtimeNotifier() {
     playSingleChime(1.1);
   };
 
-  const triggerOrderNotification = (order: any) => {
+  const triggerOrderNotification = useCallback((order: any) => {
     if (!order?.id || notifiedIds.current.has(order.id)) return;
     notifiedIds.current.add(order.id);
 
@@ -111,9 +111,9 @@ export function AdminRealtimeNotifier() {
         </button>
       </div>
     ), { duration: 10000 });
-  };
+  }, [router]);
 
-  const triggerUpdateNotification = (data: { id: string; status: string }) => {
+  const triggerUpdateNotification = useCallback((data: { id: string; status: string }) => {
     if (!data?.id) return;
     const key = `${data.id}_${data.status}`;
     const now = Date.now();
@@ -165,13 +165,16 @@ export function AdminRealtimeNotifier() {
         </div>
       ), { duration: 4000 });
     }
-  };
+  }, [router]);
 
   // Sử dụng ref để đảm bảo Hot Reload luôn nhận được code âm thanh mới nhất mà không bị cache closure cũ
   const triggerOrderRef = useRef(triggerOrderNotification);
-  triggerOrderRef.current = triggerOrderNotification;
   const triggerUpdateRef = useRef(triggerUpdateNotification);
-  triggerUpdateRef.current = triggerUpdateNotification;
+
+  useEffect(() => {
+    triggerOrderRef.current = triggerOrderNotification;
+    triggerUpdateRef.current = triggerUpdateNotification;
+  }, [triggerOrderNotification, triggerUpdateNotification]);
 
   useEffect(() => {
     const unlock = () => {

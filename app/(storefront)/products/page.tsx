@@ -67,7 +67,7 @@ export default async function ProductsPage({
 
         <div className="flex flex-col gap-2">
           {searchQuery ? (
-            <h1 className="text-3xl font-bold text-foreground">Kết quả tìm kiếm: "{searchQuery}"</h1>
+            <h1 className="text-3xl font-bold text-foreground">Kết quả tìm kiếm: &quot;{searchQuery}&quot;</h1>
           ) : (
             <h1 className="text-3xl font-bold text-foreground lg:hidden">Tất cả sản phẩm</h1>
           )}
@@ -89,7 +89,7 @@ export default async function ProductsPage({
         ) : (
           <div className="py-20 text-center flex flex-col items-center justify-center border rounded-xl border-dashed">
             <h3 className="text-xl font-bold mb-2">No products found</h3>
-            <p className="text-muted-foreground">Try adjusting your filters to find what you're looking for.</p>
+            <p className="text-muted-foreground">Try adjusting your filters to find what you&apos;re looking for.</p>
           </div>
         )}
 

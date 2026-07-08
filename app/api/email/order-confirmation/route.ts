@@ -25,7 +25,8 @@ export async function POST(req: Request) {
     });
 
     if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 500 });
+      const errStr = typeof result.error === "string" ? result.error : JSON.stringify(result.error) || "Email sending failed";
+      return NextResponse.json({ success: false, error: errStr, warning: "Email delivery skipped" }, { status: 200 });
     }
 
     return NextResponse.json({ success: true, messageId: result.messageId });

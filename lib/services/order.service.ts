@@ -164,9 +164,9 @@ export async function updateOrderStatus(id: string, status: string) {
             body: JSON.stringify(emailPayload),
           });
 
-          if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            console.error("❌ [Order Service] Lỗi từ API gửi email giao hàng:", res.status, errData);
+          const resData = await res.json().catch(() => ({}));
+          if (!res.ok || !resData.success) {
+            console.warn("⚠️ [Order Service] Không thể gửi email thông báo giao hàng:", resData.error || resData.warning || res.statusText);
           } else {
             console.log("✅ [Order Service] Đã gửi email thông báo giao hàng thành công!");
           }
