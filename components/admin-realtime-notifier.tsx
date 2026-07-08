@@ -25,7 +25,7 @@ export function AdminRealtimeNotifier() {
     return audioCtxRef.current;
   };
 
-  const playSingleChime = (delaySec: number) => {
+  const playSingleChime = useCallback((delaySec: number) => {
     try {
       const ctx = getAudioCtx();
       if (!ctx) return;
@@ -51,14 +51,14 @@ export function AdminRealtimeNotifier() {
     } catch (err) {
       console.warn("Lỗi phát âm thanh:", err);
     }
-  };
+  }, []);
 
   // Phát chuông báo 2 tiếng liên tiếp (Ting Ting... Ting Ting)
-  const playCashChime = () => {
+  const playCashChime = useCallback(() => {
     playSingleChime(0);
     playSingleChime(0.55);
     playSingleChime(1.1);
-  };
+  }, [playSingleChime]);
 
   const triggerOrderNotification = useCallback((order: any) => {
     if (!order?.id || notifiedIds.current.has(order.id)) return;
@@ -111,7 +111,7 @@ export function AdminRealtimeNotifier() {
         </button>
       </div>
     ), { duration: 10000 });
-  }, [router]);
+  }, [router, playCashChime]);
 
   const triggerUpdateNotification = useCallback((data: { id: string; status: string }) => {
     if (!data?.id) return;
@@ -165,7 +165,7 @@ export function AdminRealtimeNotifier() {
         </div>
       ), { duration: 4000 });
     }
-  }, [router]);
+  }, [router, playSingleChime]);
 
   // Sử dụng ref để đảm bảo Hot Reload luôn nhận được code âm thanh mới nhất mà không bị cache closure cũ
   const triggerOrderRef = useRef(triggerOrderNotification);

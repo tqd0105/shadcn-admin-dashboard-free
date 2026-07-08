@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import RoleGuard from "@/components/guards/role-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -422,7 +423,7 @@ function NotificationsPageContent() {
                               onClick={() => handleSelectProduct(p)}
                               className="flex items-center gap-3 p-2 hover:bg-muted cursor-pointer transition-colors border-b last:border-0"
                             >
-                              <img src={p.image_url || "https://placehold.co/40x40"} alt={p.name} className="size-8 rounded object-cover border shrink-0" />
+                              <Image width={32} height={32} unoptimized src={p.image_url || "https://placehold.co/40x40"} alt={p.name} className="size-8 rounded object-cover border shrink-0" />
                               <div className="flex flex-col overflow-hidden">
                                 <span className="text-xs font-medium truncate">{p.name}</span>
                                 <span className="text-[10px] text-red-600 font-bold">

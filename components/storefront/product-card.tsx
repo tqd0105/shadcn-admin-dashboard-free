@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 
 export interface ProductCardData {
@@ -37,9 +38,11 @@ export function ProductCard({ product }: ProductCardProps) {
         </Badge>
       )}
       <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary mb-4 w-full block hover-scale-img cursor-pointer">
-        <img
+        <Image
+          fill
+          unoptimized
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="object-cover"
           src={product.image_url || "/placeholder-image.jpg"}
         />
       </Link>

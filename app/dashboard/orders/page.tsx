@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
 import { getOrders, updateOrderStatus, getOrderById, deleteOrderAdmin } from "@/lib/services/order.service";
@@ -602,7 +603,7 @@ function OrdersContent() {
                       {selectedOrder.order_items?.map((item: any) => (
                         <TableRow key={item.id}>
                           <TableCell className="flex items-center gap-3">
-                            <img src={item.products?.image_url || "https://placehold.co/100x100"} alt="img" className="h-10 w-10 rounded-md object-cover border shrink-0" />
+                            <Image width={40} height={40} unoptimized src={item.products?.image_url || "https://placehold.co/100x100"} alt="img" className="h-10 w-10 rounded-md object-cover border shrink-0" />
                             <span className="font-medium line-clamp-2">{item.products?.name}</span>
                           </TableCell>
                           <TableCell className="text-xs md:text-sm text-muted-foreground">

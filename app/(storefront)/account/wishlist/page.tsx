@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { getWishlist, removeFromWishlist } from "@/lib/services/wishlist.service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { addToCart } from "@/lib/services/cart.service";
@@ -95,10 +96,12 @@ export default function WishlistPage() {
                   return (
                     <div key={item.id} className="group border rounded-xl overflow-hidden hover:shadow-md transition-all bg-card flex flex-col">
                       <Link href={`/product/${p.id}`} className="relative aspect-square overflow-hidden bg-muted block">
-                        <img 
+                        <Image 
+                          fill
+                          unoptimized
                           src={p.image_url} 
                           alt={p.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         {discount > 0 && (
                           <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">

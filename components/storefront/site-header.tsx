@@ -351,7 +351,7 @@ export function SiteHeader() {
                         className="flex items-center gap-3 px-4 py-2 hover:bg-secondary/80 transition-colors"
                         onClick={() => setShowSuggestions(false)}
                       >
-                        <img src={product.image_url || "https://placehold.co/40x40"} alt={product.name} className="w-10 h-10 object-cover rounded-md border" />
+                        <Image width={40} height={40} unoptimized src={product.image_url || "https://placehold.co/40x40"} alt={product.name} className="w-10 h-10 object-cover rounded-md border" />
                         <div className="flex flex-col">
                           <span className="text-sm font-medium line-clamp-1">{product.name}</span>
                           <span className="text-xs text-red-600 font-bold">

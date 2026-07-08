@@ -1,6 +1,7 @@
 import { getAllCategories } from "@/lib/services/category.service";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Sparkles, Layers, ArrowUpRight } from "lucide-react";
 
 export async function CategoriesSection() {
@@ -55,20 +56,29 @@ export async function CategoriesSection() {
                   {catProducts.length >= 2 ? (
                     <div className="relative size-full flex items-center justify-center">
                       {/* Ảnh sau lệch trái */}
-                      <img 
+                      <Image 
+                        width={112}
+                        height={112}
+                        unoptimized
                         src={catProducts[1].image_url} 
                         alt={catProducts[1].name}
                         className="absolute size-28 object-cover rounded-xl shadow-md -rotate-12 -translate-x-4 opacity-70 group-hover:-rotate-16 group-hover:-translate-x-6 transition-all duration-500 border border-background" 
                       />
                       {/* Ảnh trước chính giữa */}
-                      <img 
+                      <Image 
+                        width={128}
+                        height={128}
+                        unoptimized
                         src={catProducts[0].image_url} 
                         alt={catProducts[0].name}
                         className="absolute size-32 object-cover rounded-xl shadow-lg rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 z-10 border-2 border-background" 
                       />
                     </div>
                   ) : catProducts.length === 1 ? (
-                    <img 
+                    <Image 
+                      width={144}
+                      height={144}
+                      unoptimized
                       src={catProducts[0].image_url} 
                       alt={catProducts[0].name}
                       className="size-36 object-cover rounded-xl shadow-md group-hover:scale-110 transition-transform duration-500" 

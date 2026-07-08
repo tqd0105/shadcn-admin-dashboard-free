@@ -1,4 +1,5 @@
 import { LockIcon, Menu } from "lucide-react";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,7 +77,7 @@ export default function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <figure className="cursor-pointer">
-              <img src={`/images/avatars/1.png`} className="h-10 w-10" alt="..." />
+              <Image src="/images/avatars/1.png" width={40} height={40} className="h-10 w-10" alt="..." />
             </figure>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

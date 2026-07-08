@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   getProduct,
@@ -273,10 +274,12 @@ function ProductsPageContent() {
               {/* Product Image */}
               <div className="bg-muted relative aspect-square overflow-hidden">
                 {product.image_url ? (
-                  <img
+                  <Image
+                    fill
+                    unoptimized
                     src={product.image_url}
                     alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">

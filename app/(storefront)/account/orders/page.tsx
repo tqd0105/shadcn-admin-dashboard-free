@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { getMyOrders, updateOrderStatus } from "@/lib/services/order.service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
@@ -144,7 +145,10 @@ export default function MyOrdersPage() {
               <div className="space-y-4">
                 {order.order_items?.map((item: any) => (
                   <div key={item.id} className="flex gap-4">
-                    <img 
+                    <Image 
+                      width={80}
+                      height={80}
+                      unoptimized
                       src={item.products?.image_url || "https://placehold.co/80x80"} 
                       alt="product" 
                       className="h-20 w-20 rounded-md border object-cover shrink-0" 

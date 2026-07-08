@@ -2,6 +2,7 @@
 
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getFeaturedCoupon, Coupon } from "@/lib/services/coupon.service";
@@ -78,9 +79,12 @@ export function HeroBanner() {
             }`}
           >
             {/* Ken Burns Zoom Effect */}
-            <img
+            <Image
+              fill
+              unoptimized
+              priority={idx === 0}
               alt={banner.title}
-              className={`size-full object-contain object-center transform transition-all duration-[8000ms] ease-out ${
+              className={`object-contain object-center transform transition-all duration-[8000ms] ease-out ${
                 idx === currentIndex ? "scale-115" : "scale-100"
               }`}
               src={banner.image_url}

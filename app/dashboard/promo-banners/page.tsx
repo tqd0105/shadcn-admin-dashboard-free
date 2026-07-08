@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
 import {
@@ -134,8 +135,8 @@ function SortableBannerRow({
         </button>
       </TableCell>
       <TableCell>
-        <div className="w-16 h-10 rounded overflow-hidden bg-secondary border shrink-0">
-          <img src={banner.image_url} alt={banner.title} className="size-full object-cover" />
+        <div className="w-16 h-10 rounded overflow-hidden bg-secondary border shrink-0 relative">
+          <Image fill unoptimized src={banner.image_url} alt={banner.title} className="object-cover" />
         </div>
       </TableCell>
       <TableCell className="font-medium">
@@ -230,7 +231,7 @@ function PromoBannersPageContent() {
     }
   }, [debouncedSearch, page, pathname, router, searchParams]);
 
-  const fetchBanners = async () => {
+  const fetchBanners = useCallback(async () => {
     setLoading(true);
     const [bannersData, categoriesData] = await Promise.all([
       getPromoBannersAdmin(debouncedSearch, page, pageSize),
@@ -246,12 +247,12 @@ function PromoBannersPageContent() {
       setCategories(categoriesData.data);
     }
     setLoading(false);
-  };
+  }, [debouncedSearch, page, pageSize]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBanners();
-  }, [debouncedSearch, page, refreshTrigger]);
+  }, [fetchBanners, refreshTrigger]);
 
   // Dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -718,8 +719,8 @@ function PromoBannersPageContent() {
                   required
                 />
                 {formData.image_url && (
-                  <div className="mt-2 w-full h-full rounded border bg-secondary overflow-hidden relative">
-                    <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                  <div className="mt-2 w-full h-32 rounded border bg-secondary overflow-hidden relative">
+                    <Image fill unoptimized src={formData.image_url} alt="Preview" className="object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
                   </div>
                 )}
               </div>

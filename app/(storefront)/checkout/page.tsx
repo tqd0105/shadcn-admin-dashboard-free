@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getCart } from "@/lib/services/cart.service";
 import { placeOrder } from "@/lib/services/checkout.service";
@@ -343,8 +344,11 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex justify-between text-sm">
                     <div className="flex gap-3">
                       <div className="relative">
-                        <img
-                          src={item.products?.image_url}
+                        <Image
+                          width={48}
+                          height={48}
+                          unoptimized
+                          src={item.products?.image_url || "https://placehold.co/48x48"}
                           alt="img"
                           className="h-12 w-12 rounded border object-cover"
                         />

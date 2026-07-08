@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getCart, updateCartItemQuantity, removeFromCart } from "@/lib/services/cart.service";
 import { Button } from "@/components/ui/button";
@@ -141,7 +142,10 @@ export default function CartPage() {
                     <TableRow key={item.id} className={isUpdating ? "opacity-50 pointer-events-none" : ""}>
                       <TableCell className="p-4 sm:p-2">
                         <div className="flex gap-4">
-                          <img 
+                          <Image 
+                            width={96}
+                            height={96}
+                            unoptimized
                             src={item.products?.image_url || "https://placehold.co/100x100"} 
                             alt="product" 
                             className="h-20 w-20 sm:h-24 sm:w-24 rounded-md object-cover border shrink-0" 

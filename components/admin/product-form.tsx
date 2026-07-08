@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import {
   createProduct,
   updateProduct,
@@ -561,10 +562,12 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
                 <Label>Main Product Image</Label>
                 {form.imagePreview ? (
                   <div className="relative overflow-hidden rounded-lg border h-48">
-                    <img
+                    <Image
+                      fill
+                      unoptimized
                       src={form.imagePreview}
                       alt="Preview"
-                      className="h-full w-full object-cover"
+                      className="object-cover"
                     />
                     <Button
                       type="button"
@@ -615,7 +618,7 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
                 <div className="grid grid-cols-3 gap-2 h-48 overflow-y-auto pr-2 hide-scrollbar">
                   {form.galleryImages.map((img, idx) => (
                     <div key={idx} className="relative aspect-square rounded-md overflow-hidden border group">
-                      <img src={img.url} className="w-full h-full object-cover" alt={`Gallery ${idx}`} />
+                      <Image fill unoptimized src={img.url} className="object-cover" alt={`Gallery ${idx}`} />
                       <Button
                         type="button"
                         variant="destructive"

@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-interface Image {
+interface ImageItem {
   id: string;
   image_url: string;
 }
 
 interface ProductGalleryProps {
-  images: Image[];
+  images: ImageItem[];
   productName: string;
 }
 
@@ -19,9 +20,11 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   if (!images || images.length === 0) {
     return (
       <div className="relative rounded-lg overflow-hidden border border-outline-variant bg-surface-container-lowest group aspect-square">
-        <img
+        <Image
+          fill
+          unoptimized
           alt={productName}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
           src="/placeholder-image.jpg"
         />
       </div>
@@ -34,9 +37,11 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     <div className="flex flex-col space-y-4">
       {/* Main Image */}
       <div className="relative rounded-lg overflow-hidden border border-outline-variant bg-surface-container-lowest group aspect-square">
-        <img
+        <Image
+          fill
+          unoptimized
           alt={productName}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
           src={mainImage.image_url}
         />
         {/* <button
@@ -55,13 +60,16 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               key={image.id}
               onClick={() => setActiveIndex(index)}
               className={cn(
-                "flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-colors",
+                "flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-colors relative",
                 activeIndex === index
                   ? "border-primary"
                   : "border-transparent hover:border-outline-variant"
               )}
             >
-              <img
+              <Image
+                width={96}
+                height={96}
+                unoptimized
                 alt={`${productName} thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
                 src={image.image_url}

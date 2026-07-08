@@ -4,6 +4,7 @@ import OtpStep from "@/src/features/register/components/otp-step";
 import PasswordStep from "@/src/features/register/components/password-step";
 import { useRegister } from "@/src/features/register/hooks/use-register";
 import EmailStep from "@/src/features/register/components/email-step";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const {
@@ -51,8 +52,8 @@ export default function RegisterPage() {
 
   return (
     <div className="flex pb-8 lg:h-screen lg:pb-0">
-      <div className="hidden w-1/2 bg-gray-100 lg:block">
-        <img src={`/images/cover.png`} alt="Register visual" className="h-full w-full object-cover" />
+      <div className="hidden w-1/2 bg-gray-100 lg:block relative">
+        <Image fill unoptimized src="/images/cover.png" alt="Register visual" className="object-cover" />
       </div>
 
       <div className="flex w-full items-center justify-center lg:w-1/2">

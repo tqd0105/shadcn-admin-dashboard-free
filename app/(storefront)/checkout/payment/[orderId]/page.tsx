@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState, useRef, use, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
@@ -147,8 +148,30 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     });
   };
 
+  const checkStatusAndExpiry = useCallback((payData: Payment) => {
+    if (payData.status === "MATCHED" || payData.status === "MANUAL") {
+      setStatus("SUCCESS");
+      if (!successPlayedRef.current) {
+        successPlayedRef.current = true;
+        playSuccessSound();
+      }
+      return;
+    }
+
+    const expiresAtMs = new Date(payData.expires_at).getTime();
+    const remainingSeconds = Math.floor((expiresAtMs - Date.now()) / 1000);
+
+    if (remainingSeconds <= 0 || payData.status === "EXPIRED") {
+      setStatus("EXPIRED");
+      setTimeLeft(0);
+    } else {
+      setStatus("PENDING");
+      setTimeLeft(remainingSeconds);
+    }
+  }, []);
+
   // 1. Tải thông tin đơn hàng và phiên thanh toán
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // Lấy thông tin đơn hàng
@@ -185,33 +208,11 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     } finally {
       setLoading(false);
     }
-  }
-
-  function checkStatusAndExpiry(payData: Payment) {
-    if (payData.status === "MATCHED" || payData.status === "MANUAL") {
-      setStatus("SUCCESS");
-      if (!successPlayedRef.current) {
-        successPlayedRef.current = true;
-        playSuccessSound();
-      }
-      return;
-    }
-
-    const expiresAtMs = new Date(payData.expires_at).getTime();
-    const remainingSeconds = Math.floor((expiresAtMs - Date.now()) / 1000);
-
-    if (remainingSeconds <= 0 || payData.status === "EXPIRED") {
-      setStatus("EXPIRED");
-      setTimeLeft(0);
-    } else {
-      setStatus("PENDING");
-      setTimeLeft(remainingSeconds);
-    }
-  }
+  }, [orderId, router, checkStatusAndExpiry]);
 
   useEffect(() => {
     loadData();
-  }, [orderId]);
+  }, [loadData]);
 
   // 2. Đồng hồ đếm ngược 10 phút
   useEffect(() => {
@@ -462,7 +463,10 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
               {/* Ảnh QR Code */}
               <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-primary/20 flex flex-col items-center justify-center shadow-inner relative group">
                 {payment && (
-                  <img
+                  <Image
+                    width={256}
+                    height={256}
+                    unoptimized
                     src={getVietQRUrl({ amount: payment.amount, paymentCode: payment.payment_code })}
                     alt="VietQR Chuyển khoản"
                     className="w-64 h-64 object-contain transition-transform group-hover:scale-105 duration-300"

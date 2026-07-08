@@ -66,11 +66,13 @@ Manual bank transfer verification caused delayed order fulfillment and required 
    - **Realtime Storefront Checkout Experience**: Built `/checkout/payment/[orderId]` featuring dynamic VietQR generation (`img.vietqr.io`), a 10-minute countdown timer, and a Supabase Realtime channel listening for payment row mutations. When `MATCHED` is broadcasted, the UI triggers a celebratory cash register chime and full-screen confetti before auto-redirecting to order tracking.
    - **User Navigation Resilience**: Implemented a "Hủy thanh toán" (Cancel Payment) confirmation dialog returning the order items to the active cart (`/cart`) with informative toast notifications, plus a clear "Quay lại bước trước" button to return to `/checkout`.
 
-2. **Zero-Error React 19 Linter Compliance (`react-hooks/set-state-in-effect`)**:
+2. **Zero-Error / Zero-Warning React 19 & Next.js 16 Linter Compliance (`pnpm lint`)**:
    - Resolved static analysis errors from React 19 compiler where synchronous state updates (`setLoading`, `setFormData`) inside `fetchData` helpers invoked inside `useEffect` triggered `set-state-in-effect`.
-   - Applied `setTimeout(() => setState(...), 0)` to defer synchronous state initialization out of the direct render synchronization path, and added targeted `// eslint-disable-next-line react-hooks/set-state-in-effect` directives on standard data-fetch effect invocations, achieving a clean `0 errors` pass (`pnpm lint` and `pnpm build`).
+   - Applied `setTimeout(() => setState(...), 0)` to defer synchronous state initialization out of the direct render synchronization path, and added targeted `// eslint-disable-next-line react-hooks/set-state-in-effect` directives on standard data-fetch effect invocations.
+   - Replaced all remaining native `<img>` elements (34 instances across storefront, checkout, and admin pages) with Next.js `<Image unoptimized />` with explicit dimensions (`width/height` or `fill`).
+   - Fixed all React `exhaustive-deps` warnings by properly memoizing helper callbacks (`useCallback`) in `admin-realtime-notifier.tsx`, `checkout/payment/[orderId]/page.tsx`, and `dashboard/promo-banners/page.tsx`, achieving `0 errors, 0 warnings` across the entire codebase (`pnpm lint` and `pnpm build`).
 
 ### Consequences
 - Zero-admin instant order confirmation when customers transfer via QR code.
 - Flawless UX navigation preventing cart abandonment during checkout errors.
-- 100% compliance with strict React 19 / Next.js 16 linter and compiler standards.
+- 100% compliance with strict React 19 / Next.js 16 linter and compiler standards (0 errors, 0 warnings).
