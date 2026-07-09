@@ -80,17 +80,17 @@ export function parseVcbEmail(message: GmailMessage): ParsedTransaction | null {
   // VCB thường có chữ: "+", "SD tăng", "nhận", "VND", "credit", "giao dịch"
   const isCredit = /(\+[\d,.]+)|(tăng|nhận|credit)/i.test(content) || /(\+|tăng)/i.test(subject);
   if (!isCredit && !content.includes("VND") && !content.includes("VNĐ")) {
-    console.log(`⚠️ [Parser] Email ${message.id} không giống thông báo nhận tiền VCB.`);
+    console.log(`⚠️ [Parser] Email ${message.id} không giống thông báo nhận tiền VCB. (Tiêu đề: ${subject} | Nội dung: ${content.slice(0, 150)})`);
     return null;
   }
 
   // 2. Trích xuất số tiền (Amount)
-  // Tìm mẫu: +500,000 VND hoặc 500.000 VNĐ hoặc Số tiền: 500,000
+  // Tìm mẫu: +500,000 VND hoặc 500.000 VNĐ hoặc Số tiền: 500,000 hoặc SD tăng: +29,992,500
   let amount = 0;
   const amountRegexes = [
-    /(?:\+|Số tiền|SD tăng|Amount)\s*:?\s*\+?\s*([\d,.]+)\s*(?:VND|VNĐ|đ)/i,
-    /\+\s*([\d,.]+)\s*(?:VND|VNĐ)/i,
-    /([\d,.]+)\s*(?:VND|VNĐ)/i,
+    /(?:Số tiền|SD tăng|Amount|tăng|nhận|\+)\s*:?\s*\+?\s*([\d,.]+)\s*(?:VND|VNĐ|đ)?/i,
+    /\+\s*([\d,.]+)\s*(?:VND|VNĐ|đ)?/i,
+    /([\d,.]+)\s*(?:VND|VNĐ|đ)/i,
   ];
 
   for (const regex of amountRegexes) {
@@ -107,7 +107,7 @@ export function parseVcbEmail(message: GmailMessage): ParsedTransaction | null {
   }
 
   if (amount === 0) {
-    console.warn(`⚠️ [Parser] Không trích xuất được số tiền hợp lệ từ email ${message.id}.`);
+    console.warn(`⚠️ [Parser] Không trích xuất được số tiền hợp lệ từ email ${message.id}. (Nội dung: ${content.slice(0, 200)})`);
     return null;
   }
 
