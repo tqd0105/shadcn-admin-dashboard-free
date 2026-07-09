@@ -469,15 +469,15 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
                     unoptimized
                     src={getVietQRUrl({ amount: payment.amount, paymentCode: payment.payment_code })}
                     alt="VietQR Chuyển khoản"
-                    className="w-64 h-64 object-contain transition-transform group-hover:scale-105 duration-300"
+                    className="w-80 h-80 object-contain transition-transform group-hover:scale-105 duration-300"
                   />
                 )}
-                <div className="mt-4 text-center">
+                {/* <div className="mt-4 text-center">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ngân hàng thụ hưởng</p>
                   <p className="text-base font-bold text-primary flex items-center justify-center gap-1.5 mt-0.5">
-                    <IconBuildingBank className="w-5 h-5" /> Vietcombank (VCB)
+                    <IconBuildingBank className="w-5 h-5" /> VPBank
                   </p>
-                </div>
+                </div> */}
               </div>
 
               {/* Hướng dẫn quét */}
@@ -496,10 +496,10 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
         {/* CỘT PHẢI: CHI TIẾT TÀI KHOẢN & ĐƠN HÀNG */}
         <div className="md:col-span-5 space-y-6">
           <div className="bg-card border rounded-3xl p-6 shadow-lg shadow-black/5 space-y-5">
-            <h3 className="font-bold text-base border-b pb-3 text-foreground flex items-center justify-between">
-              <span>Thông tin thụ hưởng</span>
-              <span className="text-xs font-normal text-muted-foreground">Vietcombank</span>
-            </h3>
+            <p className="text-md text-muted-foreground border-b font-semibold pb-3 text-foreground flex items-center justify-between">
+              <span>Ngân hàng thụ hưởng</span>
+              <span className="text-lg font-bold text-green-700">{bankConfig.bankId}</span>
+            </p>
 
             <div className="space-y-4 text-sm">
               <div className="flex justify-between items-center">
@@ -572,7 +572,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
           <div className="bg-muted/40 rounded-2xl p-4 text-xs text-muted-foreground space-y-2 border">
             <p className="font-semibold text-foreground">💡 Lưu ý quan trọng:</p>
             <p>- Bạn vui lòng nhập **ĐÚNG** Nội dung chuyển khoản là mã <strong className="text-foreground">{payment?.payment_code}</strong> để hệ thống nhận diện tự động.</p>
-            <p>- Ngay sau khi ngân hàng Vietcombank báo nhận tiền, màn hình này sẽ tự động phát nhạc chúc mừng và chuyển trạng thái thành công trong vòng vài giây!</p>
+            <p>- Ngay sau khi ngân hàng {bankConfig.bankId} báo nhận tiền, màn hình này sẽ tự động thông báo kèm âm thanh và chuyển thành trạng thái thành công trong vòng vài giây!</p>
           </div>
 
           {status === "PENDING" && (
