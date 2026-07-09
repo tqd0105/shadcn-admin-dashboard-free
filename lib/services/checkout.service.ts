@@ -156,7 +156,10 @@ export async function placeOrder(checkoutData: CheckoutData) {
     }
     const channel = supabase.channel("global-admin-orders-notifier");
     await new Promise<void>((resolve) => {
-      const timer = setTimeout(() => resolve(), 500);
+      const timer = setTimeout(() => {
+        supabase.removeChannel(channel);
+        resolve();
+      }, 500);
       channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await channel.send({
@@ -165,6 +168,7 @@ export async function placeOrder(checkoutData: CheckoutData) {
             payload: order
           });
           clearTimeout(timer);
+          supabase.removeChannel(channel);
           resolve();
         }
       });

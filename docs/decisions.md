@@ -76,3 +76,25 @@ Manual bank transfer verification caused delayed order fulfillment and required 
 - Zero-admin instant order confirmation when customers transfer via QR code.
 - Flawless UX navigation preventing cart abandonment during checkout errors.
 - 100% compliance with strict React 19 / Next.js 16 linter and compiler standards (0 errors, 0 warnings).
+
+## 2026-07-08: Admin Payment Code Order Search & Customer Visual 4-Step Order Timeline
+
+### Context
+Following the completion of the VietQR automated payment pipeline, both administrators and customers required streamlined mechanisms to track and look up orders by their short-coded payment reference (`LX-[A-Z0-9]{6}`). Furthermore, customers needed an intuitive, visual order status timeline on `/account/orders` rather than static status badges alone.
+
+### Decision
+1. **Multi-Relation Smart Order Search API (`order.service.ts`)**:
+   - Expanded `getOrders` to include the `payments(payment_code, status, amount, expires_at)` relation and execute partial `ilike` matching across `payment_code`.
+   - Admin search queries matching `LX-XXXXXX` (or any substring thereof) instantly resolve parent `order_id` values alongside UUID and profile/email matching without extra roundtrips.
+2. **Admin Orders Payment Code Badge & Details Integration (`/dashboard/orders`)**:
+   - Displayed an eye-catching `LX-XXXXXX` reference badge right beside the order ID in the table rows for bank transfer orders.
+   - Incorporated a dedicated "Thanh toán chuyển khoản VietQR" details box inside the Admin Order Details Modal (`getOrderById`), highlighting the exact reference code and real-time payment status (`MATCHED`, `MANUAL`, `EXPIRED`, `PENDING`).
+3. **Customer Visual 4-Step Order Timeline & Quick Re-Pay (`/account/orders`)**:
+   - Built a dynamic `OrderTimeline` component with a responsive 4-step progress bar (`Chờ xử lý` ➔ `Đang chuẩn bị` ➔ `Đang giao` ➔ `Hoàn tất`) and custom `AlertTriangle` banner for `cancelled` orders.
+   - Embedded a "Chuyển khoản VietQR" status card inside each order card containing a "Thanh toán ngay" link directing pending customers back to their active `/checkout/payment/[orderId]` QR code page.
+
+### Consequences
+- Instant 1-second lookup for administrators reconciling bank transfers by short `LX-XXXXXX` payment codes.
+- Elevated customer trust and reduced support inquiries via visual progress indicators and direct "Thanh toán ngay" re-access.
+- Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
+

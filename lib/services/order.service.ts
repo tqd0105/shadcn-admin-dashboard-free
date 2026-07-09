@@ -12,7 +12,7 @@ export async function getOrders(
 ) {
   let query = supabase
     .from("orders")
-    .select("*, profiles(full_name, email, phone), addresses(full_name, street, city, phone)", { count: "exact" });
+    .select("*, profiles(full_name, email, phone), addresses(full_name, street, city, phone), payments(payment_code, status, amount, expires_at)", { count: "exact" });
 
   if (search && search.trim()) {
     const cleanSearch = search.trim().toLowerCase();
@@ -23,6 +23,12 @@ export async function getOrders(
       .or(`full_name.ilike.%${cleanSearch}%,email.ilike.%${cleanSearch}%`);
     const matchedUserIds = new Set(profiles?.map((p) => p.id) || []);
 
+    const { data: payments } = await supabase
+      .from("payments")
+      .select("order_id")
+      .ilike("payment_code", `%${cleanSearch}%`);
+    const matchedPaymentOrderIds = new Set(payments?.map((p) => p.order_id) || []);
+
     let allOrdersQuery = supabase.from("orders").select("id, user_id");
     if (options?.status && options.status !== "all") {
       allOrdersQuery = allOrdersQuery.eq("status", options.status);
@@ -30,7 +36,7 @@ export async function getOrders(
     const { data: allIds } = await allOrdersQuery;
 
     const matchedOrderIds = (allIds || [])
-      .filter((o) => o.id.toLowerCase().includes(cleanSearch) || matchedUserIds.has(o.user_id))
+      .filter((o) => o.id.toLowerCase().includes(cleanSearch) || matchedUserIds.has(o.user_id) || matchedPaymentOrderIds.has(o.id))
       .map((o) => o.id);
 
     if (matchedOrderIds.length === 0) {
@@ -98,6 +104,7 @@ export async function getOrderById(id: string) {
       profiles(full_name, email, phone),
       addresses(full_name, phone, street, city),
       coupons(code, discount_percent),
+      payments(payment_code, status, amount, expires_at),
       order_items(
         id,
         quantity,
@@ -127,7 +134,10 @@ export async function updateOrderStatus(id: string, status: string) {
       }
       const channel = supabase.channel("global-admin-orders-notifier");
       await new Promise<void>((resolve) => {
-        const timer = setTimeout(() => resolve(), 500);
+        const timer = setTimeout(() => {
+          supabase.removeChannel(channel);
+          resolve();
+        }, 500);
         channel.subscribe(async (st) => {
           if (st === "SUBSCRIBED") {
             await channel.send({
@@ -136,6 +146,7 @@ export async function updateOrderStatus(id: string, status: string) {
               payload: { id, status }
             });
             clearTimeout(timer);
+            supabase.removeChannel(channel);
             resolve();
           }
         });
@@ -190,6 +201,7 @@ export async function getMyOrders() {
     .from("orders")
     .select(`
       *,
+      payments(payment_code, status, amount, expires_at),
       order_items(
         id,
         quantity,

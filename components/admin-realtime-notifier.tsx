@@ -196,6 +196,9 @@ export function AdminRealtimeNotifier() {
       };
     }
 
+    const existingChannels = supabase.getChannels().filter(c => c.topic === "realtime:global-admin-orders-notifier" || c.topic === "global-admin-orders-notifier");
+    existingChannels.forEach(c => supabase.removeChannel(c));
+
     const channel = supabase
       .channel("global-admin-orders-notifier")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {

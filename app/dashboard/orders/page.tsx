@@ -333,7 +333,7 @@ function OrdersContent() {
             <div className="relative w-full max-w-md">
               <IconSearch className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Tìm theo Mã UUID, tên khách, email..."
+                placeholder="Tìm theo Mã thanh toán, UUID, tên khách, email..."
                 className="pl-9 bg-background rounded-xl border-border/80 focus:border-primary h-10 text-sm"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -426,8 +426,9 @@ function OrdersContent() {
         <Table className="min-w-[700px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[120px]">Mã đơn</TableHead>
+              <TableHead className="w-[110px]">Mã đơn</TableHead>
               <TableHead>Khách hàng</TableHead>
+              <TableHead className="w-[160px]">Thanh toán</TableHead>
               <TableHead>Ngày đặt</TableHead>
               <TableHead>Tổng tiền</TableHead>
               <TableHead>Trạng thái</TableHead>
@@ -437,19 +438,24 @@ function OrdersContent() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   <IconLoader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                 </TableCell>
               </TableRow>
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Không tìm thấy đơn hàng nào.
                 </TableCell>
               </TableRow>
             ) : (
               orders.map((order) => {
                 const isLiveNew = liveOrderIds.has(order.id);
+                const paymentObj = Array.isArray((order as any).payments) ? ((order as any).payments.length > 0 ? (order as any).payments[0] : null) : (order as any).payments;
+                const isBanking = order.payment_method === "banking" || (order.payment_method !== "cod" && !!paymentObj);
+                const paymentCode = paymentObj?.payment_code;
+                const payStatus = paymentObj?.status;
+
                 return (
                   <TableRow
                     key={order.id}
@@ -459,20 +465,41 @@ function OrdersContent() {
                         : ""
                     }
                   >
-                    <TableCell className="font-mono text-xs uppercase" title={order.id}>
-                      <div className="flex items-center gap-1.5">
+                    <TableCell className="font-mono font-bold text-xs uppercase" title={order.id}>
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {isLiveNew && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500 text-white animate-pulse shadow-sm shrink-0">
                             MỚI
                           </span>
                         )}
-                        <span>{order.id.split("-")[0]}</span>
+                        <span>#{order.id.split("-")[0]}</span>
                       </div>
                     </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{order.profiles?.full_name || "Chưa xác định tên"}</div>
-                    <div className="text-xs text-muted-foreground">{order.profiles?.email}</div>
-                  </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{order.profiles?.full_name || "Chưa xác định tên"}</div>
+                      <div className="text-xs text-muted-foreground">{order.profiles?.email}</div>
+                    </TableCell>
+                    <TableCell>
+                      {isBanking ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono font-bold text-[11px] border border-amber-500/30 w-fit" title={`Chuyển khoản VietQR: ${paymentCode || "Chờ tạo mã"}`}>
+                            VietQR: {paymentCode || "Chờ tạo mã"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {payStatus === "MATCHED" ? "✅ Đã CK" : payStatus === "MANUAL" ? "✅ Đã duyệt" : payStatus === "EXPIRED" ? "❌ Hết hạn" : "🕒 Chờ chuyển khoản"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-muted/80 text-foreground font-medium text-[11px] border border-border/80 w-fit">
+                            Thanh toán COD
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {order.status === "delivered" ? "✅ Đã thu tiền" : "📦 Khi nhận hàng"}
+                          </span>
+                        </div>
+                      )}
+                    </TableCell>
                   <TableCell>
                     {format(new Date(order.created_at), "dd/MM/yyyy HH:mm")}
                   </TableCell>
@@ -583,6 +610,59 @@ function OrdersContent() {
                   )}
                 </div>
               </div>
+
+              {(() => {
+                const detailPaymentObj = Array.isArray(selectedOrder.payments) ? (selectedOrder.payments.length > 0 ? selectedOrder.payments[0] : null) : selectedOrder.payments;
+                const isDetailBanking = selectedOrder.payment_method === "banking" || (selectedOrder.payment_method !== "cod" && !!detailPaymentObj);
+
+                if (isDetailBanking) {
+                  return (
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-amber-700 dark:text-amber-400 text-sm flex items-center gap-2">
+                          <span>💳 Thanh toán chuyển khoản VietQR</span>
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Mã đối chiếu: <strong className="font-mono font-bold text-amber-600 dark:text-amber-400 text-sm">{detailPaymentObj?.payment_code || "Chờ tạo mã"}</strong>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                          detailPaymentObj?.status === 'MATCHED' || detailPaymentObj?.status === 'MANUAL'
+                            ? 'bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30'
+                            : detailPaymentObj?.status === 'EXPIRED'
+                            ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {detailPaymentObj?.status === 'MATCHED' ? 'Đã nhận tiền' : detailPaymentObj?.status === 'MANUAL' ? 'Xác nhận thủ công' : detailPaymentObj?.status === 'EXPIRED' ? 'Hết hạn' : 'Chờ thanh toán'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="rounded-lg border border-border/80 bg-muted/20 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                        <span>📦 Thanh toán khi nhận hàng (COD)</span>
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Khách hàng thanh toán bằng tiền mặt khi shipper giao hàng thành công.
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                        selectedOrder.status === 'delivered'
+                          ? 'bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30'
+                          : 'bg-muted text-muted-foreground border border-border'
+                      }`}>
+                        {selectedOrder.status === 'delivered' ? 'Đã thu tiền' : 'Chờ thu tiền khi giao'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm md:text-base">
