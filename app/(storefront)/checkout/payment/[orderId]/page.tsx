@@ -7,16 +7,16 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { getPaymentByOrderId, createPayment, getVietQRUrl, getBankConfig, Payment } from "@/lib/services/payment.service";
 import { Button } from "@/components/ui/button";
-import { 
-  IconLoader2, 
-  IconCheck, 
-  IconCopy, 
-  IconClock, 
-  IconAlertCircle, 
-  IconArrowLeft, 
-  IconBuildingBank, 
-  IconQrcode, 
-  IconSparkles, 
+import {
+  IconLoader2,
+  IconCheck,
+  IconCopy,
+  IconClock,
+  IconAlertCircle,
+  IconArrowLeft,
+  IconBuildingBank,
+  IconQrcode,
+  IconSparkles,
   IconRefresh,
   IconX,
   IconArrowBackUp,
@@ -137,6 +137,39 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const successPlayedRef = useRef(false);
 
+  /**
+   * Tạo nội dung chuyển khoản chuẩn theo ý tưởng: Tên-SĐT-MãGD
+   * Ví dụ: DUNG-0123456789-LX123456
+   */
+  const getCustomTransferNote = () => {
+    if (!payment) return "";
+    const fullName = order?.addresses?.full_name || order?.shipping_address?.full_name || order?.full_name || "";
+    const phoneStr = (order?.addresses?.phone || order?.shipping_address?.phone || order?.phone || "").replace(/\D/g, "");
+
+    // Trích xuất từ cuối cùng trong Họ và Tên (Chỉ lấy tên, viết không dấu uppercase)
+    let firstName = "KH";
+    if (fullName) {
+      const noAccent = fullName
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .replace(/[^a-zA-Z0-9\s]/g, "")
+        .trim()
+        .toUpperCase();
+      const words = noAccent.split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        firstName = words[words.length - 1];
+      }
+    }
+
+    const codeWithoutDash = payment.payment_code.replace(/^LX-/i, "LX");
+    if (firstName !== "KH" && phoneStr) {
+      return `${firstName}-${phoneStr}-${codeWithoutDash}`;
+    }
+    return codeWithoutDash;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
   };
@@ -177,7 +210,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       // Lấy thông tin đơn hàng
       const { data: orderData, error: orderErr } = await supabase
         .from("orders")
-        .select("*")
+        .select("*, addresses(full_name, phone)")
         .eq("id", orderId)
         .single();
 
@@ -425,10 +458,9 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
                   <span>Thanh toán thành công!</span>
-                  <IconSparkles className="w-6 h-6 animate-bounce" />
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Hệ thống đã khớp giao dịch tự động 100%. Đơn hàng <strong className="text-foreground">#{order?.id.split("-")[0].toUpperCase()}</strong> của bạn đã được xác nhận và đang chuyển sang bộ phận đóng gói!
+                  Hệ thống đã xác thực giao dịch tự động thành công. Đơn hàng <strong className="text-foreground">#{order?.id.split("-")[0].toUpperCase()}</strong> của bạn đã được xác nhận và đang chuyển sang bộ phận đóng gói!
                 </p>
               </div>
               <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
@@ -467,7 +499,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
                     width={256}
                     height={256}
                     unoptimized
-                    src={getVietQRUrl({ amount: payment.amount, paymentCode: payment.payment_code })}
+                    src={getVietQRUrl({ amount: payment.amount, paymentCode: payment.payment_code, addInfo: getCustomTransferNote() })}
                     alt="VietQR Chuyển khoản"
                     className="w-80 h-80 object-contain transition-transform group-hover:scale-105 duration-300"
                   />
@@ -540,15 +572,15 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
               <div className="flex justify-between items-center bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-2xl">
                 <div>
                   <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 block">Nội dung chuyển khoản (Bắt buộc):</span>
-                  <span className="font-mono font-black text-xl text-amber-600 dark:text-amber-300 tracking-widest block mt-0.5">
-                    {payment?.payment_code || "..."}
+                  <span className="font-mono font-black text-lg md:text-xl text-amber-600 dark:text-amber-300 tracking-wider block mt-0.5">
+                    {getCustomTransferNote() || "..."}
                   </span>
                 </div>
                 <Button
                   variant="default"
                   size="sm"
-                  className="h-9 px-3 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 transition-all"
-                  onClick={() => handleCopy(payment?.payment_code || "", "Nội dung chuyển khoản")}
+                  className="h-9 px-3 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 transition-all shrink-0 ml-2"
+                  onClick={() => handleCopy(getCustomTransferNote(), "Nội dung chuyển khoản")}
                 >
                   <IconCopy className="w-4 h-4 mr-1.5" /> Copy
                 </Button>
@@ -571,7 +603,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
           <div className="bg-muted/40 rounded-2xl p-4 text-xs text-muted-foreground space-y-2 border">
             <p className="font-semibold text-foreground">💡 Lưu ý quan trọng:</p>
-            <p>- Bạn vui lòng nhập **ĐÚNG** Nội dung chuyển khoản là mã <strong className="text-foreground">{payment?.payment_code}</strong> để hệ thống nhận diện tự động.</p>
+            <p>- Bạn vui lòng nhập **ĐÚNG** Nội dung chuyển khoản là <strong className="text-foreground">{getCustomTransferNote()}</strong> để hệ thống nhận diện tự động.</p>
             <p>- Ngay sau khi ngân hàng {bankConfig.bankId} báo nhận tiền, màn hình này sẽ tự động thông báo kèm âm thanh và chuyển thành trạng thái thành công trong vòng vài giây!</p>
           </div>
 
@@ -581,7 +613,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
               size="lg"
               onClick={() => handleCancelAndRestore("/cart")}
               disabled={cancelling}
-              className="w-full rounded-2xl border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground font-bold shadow-sm transition-all h-12 cursor-pointer flex sm:hidden"
+              className="w-full rounded-2xl border-destructive/30 text-destructive hover:bg-destructive hover:text-white font-bold shadow-sm transition-all h-12 cursor-pointer flex sm:hidden"
             >
               {cancelling ? <IconLoader2 className="w-5 h-5 mr-2 animate-spin" /> : <IconShoppingCart className="w-5 h-5 mr-2" />}
               Hủy thanh toán & Hoàn lại giỏ hàng

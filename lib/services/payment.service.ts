@@ -20,9 +20,9 @@ const QR_TEMPLATE = process.env.NEXT_PUBLIC_VIETQR_TEMPLATE || "compact2";
 /**
  * Tạo URL ảnh QR động từ dịch vụ VietQR chính thức (img.vietqr.io)
  */
-export function getVietQRUrl({ amount, paymentCode }: { amount: number; paymentCode: string }): string {
+export function getVietQRUrl({ amount, paymentCode, addInfo }: { amount: number; paymentCode: string; addInfo?: string }): string {
   const encodedName = encodeURIComponent(ACCOUNT_NAME);
-  const encodedInfo = encodeURIComponent(paymentCode);
+  const encodedInfo = encodeURIComponent(addInfo || paymentCode);
   return `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-${QR_TEMPLATE}.png?amount=${amount}&addInfo=${encodedInfo}&accountName=${encodedName}`;
 }
 
@@ -36,7 +36,7 @@ function generatePaymentCode(): string {
   for (let i = 0; i < 6; i++) {
     randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `LX-${randomStr}`;
+  return `LX${randomStr}`;
 }
 
 /**

@@ -6,10 +6,17 @@ import { PaymentRecord } from "./types.ts";
 export async function findPendingPaymentByCode(supabase: any, paymentCode: string): Promise<PaymentRecord | null> {
   if (!paymentCode) return null;
   try {
+    let cleanCode = paymentCode.toUpperCase().trim();
+    // Bóc tách mã LX-XXXXXX nếu đầu vào là chuỗi ghép dài (Ví dụ: DUNG0123456789LX123456 -> LX-123456)
+    const lxMatch = cleanCode.match(/L\s*X\s*-?\s*([A-Z0-9]{4,15})/i);
+    if (lxMatch && lxMatch[1]) {
+      cleanCode = `LX-${lxMatch[1].toUpperCase()}`;
+    }
+
     const { data, error } = await supabase
       .from("payments")
       .select("*")
-      .eq("payment_code", paymentCode.toUpperCase().trim())
+      .eq("payment_code", cleanCode)
       .eq("status", "PENDING")
       .maybeSingle();
 

@@ -112,9 +112,9 @@ export function parseVcbEmail(message: GmailMessage): ParsedTransaction | null {
   }
 
   // 3. Trích xuất mã thanh toán (Description / Payment Code)
-  // Ưu tiên tìm mã theo định dạng LX-XXXXXX (chấp nhận cả khoảng trắng và chữ thường)
+  // Ưu tiên tìm mã theo định dạng LX-XXXXXX hoặc LXXXXXX (chấp nhận cả khoảng trắng, chữ thường và không có dấu gạch nối)
   let description = "";
-  const codeMatch = content.match(/L\s*X\s*-\s*([A-Z0-9]{4,15})/i);
+  const codeMatch = content.match(/L\s*X\s*-?\s*([A-Z0-9]{4,15})/i);
   if (codeMatch) {
     description = `LX-${codeMatch[1].toUpperCase()}`;
   } else {
