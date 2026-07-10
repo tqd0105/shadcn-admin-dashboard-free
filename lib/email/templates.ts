@@ -254,3 +254,61 @@ export function generateOrderDeliveredHtml(data: OrderDeliveredData): string {
 </body>
 </html>`;
 }
+
+export function generateOrderConfirmationText(data: OrderConfirmationData): string {
+  const shortId = data.orderId ? data.orderId.split("-")[0].toUpperCase() : "ORD";
+  const formattedTotal = Number(data.totalAmount || 0).toLocaleString("vi-VN") + " VND";
+  const dateStr = data.createdAt
+    ? new Date(data.createdAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : new Date().toLocaleDateString("vi-VN");
+
+  const itemsText = (data.items || []).map(item => 
+    `- ${item.name} ${item.variant ? `(${item.variant})` : ""} x${item.quantity}: ${Number(item.price * item.quantity).toLocaleString("vi-VN")} VND`
+  ).join("\n");
+
+  return `LUXE COMMERCE - XÁC NHẬN ĐƠN HÀNG #${shortId}
+--------------------------------------------------
+Xin chào ${data.fullName || "Quý khách"},
+
+Cảm ơn bạn đã đặt hàng tại LuxeCommerce. Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến địa chỉ của bạn.
+
+THÔNG TIN ĐƠN HÀNG:
+- Mã đơn hàng: #${shortId}
+- Ngày đặt: ${dateStr}
+- Thanh toán: ${data.paymentMethod === "banking" || data.paymentMethod?.includes("VietQR") ? "Chuyển khoản VietQR (Đã thanh toán)" : "Thanh toán khi nhận hàng (COD)"}
+- Địa chỉ nhận hàng: ${data.address || "Chưa cập nhật"} ${data.phone ? `- SĐT: ${data.phone}` : ""}
+
+CHI TIẾT SẢN PHẨM:
+${itemsText}
+
+--------------------------------------------------
+TỔNG THANH TOÁN: ${formattedTotal}
+
+Nếu bạn cần hỗ trợ, vui lòng trả lời trực tiếp email này. Chúng tôi luôn sẵn sàng giúp đỡ bạn.
+Trân trọng,
+LuxeCommerce Team`;
+}
+
+export function generateOrderDeliveredText(data: OrderDeliveredData): string {
+  const shortId = data.orderId ? data.orderId.split("-")[0].toUpperCase() : "ORD";
+  const formattedTotal = Number(data.totalAmount || 0).toLocaleString("vi-VN") + " VND";
+  const dateStr = data.deliveredAt
+    ? new Date(data.deliveredAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : new Date().toLocaleDateString("vi-VN");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shadcn-admin-dashboard-free-eight.vercel.app";
+
+  return `LUXE COMMERCE - GIAO HÀNG THÀNH CÔNG #${shortId}
+--------------------------------------------------
+Xin chào ${data.fullName || "Quý khách"},
+
+Đơn hàng #${shortId} trị giá ${formattedTotal} đã được giao thành công đến địa chỉ của bạn vào ngày ${dateStr}.
+Địa chỉ nhận hàng: ${data.address || "Đã giao tận tay"}
+
+Hy vọng bạn hài lòng với sản phẩm. Hãy dành ít phút đánh giá sản phẩm tại link dưới đây để giúp chúng tôi phục vụ bạn tốt hơn:
+${siteUrl}/products
+
+Chính sách đổi trả: Bạn được hỗ trợ đổi trả trong vòng 7 ngày kể từ ngày nhận hàng nếu sản phẩm bị lỗi từ nhà sản xuất.
+
+Trân trọng,
+LuxeCommerce Team`;
+}

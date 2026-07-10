@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email/nodemailer";
-import { generateOrderConfirmationHtml, OrderConfirmationData } from "@/lib/email/templates";
+import { generateOrderConfirmationHtml, generateOrderConfirmationText, OrderConfirmationData } from "@/lib/email/templates";
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     }
 
     const html = generateOrderConfirmationHtml(orderData);
+    const text = generateOrderConfirmationText(orderData);
     const shortId = orderData.orderId.split("-")[0].toUpperCase();
     const subject = `Xác nhận đơn hàng #${shortId} - LuxeCommerce`;
 
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
       to,
       subject,
       html,
+      text,
     });
 
     if (!result.success) {

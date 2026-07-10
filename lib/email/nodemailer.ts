@@ -4,6 +4,7 @@ export interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  text?: string;
 }
 
 function getTransporter() {
@@ -49,7 +50,7 @@ function htmlToPlainText(html: string): string {
     .trim();
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+export async function sendEmail(options: SendEmailOptions) {
   const gmailUser = process.env.GMAIL_USER;
   const gmailPass = process.env.GMAIL_APP_PASSWORD;
 
@@ -64,24 +65,23 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
   }
 
   try {
-    const text = htmlToPlainText(html);
+    const text = options.text || htmlToPlainText(options.html);
 
     const info = await transporter.sendMail({
-      // Dùng tên tài khoản Gmail thật thay vì brand name mạo danh
-      // Google sẽ không gắn cờ "mạo danh" khi tên người gửi trùng chủ sở hữu
-      from: gmailUser,
-      to,
-      subject,
+      // Chuẩn RFC 5322: Format tên thương hiệu kèm email thật để tránh bị nhận diện là Bulk/Spam
+      from: `"LuxeCommerce" <${gmailUser}>`,
+      replyTo: `"LuxeCommerce Hỗ Trợ" <${gmailUser}>`,
+      to: options.to,
+      subject: options.subject,
       text,
-      html,
-      // KHÔNG thêm X-Priority, Importance, X-MSMail-Priority
-      // Các header này là trigger spam #1 trên SpamAssassin
+      html: options.html,
       headers: {
-        "List-Unsubscribe": `<mailto:${gmailUser}?subject=unsubscribe>`,
+        // Headers chuẩn cho email giao dịch (transactional receipt), không dùng List-Unsubscribe giả
+        "X-Entity-Ref-ID": `ORD-${Date.now()}`,
       },
     });
 
-    console.log("✅ [Email Service] Đã gửi email thành công đến:", to, "| MessageID:", info.messageId);
+    console.log("✅ [Email Service] Đã gửi email thành công đến:", options.to, "| MessageID:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error("❌ [Email Service] Lỗi khi gửi email:", error);
