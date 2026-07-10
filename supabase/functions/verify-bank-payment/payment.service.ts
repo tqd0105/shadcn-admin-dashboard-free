@@ -71,13 +71,63 @@ export async function markPaymentAsMatched(
         // Không return false vì payment đã được update thành công
       } else {
         console.log(`✅ [Payment Service] Đã cập nhật order ${orderId} sang trạng thái paid!`);
+
+        // 3. Tự động gửi email xác nhận & thông báo thanh toán chuyển khoản thành công
+        try {
+          const { data: fullOrder } = await supabase
+            .from("orders")
+            .select("*, order_items(*, products(*), product_variants(*)), profiles(email, full_name), shipping_addresses(*)")
+            .eq("id", orderId)
+            .maybeSingle();
+
+          const recipientEmail = fullOrder?.profiles?.email || fullOrder?.email;
+          if (fullOrder && recipientEmail) {
+            const siteUrl = Deno.env.get("NEXT_PUBLIC_SITE_URL") || Deno.env.get("NEXT_PUBLIC_APP_URL") || "http://localhost:3000";
+            
+            const emailPayload = {
+              to: recipientEmail,
+              orderId: fullOrder.id,
+              fullName: fullOrder.profiles?.full_name || fullOrder.full_name || "Quý khách",
+              phone: fullOrder.phone || "",
+              address: fullOrder.shipping_addresses ? `${fullOrder.shipping_addresses.street || ""}, ${fullOrder.shipping_addresses.city || ""}` : "",
+              items: (fullOrder.order_items || []).map((item: any) => ({
+                name: item.products?.name || "Sản phẩm",
+                quantity: item.quantity || 1,
+                price: Number(item.price || item.products?.price || 0),
+                variant: item.product_variants?.name || undefined,
+                imageUrl: item.products?.image_url || undefined,
+              })),
+              totalAmount: fullOrder.total_amount,
+              paymentMethod: "VietQR (Đã xác nhận chuyển khoản)",
+              createdAt: fullOrder.created_at || now,
+            };
+
+            console.log(`📤 [Payment Service] Đang gửi email xác nhận thanh toán thành công tới: ${recipientEmail} qua ${siteUrl}/api/email/order-confirmation`);
+            fetch(`${siteUrl}/api/email/order-confirmation`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(emailPayload),
+            }).then(async (res) => {
+              if (res.ok) {
+                console.log(`✅ [Payment Service] Đã gửi email xác nhận thành công cho đơn hàng ${orderId}!`);
+              } else {
+                const text = await res.text().catch(() => "");
+                console.warn(`⚠️ [Payment Service] API gửi mail trả về lỗi (${res.status}): ${text}`);
+              }
+            }).catch((err) => console.warn("⚠️ [Payment Service] Lỗi khi gọi API gửi mail:", err.message));
+          } else {
+            console.warn(`ℹ️ [Payment Service] Không tìm thấy email của khách hàng cho đơn hàng ${orderId} để gửi thông báo.`);
+          }
+        } catch (mailErr: any) {
+          console.warn("⚠️ [Payment Service] Ngoại lệ khi chuẩn bị gửi mail:", mailErr?.message || mailErr);
+        }
       }
     }
 
     console.log(`🎉 [Payment Service] Phiên thanh toán ${paymentId} đã xác nhận MATCHED thành công!`);
     return true;
-  } catch (err) {
-    console.error("❌ [Payment Service] Ngoại lệ khi cập nhật trạng thái thanh toán:", err);
+  } catch (err: any) {
+    console.error("❌ [Payment Service] Ngoại lệ khi cập nhật trạng thái thanh toán:", err?.message || err);
     return false;
   }
 }

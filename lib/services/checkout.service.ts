@@ -175,57 +175,61 @@ export async function placeOrder(checkoutData: CheckoutData) {
     });
   } catch (err) {}
 
-  // 7. Gửi email xác nhận đơn hàng (Có fallback lấy từ bảng profiles và await để tránh browser hủy request)
-  try {
-    let recipientEmail = userData.user?.email;
-    if (!recipientEmail) {
-      const { data: profileData } = await supabase.from("profiles").select("email").eq("id", userId).single();
-      recipientEmail = profileData?.email;
-    }
-
-    if (recipientEmail) {
-      const emailPayload = {
-        to: recipientEmail,
-        orderId: order.id,
-        fullName: checkoutData.fullName || userData.user?.user_metadata?.full_name || "Quý khách",
-        phone: checkoutData.phone,
-        address: `${checkoutData.street}, ${checkoutData.city}`,
-        items: (cartItems as any[]).map(item => {
-          const basePrice = Number(item.products?.price || 0);
-          const discount = Number(item.products?.discount_percent || 0);
-          const modifier = Number(item.product_variants?.price_modifier || 0);
-          const finalPrice = basePrice - (basePrice * discount / 100) + modifier;
-          return {
-            name: item.products?.name || "Sản phẩm",
-            quantity: item.quantity,
-            price: finalPrice,
-            variant: item.product_variants?.name || undefined,
-            imageUrl: item.products?.image_url || undefined,
-          };
-        }),
-        totalAmount: order.total_amount || totalAmount,
-        paymentMethod: checkoutData.paymentMethod,
-        createdAt: order.created_at || new Date().toISOString(),
-      };
-
-      console.log("📤 [Checkout Service] Đang gửi yêu cầu email xác nhận đến:", recipientEmail);
-      const res = await fetch("/api/email/order-confirmation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emailPayload),
-      });
-
-      const resData = await res.json().catch(() => ({}));
-      if (!res.ok || !resData.success) {
-        console.warn("⚠️ [Checkout Service] Không thể gửi email xác nhận (Đơn hàng vẫn đặt thành công):", resData.error || resData.warning || res.statusText);
-      } else {
-        console.log("✅ [Checkout Service] Đã gửi email xác nhận đặt hàng thành công!");
+  // 7. Gửi email xác nhận đơn hàng (Chỉ gửi ngay với COD; Nếu là Banking thì hoãn chờ thanh toán thành công mới gửi)
+  if (checkoutData.paymentMethod !== "banking") {
+    try {
+      let recipientEmail = userData.user?.email;
+      if (!recipientEmail) {
+        const { data: profileData } = await supabase.from("profiles").select("email").eq("id", userId).single();
+        recipientEmail = profileData?.email;
       }
-    } else {
-      console.warn("⚠️ [Checkout Service] Không tìm thấy địa chỉ email của khách hàng để gửi thông báo.");
+
+      if (recipientEmail) {
+        const emailPayload = {
+          to: recipientEmail,
+          orderId: order.id,
+          fullName: checkoutData.fullName || userData.user?.user_metadata?.full_name || "Quý khách",
+          phone: checkoutData.phone,
+          address: `${checkoutData.street}, ${checkoutData.city}`,
+          items: (cartItems as any[]).map(item => {
+            const basePrice = Number(item.products?.price || 0);
+            const discount = Number(item.products?.discount_percent || 0);
+            const modifier = Number(item.product_variants?.price_modifier || 0);
+            const finalPrice = basePrice - (basePrice * discount / 100) + modifier;
+            return {
+              name: item.products?.name || "Sản phẩm",
+              quantity: item.quantity,
+              price: finalPrice,
+              variant: item.product_variants?.name || undefined,
+              imageUrl: item.products?.image_url || undefined,
+            };
+          }),
+          totalAmount: order.total_amount || totalAmount,
+          paymentMethod: checkoutData.paymentMethod,
+          createdAt: order.created_at || new Date().toISOString(),
+        };
+
+        console.log("📤 [Checkout Service] Đang gửi yêu cầu email xác nhận (COD) đến:", recipientEmail);
+        const res = await fetch("/api/email/order-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emailPayload),
+        });
+
+        const resData = await res.json().catch(() => ({}));
+        if (!res.ok || !resData.success) {
+          console.warn("⚠️ [Checkout Service] Không thể gửi email xác nhận (Đơn hàng vẫn đặt thành công):", resData.error || resData.warning || res.statusText);
+        } else {
+          console.log("✅ [Checkout Service] Đã gửi email xác nhận đặt hàng (COD) thành công!");
+        }
+      } else {
+        console.warn("⚠️ [Checkout Service] Không tìm thấy địa chỉ email của khách hàng để gửi thông báo.");
+      }
+    } catch (err) {
+      console.error("❌ [Checkout Service] Ngoại lệ khi gọi API gửi email:", err);
     }
-  } catch (err) {
-    console.error("❌ [Checkout Service] Ngoại lệ khi gọi API gửi email:", err);
+  } else {
+    console.log("⏸️ [Checkout Service] Đơn hàng thanh toán qua VietQR (banking), tạm hoãn gửi email xác nhận cho đến khi khớp lệnh thanh toán!");
   }
 
   // 8. Tự động khởi tạo phiên thanh toán chuyển khoản (Nếu khách chọn chuyển khoản ngân hàng)
