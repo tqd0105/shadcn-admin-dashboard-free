@@ -84,7 +84,7 @@ export async function markPaymentAsMatched(
         try {
           const { data: fullOrder } = await supabase
             .from("orders")
-            .select("*, order_items(*, products(*), product_variants(*)), profiles(email, full_name), shipping_addresses(*)")
+            .select("*, order_items(*, products(*), product_variants(*)), profiles(email, full_name, phone), addresses(*)")
             .eq("id", orderId)
             .maybeSingle();
 
@@ -95,9 +95,9 @@ export async function markPaymentAsMatched(
             const emailPayload = {
               to: recipientEmail,
               orderId: fullOrder.id,
-              fullName: fullOrder.profiles?.full_name || fullOrder.full_name || "Quý khách",
-              phone: fullOrder.phone || "",
-              address: fullOrder.shipping_addresses ? `${fullOrder.shipping_addresses.street || ""}, ${fullOrder.shipping_addresses.city || ""}` : "",
+              fullName: fullOrder.profiles?.full_name || fullOrder.addresses?.full_name || fullOrder.full_name || "Quý khách",
+              phone: fullOrder.profiles?.phone || fullOrder.addresses?.phone || fullOrder.phone || "",
+              address: fullOrder.addresses ? `${fullOrder.addresses.street || ""}, ${fullOrder.addresses.city || ""}` : "",
               items: (fullOrder.order_items || []).map((item: any) => ({
                 name: item.products?.name || "Sản phẩm",
                 quantity: item.quantity || 1,
@@ -109,6 +109,10 @@ export async function markPaymentAsMatched(
               paymentMethod: "VietQR (Đã xác nhận chuyển khoản)",
               createdAt: fullOrder.created_at || now,
             };
+
+            if (siteUrl.includes("localhost")) {
+              console.warn(`⚠️ [Payment Service] Cảnh báo: NEXT_PUBLIC_SITE_URL đang là "${siteUrl}". Edge Function trên Supabase Cloud không thể gọi HTTP về localhost máy cá nhân. (Hệ thống sẽ gửi qua trình duyệt khách khi test local)`);
+            }
 
             console.log(`📤 [Payment Service] Đang gửi email xác nhận thanh toán thành công tới: ${recipientEmail} qua ${siteUrl}/api/email/order-confirmation`);
             fetch(`${siteUrl}/api/email/order-confirmation`, {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { getPaymentByOrderId, createPayment, getVietQRUrl, getBankConfig, Payment } from "@/lib/services/payment.service";
+import { getOrderById } from "@/lib/services/order.service";
 import { Button } from "@/components/ui/button";
 import {
   IconLoader2,
@@ -136,6 +137,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
   const bankConfig = getBankConfig();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const successPlayedRef = useRef(false);
+  const emailSentRef = useRef(false);
 
   /**
    * Tạo nội dung chuyển khoản chuẩn theo ý tưởng: Tên-SĐT-MãGD
@@ -181,12 +183,59 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     });
   };
 
-  const checkStatusAndExpiry = useCallback((payData: Payment) => {
+  const triggerSuccessEmail = useCallback(async (orderObj: any, payObj: Payment) => {
+    if (emailSentRef.current || !orderObj || !payObj) return;
+    emailSentRef.current = true;
+    try {
+      let email = orderObj.profiles?.email || orderObj.email;
+      if (!email) {
+        const { data: authData } = await supabase.auth.getUser();
+        email = authData.user?.email;
+      }
+      if (!email) {
+        console.warn("⚠️ [QR Page] Không tìm thấy email khách hàng để gửi thông báo.");
+        return;
+      }
+
+      const emailPayload = {
+        to: email,
+        orderId: orderObj.id,
+        fullName: orderObj.profiles?.full_name || orderObj.addresses?.full_name || orderObj.full_name || "Quý khách",
+        phone: orderObj.profiles?.phone || orderObj.addresses?.phone || orderObj.phone || "",
+        address: orderObj.addresses ? `${orderObj.addresses.street || ""}, ${orderObj.addresses.city || ""}` : "",
+        items: (orderObj.order_items || []).map((item: any) => ({
+          name: item.products?.name || "Sản phẩm",
+          quantity: item.quantity || 1,
+          price: Number(item.price || item.products?.price || 0),
+          variant: item.product_variants?.name || undefined,
+          imageUrl: item.products?.image_url || undefined,
+        })),
+        totalAmount: orderObj.total_amount,
+        paymentMethod: `Chuyển khoản VietQR (${payObj.payment_code} - Đã thanh toán)`,
+        createdAt: orderObj.created_at || new Date().toISOString(),
+      };
+
+      console.log("📤 [QR Page] Đang gửi yêu cầu email xác nhận thanh toán đến:", email);
+      await fetch("/api/email/order-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailPayload),
+      });
+      console.log("✅ [QR Page] Đã yêu cầu gửi email xác nhận thành công!");
+    } catch (err) {
+      console.error("❌ [QR Page] Lỗi khi gửi email:", err);
+    }
+  }, []);
+
+  const checkStatusAndExpiry = useCallback((payData: Payment, currentOrder?: any) => {
     if (payData.status === "MATCHED" || payData.status === "MANUAL") {
       setStatus("SUCCESS");
       if (!successPlayedRef.current) {
         successPlayedRef.current = true;
         playSuccessSound();
+      }
+      if (currentOrder || order) {
+        triggerSuccessEmail(currentOrder || order, payData);
       }
       return;
     }
@@ -201,18 +250,14 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       setStatus("PENDING");
       setTimeLeft(remainingSeconds);
     }
-  }, []);
+  }, [order, triggerSuccessEmail]);
 
   // 1. Tải thông tin đơn hàng và phiên thanh toán
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Lấy thông tin đơn hàng
-      const { data: orderData, error: orderErr } = await supabase
-        .from("orders")
-        .select("*, addresses(full_name, phone)")
-        .eq("id", orderId)
-        .single();
+      // Lấy thông tin đơn hàng đầy đủ (kèm order_items, profile email, address)
+      const { data: orderData, error: orderErr } = await getOrderById(orderId);
 
       if (orderErr || !orderData) {
         toast.error("Không tìm thấy đơn hàng!");
@@ -225,7 +270,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       const { data: payData } = await getPaymentByOrderId(orderId);
       if (payData) {
         setPayment(payData);
-        checkStatusAndExpiry(payData);
+        checkStatusAndExpiry(payData, orderData);
       } else {
         // Nếu chưa có payment thì tự động tạo mới
         const { data: newPay, error: payErr } = await createPayment(orderId, orderData.total_amount);
@@ -233,7 +278,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
           toast.error("Lỗi khởi tạo cổng thanh toán!");
         } else {
           setPayment(newPay);
-          checkStatusAndExpiry(newPay);
+          checkStatusAndExpiry(newPay, orderData);
         }
       }
     } catch (err) {
@@ -293,6 +338,9 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
               playSuccessSound();
               toast.success("🎉 Thanh toán đã được xác nhận thành công!");
             }
+            if (order) {
+              triggerSuccessEmail(order, newPay);
+            }
           } else if (newPay.status === "EXPIRED") {
             setStatus("EXPIRED");
           }
@@ -303,7 +351,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [payment?.id]);
+  }, [payment?.id, order, triggerSuccessEmail]);
 
   // 4. Hàm làm mới mã QR khi hết hạn
   const handleRegenerateQR = async () => {
@@ -518,8 +566,8 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
                   <IconSparkles className="w-4 h-4 text-amber-500" /> Hướng dẫn chuyển khoản nhanh 100% tự động:
                 </p>
                 <p>1. Mở App ngân hàng bất kỳ hoặc MoMo, chọn <strong>Quét mã QR</strong>.</p>
-                <p>2. Kiểm tra đúng số tiền và <strong>Nội dung chuyển khoản (Mã LX-...)</strong> đã điền sẵn.</p>
-                <p>3. Xác nhận chuyển tiền &rarr; Hệ thống sẽ phát tín hiệu âm thanh và thông báo thành công ngay lập tức!</p>
+                <p>2. Kiểm tra đúng số tiền và <strong>Nội dung chuyển khoản (Mã LX...)</strong> đã điền sẵn.</p>
+                <p>3. Xác nhận chuyển tiền &rarr; Hệ thống sẽ phát tín hiệu âm thanh và thông báo thành công chỉ trong 1 phút!</p>
               </div>
             </div>
           )}
@@ -604,7 +652,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
           <div className="bg-muted/40 rounded-2xl p-4 text-xs text-muted-foreground space-y-2 border">
             <p className="font-semibold text-foreground">💡 Lưu ý quan trọng:</p>
             <p>- Bạn vui lòng nhập **ĐÚNG** Nội dung chuyển khoản là <strong className="text-foreground">{getCustomTransferNote()}</strong> để hệ thống nhận diện tự động.</p>
-            <p>- Ngay sau khi ngân hàng {bankConfig.bankId} báo nhận tiền, màn hình này sẽ tự động thông báo kèm âm thanh và chuyển thành trạng thái thành công trong vòng vài giây!</p>
+            <p>- Ngay sau khi ngân hàng {bankConfig.bankId} báo nhận tiền, màn hình này sẽ tự động thông báo kèm âm thanh và chuyển thành trạng thái thành công.!</p>
           </div>
 
           {status === "PENDING" && (
