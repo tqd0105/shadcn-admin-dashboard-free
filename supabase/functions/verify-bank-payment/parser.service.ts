@@ -116,7 +116,7 @@ export function parseVcbEmail(message: GmailMessage): ParsedTransaction | null {
   let description = "";
   const codeMatch = content.match(/L\s*X\s*-?\s*([A-Z0-9]{4,15})/i);
   if (codeMatch) {
-    description = `LX-${codeMatch[1].toUpperCase()}`;
+    description = `LX${codeMatch[1].toUpperCase()}`;
   } else {
     // Tìm sau từ khóa Nội dung / ND / Description / Memo
     const descMatch = content.match(/(?:Nội dung|ND|Description|Memo|Ref)\s*:?\s*([A-Z0-9\s-]+?)(?:\s+từ|\s+lúc|\s+ngay|\.\s|\n|$)/i);
