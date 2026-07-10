@@ -138,6 +138,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const successPlayedRef = useRef(false);
   const emailSentRef = useRef(false);
+  const orderRef = useRef<any>(null);
 
   /**
    * Tạo nội dung chuyển khoản chuẩn theo ý tưởng: Tên-SĐT-MãGD
@@ -234,8 +235,9 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
         successPlayedRef.current = true;
         playSuccessSound();
       }
-      if (currentOrder || order) {
-        triggerSuccessEmail(currentOrder || order, payData);
+      const targetOrder = currentOrder || orderRef.current;
+      if (targetOrder) {
+        triggerSuccessEmail(targetOrder, payData);
       }
       return;
     }
@@ -250,7 +252,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       setStatus("PENDING");
       setTimeLeft(remainingSeconds);
     }
-  }, [order, triggerSuccessEmail]);
+  }, [triggerSuccessEmail]);
 
   // 1. Tải thông tin đơn hàng và phiên thanh toán
   const loadData = useCallback(async () => {
@@ -264,6 +266,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
         router.push("/account/orders");
         return;
       }
+      orderRef.current = orderData;
       setOrder(orderData);
 
       // Lấy hoặc tạo payment
@@ -290,7 +293,8 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]); // CHỈ CHẠY 1 LẦN KHI orderId THAY ĐỔI, ngăn chặn triệt để lặp vô tận (infinite loop)!
 
   // 2. Đồng hồ đếm ngược 10 phút
   useEffect(() => {
@@ -338,8 +342,8 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
               playSuccessSound();
               toast.success("🎉 Thanh toán đã được xác nhận thành công!");
             }
-            if (order) {
-              triggerSuccessEmail(order, newPay);
+            if (orderRef.current) {
+              triggerSuccessEmail(orderRef.current, newPay);
             }
           } else if (newPay.status === "EXPIRED") {
             setStatus("EXPIRED");
@@ -351,7 +355,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [payment?.id, order, triggerSuccessEmail]);
+  }, [payment?.id, triggerSuccessEmail]);
 
   // 4. Hàm làm mới mã QR khi hết hạn
   const handleRegenerateQR = async () => {
