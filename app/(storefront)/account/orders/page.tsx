@@ -8,9 +8,10 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconLoader2, IconPackage, IconX } from "@tabler/icons-react";
-import { Clock, Package, Truck, CheckCircle2, AlertTriangle, CreditCard } from "lucide-react";
+import { Clock, Package, Truck, CheckCircle2, AlertTriangle, CreditCard, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ProductReviewModal, ReviewItemData } from "@/components/storefront/product-review-modal";
 import {
   Card,
   CardContent,
@@ -124,6 +125,11 @@ export default function MyOrdersPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
+  // Review modal state
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [itemToReview, setItemToReview] = useState<ReviewItemData | null>(null);
+  const [reviewedProductIds, setReviewedProductIds] = useState<Set<string>>(new Set());
+
   const fetchOrders = useCallback(async (showLoading = true) => {
     if (showLoading) {
       setTimeout(() => setLoading(true), 0);
@@ -132,10 +138,21 @@ export default function MyOrdersPage() {
     if (!error && data) {
       setOrders(data);
     }
+
+    if (user?.id) {
+      const { data: myReviews } = await supabase
+        .from("product_reviews")
+        .select("product_id")
+        .eq("user_id", user.id);
+      if (myReviews) {
+        setReviewedProductIds(new Set(myReviews.map((r) => r.product_id)));
+      }
+    }
+
     if (showLoading) {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -298,28 +315,94 @@ export default function MyOrdersPage() {
 
                 {/* Product List */}
                 <div className="divide-y divide-border/60">
-                  {order.order_items?.map((item: any) => (
-                    <div key={item.id} className="py-3 first:pt-1 last:pb-1 flex gap-3.5 items-center">
-                      <Image 
-                        width={64}
-                        height={64}
-                        unoptimized
-                        src={item.products?.image_url || "https://placehold.co/64x64"} 
-                        alt="product" 
-                        className="h-16 w-16 rounded-md border object-cover shrink-0" 
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm line-clamp-1">{item.products?.name}</h4>
-                        {item.product_variants && (
-                          <p className="text-xs text-muted-foreground mt-0.5">Phân loại: {item.product_variants.name}</p>
-                        )}
-                        <div className="flex justify-between items-center mt-1.5 text-xs">
-                          <span className="text-muted-foreground">Số lượng: x{item.quantity}</span>
-                          <span className="font-semibold text-sm text-foreground">{formatCurrency(item.price)}</span>
+                  {order.order_items?.map((item: any) => {
+                    const productId = item.product_id || item.products?.id;
+                    return (
+                      <div key={item.id} className="py-3.5 first:pt-1 last:pb-1 flex gap-3.5 items-center justify-between group/item">
+                        <div className="flex gap-3.5 items-center min-w-0 flex-1">
+                          <Link 
+                            href={productId ? `/product/${productId}` : "#"} 
+                            className="shrink-0 block overflow-hidden rounded-md border bg-muted/20"
+                            title="Xem chi tiết sản phẩm"
+                          >
+                            <Image 
+                              width={64}
+                              height={64}
+                              unoptimized
+                              src={item.products?.image_url || "https://placehold.co/64x64"} 
+                              alt={item.products?.name || "product"} 
+                              className="h-16 w-16 object-cover transition-transform duration-300 group-hover/item:scale-105" 
+                            />
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <Link 
+                              href={productId ? `/product/${productId}` : "#"} 
+                              className="font-semibold text-sm line-clamp-1 hover:text-primary transition-colors block"
+                            >
+                              {item.products?.name || "Sản phẩm không xác định"}
+                            </Link>
+                            {item.product_variants && (
+                              <p className="text-xs text-muted-foreground mt-0.5">Phân loại: <span className="font-medium text-foreground/80">{item.product_variants.name}</span></p>
+                            )}
+                            <div className="flex items-center gap-4 mt-1.5 text-xs">
+                              <span className="text-muted-foreground">Số lượng: <strong className="text-foreground">x{item.quantity}</strong></span>
+                              <span className="font-bold text-sm text-primary">{formatCurrency(item.price)}</span>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* Nút Xem chi tiết / Mua lại & Đánh giá dành riêng cho từng sản phẩm khớp trong đơn hàng */}
+                        {productId && (
+                          <div className="shrink-0 pl-2 flex items-center gap-2">
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-xs font-semibold hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm"
+                            >
+                              <Link href={`/product/${productId}`}>
+                                Xem sản phẩm
+                              </Link>
+                            </Button>
+
+                            {/* Nút Đánh giá sản phẩm khi đơn hàng đã giao thành công (delivered) */}
+                            {order.status === "delivered" && (
+                              reviewedProductIds.has(productId) ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled
+                                  className="h-8 px-3 text-xs font-bold text-green-600 dark:text-green-400 bg-green-50/80 dark:bg-green-950/40 border border-green-200 dark:border-green-800"
+                                >
+                                  <CheckCircle2 className="size-3.5 mr-1" /> Đã đánh giá
+                                </Button>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => {
+                                    setItemToReview({
+                                      productId: productId,
+                                      productName: item.products?.name || "Sản phẩm",
+                                      productImage: item.products?.image_url,
+                                      variantName: item.product_variants?.name,
+                                      price: item.price,
+                                      orderId: order.id
+                                    });
+                                    setReviewModalOpen(true);
+                                  }}
+                                  className="h-8 px-3.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-all hover:scale-105 active:scale-95"
+                                >
+                                  <Star className="size-3.5 mr-1.5 fill-white text-white animate-pulse duration-1000" /> Đánh giá
+                                </Button>
+                              )
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Action */}
@@ -366,6 +449,16 @@ export default function MyOrdersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal đánh giá sản phẩm hiện đại, chuyên nghiệp */}
+      <ProductReviewModal
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        item={itemToReview}
+        onSuccess={(reviewedProductId) => {
+          setReviewedProductIds((prev) => new Set(prev).add(reviewedProductId));
+        }}
+      />
     </div>
   );
 }

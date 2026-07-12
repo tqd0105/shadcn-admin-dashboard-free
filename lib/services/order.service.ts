@@ -204,9 +204,10 @@ export async function getMyOrders() {
       payments(payment_code, status, amount, expires_at),
       order_items(
         id,
+        product_id,
         quantity,
         price,
-        products(name, image_url),
+        products(id, name, image_url),
         product_variants(name)
       )
     `)

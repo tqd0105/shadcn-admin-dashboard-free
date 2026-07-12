@@ -2,15 +2,8 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Star, CheckCircle2, MessageSquarePlus, Sparkles, ShieldCheck, ThumbsUp, UserCircle2 } from "lucide-react";
+import { ProductReviewModal } from "@/components/storefront/product-review-modal";
 
 interface Spec {
   id: string;
@@ -24,6 +17,7 @@ interface Review {
   rating: number;
   comment: string;
   created_at: string;
+  user_name?: string;
 }
 
 interface ProductTabsProps {
@@ -31,72 +25,15 @@ interface ProductTabsProps {
   description: string;
   specs: Spec[];
   reviews: Review[];
+  productName?: string;
+  productImage?: string;
 }
 
-export function ProductTabs({ productId, description, specs, reviews }: ProductTabsProps) {
+export function ProductTabs({ productId, description, specs, reviews, productName, productImage }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<"desc" | "specs" | "reviews">("desc");
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<number | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    isSuccess: boolean;
-  }>({
-    isOpen: false,
-    title: "",
-    message: "",
-    isSuccess: false,
-  });
-
-  const submitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Dynamically import supabase client to avoid SSR issues if any
-    const { supabase } = await import("@/lib/supabase/client");
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      setModalState({
-        isOpen: true,
-        title: "Yêu cầu đăng nhập",
-        message: "Bạn cần đăng nhập để gửi đánh giá!",
-        isSuccess: false,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    const { error } = await supabase.from("product_reviews").insert({
-      product_id: productId,
-      rating,
-      comment,
-      user_id: session.user.id
-    });
-
-    setIsSubmitting(false);
-    if (error) {
-      setModalState({
-        isOpen: true,
-        title: "Có lỗi xảy ra",
-        message: error.message,
-        isSuccess: false,
-      });
-    } else {
-      setComment("");
-      setRating(5);
-      setModalState({
-        isOpen: true,
-        title: "Thành công",
-        message: "Cảm ơn bạn đã gửi đánh giá!",
-        isSuccess: true,
-      });
-    }
-  };
-
   return (
     <div className="mt-16 border border-outline-variant rounded-lg bg-surface-container-lowest overflow-hidden">
       <div className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-b border-outline-variant bg-surface-container-low">
@@ -168,129 +105,235 @@ export function ProductTabs({ productId, description, specs, reviews }: ProductT
 
         {/* Reviews Tab */}
         {activeTab === "reviews" && (
-          <div className="space-y-6">
-            {!reviews || reviews.length === 0 ? (
-              <p className="text-on-surface-variant font-body-md text-body-md">Chưa có đánh giá nào cho sản phẩm này.</p>
-            ) : (
-              <>
-                <div className="flex items-center space-x-6 mb-6">
-                  <div className="text-display-lg text-on-surface font-bold">
-                    {(reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)}
+          <div className="space-y-10 animate-in fade-in duration-300">
+            {/* 1. Rating Overview & Distribution Panel */}
+            <div className="bg-card/90 rounded-2xl border border-border/70 p-6 sm:p-8 shadow-2xs">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                {/* Left: Big Score Display */}
+                <div className="md:col-span-4 flex flex-col items-center md:items-start justify-center border-b md:border-b-0 md:border-r border-border/60 pb-6 md:pb-0 md:pr-8 text-center md:text-left">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl sm:text-6xl font-extrabold tracking-tight text-foreground">
+                      {reviews?.length ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) : "5.0"}
+                    </span>
+                    <span className="text-lg font-medium text-muted-foreground">/ 5</span>
                   </div>
-                  <div>
-                    <div className="flex text-yellow-500 mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span key={star} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                      ))}
-                    </div>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">Dựa trên {reviews.length} đánh giá</span>
+                  <div className="flex items-center gap-1 mt-2.5">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const avg = reviews?.length ? reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length : 5;
+                      return (
+                        <Star
+                          key={star}
+                          className={`size-5 ${
+                            star <= Math.round(avg)
+                              ? "text-amber-400 fill-amber-400"
+                              : "text-muted-foreground/20"
+                          }`}
+                        />
+                      );
+                    })}
                   </div>
+                  <p className="text-xs font-medium text-muted-foreground mt-2">
+                    {reviews?.length ? `Dựa trên ${reviews.length} đánh giá thực tế` : "Chưa có đánh giá nào"}
+                  </p>
                 </div>
-                
-                <div className="space-y-4 border-t border-outline-variant/50 pt-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="bg-surface p-4 rounded-lg border border-outline-variant/30">
-                      <div className="flex justify-between mb-2">
-                        <span className="font-label-md text-label-md font-semibold text-on-surface">
-                          Khách hàng
+
+                {/* Middle: Rating Breakdown Progress Bars */}
+                <div className="md:col-span-5 space-y-2.5">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const total = reviews?.length || 0;
+                    const count = total ? reviews.filter((r) => r.rating === star).length : 0;
+                    const percent = total ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={star} className="flex items-center gap-3 text-xs">
+                        <span className="w-12 font-semibold text-foreground flex items-center gap-1 shrink-0">
+                          {star} <Star className="size-3 text-amber-400 fill-amber-400" />
                         </span>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant">
-                          {new Date(review.created_at).toLocaleDateString("vi-VN")}
+                        <div className="flex-1 h-2 rounded-full bg-secondary/80 overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400 transition-all duration-500 rounded-full"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <span className="w-9 text-right font-medium text-muted-foreground shrink-0">
+                          {percent}%
                         </span>
                       </div>
-                      <div className="flex text-yellow-500 mb-2 text-[14px]">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <span
-                            key={star}
-                            className="material-symbols-outlined text-[14px]"
-                            style={{ fontVariationSettings: star <= review.rating ? "'FILL' 1" : "'FILL' 0" }}
-                          >
-                            star
-                          </span>
-                        ))}
-                      </div>
-                      <p className="font-body-md text-body-md text-on-surface-variant">{review.comment}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-              </>
+
+                {/* Right: Write Review CTA */}
+                <div className="md:col-span-3 flex flex-col items-center md:items-end justify-center pt-4 md:pt-0 border-t md:border-t-0 border-border/60 md:pl-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="w-full sm:w-auto px-6 py-3 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold text-xs transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Sparkles className="size-3.5" /> Viết đánh giá
+                  </button>
+                  <span className="text-[11px] text-muted-foreground mt-2 text-center md:text-right block">
+                    Chia sẻ trải nghiệm của bạn
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Filter Bar */}
+            {reviews && reviews.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border/60">
+                <span className="text-xs font-semibold text-muted-foreground shrink-0 mr-1">Lọc theo:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFilter(null)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 ${
+                    selectedFilter === null
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "bg-secondary/70 text-secondary-foreground hover:bg-secondary"
+                  }`}
+                >
+                  Tất cả ({reviews.length})
+                </button>
+                {[5, 4, 3].map((star) => {
+                  const count = reviews.filter((r) => r.rating === star).length;
+                  if (count === 0 && star !== 5) return null;
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setSelectedFilter(star)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 flex items-center gap-1 ${
+                        selectedFilter === star
+                          ? "bg-primary text-primary-foreground shadow-2xs"
+                          : "bg-secondary/70 text-secondary-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      {star} Sao ({count})
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setSelectedFilter(0)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 ${
+                    selectedFilter === 0
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "bg-secondary/70 text-secondary-foreground hover:bg-secondary"
+                  }`}
+                >
+                  1 - 2 Sao ({reviews.filter((r) => r.rating <= 2).length})
+                </button>
+              </div>
             )}
 
-            {/* Review Form */}
-            <div className="mt-8 pt-6 border-t border-outline-variant/50">
-              <h3 className="font-headline-sm text-lg font-bold mb-4">Viết đánh giá của bạn</h3>
-              <form onSubmit={submitReview} className="space-y-4 max-w-lg">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Đánh giá (Số sao)</label>
-                  <select 
-                    value={rating} 
-                    onChange={(e) => setRating(Number(e.target.value))}
-                    className="w-full border rounded-md p-2 bg-surface"
+            {/* 3. Authentic Customer Reviews List */}
+            <div className="space-y-6">
+              {!reviews || reviews.length === 0 ? (
+                <div className="text-center py-16 px-4 rounded-2xl border border-dashed border-border/80 bg-muted/10 space-y-3">
+                  <div className="size-12 rounded-full bg-secondary flex items-center justify-center mx-auto text-muted-foreground">
+                    <Star className="size-6 text-amber-500/60" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-base text-foreground">Chưa có đánh giá nào</h4>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      Bạn có thể là người đầu tiên trải nghiệm và chia sẻ nhận xét thực tế về sản phẩm này.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold transition-all shadow-2xs mt-3"
                   >
-                    <option value={5}>5 Sao - Tuyệt vời</option>
-                    <option value={4}>4 Sao - Tốt</option>
-                    <option value={3}>3 Sao - Bình thường</option>
-                    <option value={2}>2 Sao - Tệ</option>
-                    <option value={1}>1 Sao - Quá tệ</option>
-                  </select>
+                    Viết nhận xét đầu tiên
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Nhận xét chi tiết</label>
-                  <textarea 
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    required
-                    rows={3}
-                    placeholder="Sản phẩm này như thế nào?"
-                    className="w-full border rounded-md p-2 bg-surface"
-                  ></textarea>
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-md hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {isSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
-                </button>
-              </form>
+              ) : (
+                (() => {
+                  const filtered = reviews.filter((r) => {
+                    if (selectedFilter === null) return true;
+                    if (selectedFilter === 0) return r.rating <= 2;
+                    return r.rating === selectedFilter;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-xs text-muted-foreground">
+                        Không tìm thấy đánh giá nào với bộ lọc đã chọn.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="divide-y divide-border/60">
+                      {filtered.map((review) => {
+                        const userName = review.user_name || "Khách hàng mua thực tế";
+                        const initials = userName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(-2)
+                          .toUpperCase();
+
+                        return (
+                          <div key={review.id} className="py-6 first:pt-2 space-y-3">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-center gap-3">
+                                <div className="size-10 rounded-full bg-secondary/80 text-secondary-foreground font-semibold flex items-center justify-center text-xs shrink-0 border border-border/40">
+                                  {initials || "KH"}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-sm text-foreground">
+                                      {userName}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                      <ShieldCheck className="size-3 text-emerald-600 dark:text-emerald-400" /> Đã mua hàng
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star
+                                        key={star}
+                                        className={`size-3.5 ${
+                                          star <= review.rating
+                                            ? "text-amber-400 fill-amber-400"
+                                            : "text-muted-foreground/20"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="text-xs font-normal text-muted-foreground shrink-0">
+                                {new Date(review.created_at).toLocaleDateString("vi-VN")}
+                              </span>
+                            </div>
+
+                            <p className="text-sm text-foreground/90 font-normal leading-relaxed pl-13">
+                              {review.comment}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Response Modal */}
-      <AlertDialog 
-        open={modalState.isOpen} 
-        onOpenChange={(isOpen) => {
-          if (!isOpen && modalState.isSuccess) {
-            window.location.reload();
-          }
-          setModalState(prev => ({ ...prev, isOpen }));
+      {/* Product Review Modal (được gọi từ nút trên Top Dashboard) */}
+      <ProductReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        item={{
+          productId,
+          productName: productName || "Sản phẩm đang xem",
+          productImage
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className={modalState.isSuccess ? "text-green-600" : "text-destructive"}>
-              {modalState.title}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {modalState.message}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction 
-              onClick={() => {
-                setModalState(prev => ({ ...prev, isOpen: false }));
-                if (modalState.isSuccess) {
-                  window.location.reload();
-                }
-              }}
-            >
-              Đóng lại
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   );
 }
