@@ -90,6 +90,15 @@ export function ProductReviewModal({ isOpen, onClose, item, onSuccess }: Product
         return;
       }
 
+      const googleAvatar = userData.user.user_metadata?.picture || userData.user.user_metadata?.avatar_url;
+      const googleName = userData.user.user_metadata?.full_name || userData.user.user_metadata?.name;
+      if (googleAvatar || googleName) {
+        await supabase.from("profiles").update({
+          ...(googleAvatar ? { avatar_url: googleAvatar } : {}),
+          ...(googleName ? { full_name: googleName } : {}),
+        }).eq("id", userData.user.id);
+      }
+
       // Ghi nhận đánh giá vào bảng product_reviews
       const { error: insertError } = await supabase.from("product_reviews").insert({
         product_id: item.productId,
@@ -142,7 +151,7 @@ export function ProductReviewModal({ isOpen, onClose, item, onSuccess }: Product
           /* Màn hình thành công rực rỡ */
           <div className="p-8 text-center space-y-4 my-4 animate-in fade-in zoom-in-95 duration-300">
             <div className="size-16 bg-green-100 dark:bg-green-950/60 rounded-full flex items-center justify-center mx-auto border border-green-200 dark:border-green-800 shadow-inner">
-              <CheckCircle2 className="size-9 text-green-600 dark:text-green-400 animate-bounce" />
+              <CheckCircle2 className="size-9 text-green-600 dark:text-green-400 " />
             </div>
             <div className="space-y-1">
               <h3 className="text-xl font-bold text-foreground">Gửi đánh giá thành công!</h3>

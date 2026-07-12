@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Star, CheckCircle2, MessageSquarePlus, Sparkles, ShieldCheck, ThumbsUp, UserCircle2 } from "lucide-react";
 import { ProductReviewModal } from "@/components/storefront/product-review-modal";
+import Image from "next/image";
 
 interface Spec {
   id: string;
@@ -18,6 +19,7 @@ interface Review {
   comment: string;
   created_at: string;
   user_name?: string;
+  user_avatar?: string | null;
 }
 
 interface ProductTabsProps {
@@ -113,18 +115,18 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
                 <div className="md:col-span-4 flex flex-col items-center md:items-start justify-center border-b md:border-b-0 md:border-r border-border/60 pb-6 md:pb-0 md:pr-8 text-center md:text-left">
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl sm:text-6xl font-extrabold tracking-tight text-foreground">
-                      {reviews?.length ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) : "5.0"}
+                      {reviews?.length ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) : "0.0"}
                     </span>
                     <span className="text-lg font-medium text-muted-foreground">/ 5</span>
                   </div>
                   <div className="flex items-center gap-1 mt-2.5">
                     {[1, 2, 3, 4, 5].map((star) => {
-                      const avg = reviews?.length ? reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length : 5;
+                      const avg = reviews?.length ? reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length : 0;
                       return (
                         <Star
                           key={star}
                           className={`size-5 ${
-                            star <= Math.round(avg)
+                            star <= Math.round(avg) && avg > 0
                               ? "text-amber-400 fill-amber-400"
                               : "text-muted-foreground/20"
                           }`}
@@ -133,7 +135,7 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
                     })}
                   </div>
                   <p className="text-xs font-medium text-muted-foreground mt-2">
-                    {reviews?.length ? `Dựa trên ${reviews.length} đánh giá thực tế` : "Chưa có đánh giá nào"}
+                    {reviews?.length ? `Dựa trên ${reviews.length} đánh giá thực tế` : "Chưa có đánh giá nào. Hãy là người đầu tiên!"}
                   </p>
                 </div>
 
@@ -265,7 +267,7 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
                   return (
                     <div className="divide-y divide-border/60">
                       {filtered.map((review) => {
-                        const userName = review.user_name || "Khách hàng mua thực tế";
+                        const userName = review.user_name || "Khách hàng";
                         const initials = userName
                           .split(" ")
                           .map((n) => n[0])
@@ -277,9 +279,13 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
                           <div key={review.id} className="py-6 first:pt-2 space-y-3">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex items-center gap-3">
-                                <div className="size-10 rounded-full bg-secondary/80 text-secondary-foreground font-semibold flex items-center justify-center text-xs shrink-0 border border-border/40">
-                                  {initials || "KH"}
-                                </div>
+                                {review.user_avatar ? (
+                                  <Image src={review.user_avatar} alt={userName} width={40} height={40} className="rounded-full object-cover size-10 border border-border/40" />
+                                ) : (
+                                  <div className="size-10 rounded-full bg-secondary/80 text-secondary-foreground font-semibold flex items-center justify-center text-xs shrink-0 border border-border/40">
+                                    {initials || "KH"}
+                                  </div>
+                                )}
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="font-semibold text-sm text-foreground">
