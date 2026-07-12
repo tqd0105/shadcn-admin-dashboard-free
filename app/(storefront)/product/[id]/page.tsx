@@ -3,8 +3,8 @@ import { getProductById, getRelatedProducts } from "@/lib/services/product.servi
 import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductTabs } from "@/components/storefront/product-tabs";
 import { ProductCard } from "@/components/storefront/product-card";
-
 import { ProductActions } from "@/components/storefront/product-actions";
+import { Star } from "lucide-react";
 
 export default async function ProductDetailsPage({
   params,
@@ -25,7 +25,7 @@ export default async function ProductDetailsPage({
 
   // Format images
   const extraImages = product.product_images?.length 
-    ? product.product_images.sort((a: any, b: any) => a.display_order - b.display_order)
+    ? [...product.product_images].sort((a: any, b: any) => a.display_order - b.display_order)
     : [];
     
   const images = [
@@ -34,40 +34,47 @@ export default async function ProductDetailsPage({
   ];
 
   return (
-    <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {/* Product Overview */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         {/* Left: Gallery */}
-        <ProductGallery images={images} productName={product.name} />
+        <div className="w-full">
+          <ProductGallery images={images} productName={product.name} />
+        </div>
 
-        {/* Right: Product Info */}
+        {/* Right: Product Info & Actions */}
         <div className="flex flex-col space-y-6">
           <div>
             <div className="flex items-center space-x-2 mb-2">
               {product.brand && (
-                <span className="px-2 py-1 bg-secondary text-secondary-foreground font-label-sm text-label-sm rounded uppercase tracking-wider">
+                <span className="px-2.5 py-1 bg-secondary text-secondary-foreground font-semibold text-xs rounded uppercase tracking-wider">
                   {product.brand}
                 </span>
               )}
-              <span className="flex items-center text-muted-foreground font-label-sm text-label-sm">
+              <span className="flex items-center text-muted-foreground font-medium text-xs">
                 {product.product_reviews?.length ? (
                   <>
-                    <span className="material-symbols-outlined text-[16px] mr-1 text-yellow-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    {(product.product_reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / product.product_reviews.length).toFixed(1)} ({product.product_reviews.length} Đánh giá)
+                    <Star className="size-4 mr-1 text-amber-500 fill-amber-500 inline-block" />
+                    <span className="font-bold text-foreground">
+                      {(product.product_reviews.reduce((acc: number, curr: any) => acc + curr.rating, 0) / product.product_reviews.length).toFixed(1)}
+                    </span>
+                    <span className="ml-1">({product.product_reviews.length} Đánh giá)</span>
                   </>
                 ) : (
                   <span>Chưa có đánh giá</span>
                 )}
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">{product.name}</h1>
           </div>
 
           {product.description && (
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
               {product.description}
             </p>
           )}
 
+          {/* Interactive Client Component for Price, Quantity, Variant Selection & Buttons */}
           <ProductActions 
             productId={product.id}
             basePrice={product.price}
@@ -82,7 +89,9 @@ export default async function ProductDetailsPage({
         productId={product.id}
         description={product.description_html || product.description || ""} 
         specs={product.product_specs || []} 
-        reviews={product.product_reviews || []} 
+        reviews={product.product_reviews || []}
+        productName={product.name}
+        productImage={product.image_url}
       />
 
       {/* Related Products */}
