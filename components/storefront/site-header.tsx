@@ -309,8 +309,9 @@ export function SiteHeader() {
               </SheetContent>
             </Sheet>
           </div>
-          <Link href="/" className="text-lg md:text-xl font-bold tracking-tight flex-shrink-0 text-primary flex items-center gap-2">
-            LuxeCommerce
+          <Link href="/" className="text-lg md:text-xl font-bold tracking-tight flex-shrink-0 text-primary flex items-center gap-3">
+            <Image src="/icons/luxecommerce.png" alt="Logo" width={32} height={32} className="rounded-full" />
+             LuxeCommerce
           </Link>
         </div>
 

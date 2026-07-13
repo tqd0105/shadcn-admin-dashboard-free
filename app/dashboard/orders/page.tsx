@@ -60,6 +60,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   paid: { label: "Đã thanh toán", color: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-500/20" },
   shipping: { label: "Đang giao", color: "bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border-indigo-500/20" },
   delivered: { label: "Đã giao", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/20" },
+  completed: { label: "Đã nhận hàng", color: "bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20 font-bold" },
   cancelled: { label: "Đã hủy", color: "bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-500/20" },
 };
 
@@ -495,7 +496,7 @@ function OrdersContent() {
                             Thanh toán COD
                           </span>
                           <span className="text-[10px] text-muted-foreground font-medium">
-                            {order.status === "delivered" ? "✅ Đã thu tiền" : "📦 Khi nhận hàng"}
+                            {(order.status === "delivered" || order.status === "completed") ? "✅ Đã thu tiền" : "📦 Khi nhận hàng"}
                           </span>
                         </div>
                       )}
@@ -653,11 +654,11 @@ function OrdersContent() {
                     </div>
                     <div className="text-right">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
-                        selectedOrder.status === 'delivered'
+                        (selectedOrder.status === 'delivered' || selectedOrder.status === 'completed')
                           ? 'bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30'
                           : 'bg-muted text-muted-foreground border border-border'
                       }`}>
-                        {selectedOrder.status === 'delivered' ? 'Đã thu tiền' : 'Chờ thu tiền khi giao'}
+                        {(selectedOrder.status === 'delivered' || selectedOrder.status === 'completed') ? 'Đã thu tiền' : 'Chờ thu tiền khi giao'}
                       </span>
                     </div>
                   </div>

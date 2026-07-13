@@ -335,6 +335,7 @@ function PromoBannersPageContent() {
     try {
       const payload = updatedBanners.map((b) => ({ id: b.id, order_index: b.order_index }));
       await updatePromoBannerOrders(payload);
+      router.refresh();
     } catch (err) {
       console.error(err);
     }
@@ -408,6 +409,7 @@ function PromoBannersPageContent() {
     const { error } = await updatePromoBanner(banner.id, { is_active: checked });
     if (!error) {
       setBanners(banners.map(b => b.id === banner.id ? { ...b, is_active: checked } : b));
+      router.refresh();
     }
   };
 

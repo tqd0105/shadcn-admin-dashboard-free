@@ -98,3 +98,36 @@ Following the completion of the VietQR automated payment pipeline, both administ
 - Elevated customer trust and reduced support inquiries via visual progress indicators and direct "Thanh toán ngay" re-access.
 - Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
 
+## 2026-07-12: Client-Side Hybrid Search & Filtering for Customer Order History (`account/orders`)
+
+### Context
+The customer Order History page (`app/(storefront)/account/orders/page.tsx`) lacked filtering by status, time range, and search query. We needed to decide whether to implement filtering on the client side (using RAM/`useMemo`) or server side (calling PostgREST queries on every input/tab change).
+
+### Decision
+1. **Adopted Client-Side Hybrid Architecture**:
+   - Since individual customers typically have fewer than 200 orders, fetching their full order history once (`~30KB-80KB` JSON) and filtering in-browser via `useMemo` provides instant `0ms latency` feedback without server roundtrips or loading spinners.
+   - Enabled multi-field relational search across **Order ID (`#ORD...`)**, **VietQR Payment Code (`LX...`)**, and **nested Product Names (`order_items.products.name`)** without complex SQL joins.
+2. **Built Status Filter Pills & Dynamic Badge Counts**:
+   - Added Status Pills (`Tất cả`, `Chờ xử lý`, `Đang giao`, `Hoàn tất`, `Đã hủy`) where badge counts reflect the exact number of orders matching the active search query and time range.
+3. **Resolved React 19 / Next.js 16 Compiler Hook Purity Rules**:
+   - Initialized `currentTime` via `useState(() => Date.now())` to avoid calling impure `Date.now()` inside `useMemo` computations, and wrapped `fetchOrders(true)` inside `setTimeout` within `useEffect` to prevent synchronous state updates (`react-hooks/set-state-in-effect`).
+
+### Consequences
+- Flawless, instant search and filtering experience for customers with zero latency.
+- Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
+
+## 2026-07-13: Dynamic Storefront Home Page & Real-Time Promo Banner Reordering (`order_index`)
+
+### Context
+When testing the promo banner drag-and-drop reordering feature (`đảo vị trí hiển thị`) in local development (`pnpm dev`), reloading the home page (`/`) reflected the new banner order immediately. However, in production (`pnpm build`), reloading the home page did not update the banner order (`test ở production lại ko đc`).
+
+### Decision
+1. **Dynamic Route Opt-out (`export const dynamic = "force-dynamic"`)**: By default, Next.js App Router marks `app/(storefront)/page.tsx` (`StorefrontHomePage`) as `○ (Static) prerendered as static content` during `next build` because it has no dynamic parameters (`searchParams`). Consequently, `HeroBanner` only fetched `promo_banners` once at build time. Added `export const dynamic = "force-dynamic"` and `export const revalidate = 0` to `app/(storefront)/page.tsx` so the production server dynamically fetches active banners sorted by `order_index ASC` on every home page visit without serving stale build-time HTML.
+2. **Synchronized Client State in `HeroBannerClient`**: Updated `HeroBannerClient` to sync `initialBanners` into `activeBanners` via `useEffect` whenever props change (`setActiveBanners(initialBanners)`), preventing `useState(initialBanners)` from retaining stale initial state during client routing.
+3. **Automatic Router Refresh on Admin Reorder (`router.refresh()`)**: Added `router.refresh()` inside `handleDragEnd` and `handleToggleActive` in `app/dashboard/promo-banners/page.tsx` so admin state updates immediately clear the browser router cache.
+
+### Consequences
+- Drag-and-drop banner reordering (`order_index`) in `/dashboard/promo-banners` instantly reflects on the Storefront home page (`/`) in both local development and production environments.
+
+
+

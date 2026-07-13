@@ -15,9 +15,18 @@ interface HeroBannerClientProps {
 
 export function HeroBannerClient({ initialBanners, initialCoupon }: HeroBannerClientProps) {
   const [isCopied, setIsCopied] = useState(false);
-  const [activeBanners] = useState<PromoBanner[]>(initialBanners);
-  const [featuredCoupon] = useState<Coupon | null>(initialCoupon);
+  const [activeBanners, setActiveBanners] = useState<PromoBanner[]>(initialBanners);
+  const [featuredCoupon, setFeaturedCoupon] = useState<Coupon | null>(initialCoupon);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveBanners(initialBanners);
+    setCurrentIndex(0);
+  }, [initialBanners]);
+
+  useEffect(() => {
+    setFeaturedCoupon(initialCoupon);
+  }, [initialCoupon]);
 
   // Auto slide rotation
   useEffect(() => {
