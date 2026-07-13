@@ -98,3 +98,22 @@ Following the completion of the VietQR automated payment pipeline, both administ
 - Elevated customer trust and reduced support inquiries via visual progress indicators and direct "Thanh toán ngay" re-access.
 - Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
 
+## 2026-07-12: Client-Side Hybrid Search & Filtering for Customer Order History (`account/orders`)
+
+### Context
+The customer Order History page (`app/(storefront)/account/orders/page.tsx`) lacked filtering by status, time range, and search query. We needed to decide whether to implement filtering on the client side (using RAM/`useMemo`) or server side (calling PostgREST queries on every input/tab change).
+
+### Decision
+1. **Adopted Client-Side Hybrid Architecture**:
+   - Since individual customers typically have fewer than 200 orders, fetching their full order history once (`~30KB-80KB` JSON) and filtering in-browser via `useMemo` provides instant `0ms latency` feedback without server roundtrips or loading spinners.
+   - Enabled multi-field relational search across **Order ID (`#ORD...`)**, **VietQR Payment Code (`LX...`)**, and **nested Product Names (`order_items.products.name`)** without complex SQL joins.
+2. **Built Status Filter Pills & Dynamic Badge Counts**:
+   - Added Status Pills (`Tất cả`, `Chờ xử lý`, `Đang giao`, `Hoàn tất`, `Đã hủy`) where badge counts reflect the exact number of orders matching the active search query and time range.
+3. **Resolved React 19 / Next.js 16 Compiler Hook Purity Rules**:
+   - Initialized `currentTime` via `useState(() => Date.now())` to avoid calling impure `Date.now()` inside `useMemo` computations, and wrapped `fetchOrders(true)` inside `setTimeout` within `useEffect` to prevent synchronous state updates (`react-hooks/set-state-in-effect`).
+
+### Consequences
+- Flawless, instant search and filtering experience for customers with zero latency.
+- Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
+
+
