@@ -116,4 +116,18 @@ The customer Order History page (`app/(storefront)/account/orders/page.tsx`) lac
 - Flawless, instant search and filtering experience for customers with zero latency.
 - Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
 
+## 2026-07-13: Dynamic Storefront Home Page & Real-Time Promo Banner Reordering (`order_index`)
+
+### Context
+When testing the promo banner drag-and-drop reordering feature (`đảo vị trí hiển thị`) in local development (`pnpm dev`), reloading the home page (`/`) reflected the new banner order immediately. However, in production (`pnpm build`), reloading the home page did not update the banner order (`test ở production lại ko đc`).
+
+### Decision
+1. **Dynamic Route Opt-out (`export const dynamic = "force-dynamic"`)**: By default, Next.js App Router marks `app/(storefront)/page.tsx` (`StorefrontHomePage`) as `○ (Static) prerendered as static content` during `next build` because it has no dynamic parameters (`searchParams`). Consequently, `HeroBanner` only fetched `promo_banners` once at build time. Added `export const dynamic = "force-dynamic"` and `export const revalidate = 0` to `app/(storefront)/page.tsx` so the production server dynamically fetches active banners sorted by `order_index ASC` on every home page visit without serving stale build-time HTML.
+2. **Synchronized Client State in `HeroBannerClient`**: Updated `HeroBannerClient` to sync `initialBanners` into `activeBanners` via `useEffect` whenever props change (`setActiveBanners(initialBanners)`), preventing `useState(initialBanners)` from retaining stale initial state during client routing.
+3. **Automatic Router Refresh on Admin Reorder (`router.refresh()`)**: Added `router.refresh()` inside `handleDragEnd` and `handleToggleActive` in `app/dashboard/promo-banners/page.tsx` so admin state updates immediately clear the browser router cache.
+
+### Consequences
+- Drag-and-drop banner reordering (`order_index`) in `/dashboard/promo-banners` instantly reflects on the Storefront home page (`/`) in both local development and production environments.
+
+
 
