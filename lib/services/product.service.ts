@@ -101,6 +101,37 @@ export async function getProductById(id: string) {
     .eq("id", id)
     .single();
 
+  if (data && data.product_reviews && data.product_reviews.length > 0) {
+    const userIds = Array.from(
+      new Set(data.product_reviews.map((r: any) => r.user_id).filter(Boolean))
+    );
+
+    let profileMap = new Map();
+    if (userIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", userIds);
+
+      if (profilesData) {
+        profilesData.forEach((p: any) => profileMap.set(p.id, p));
+      }
+    }
+
+    data.product_reviews = data.product_reviews.map((review: any) => {
+      const profile = review.profiles || (review.user_id ? profileMap.get(review.user_id) : null);
+      let displayName = review.user_name || null;
+      if (!displayName && profile) {
+        displayName = profile.full_name || (profile.email ? profile.email.split('@')[0] : null);
+      }
+      return {
+        ...review,
+        user_name: displayName || "Khách hàng ",
+        user_avatar: profile?.avatar_url || review.user_avatar || null,
+      };
+    });
+  }
+
   return { data, error };
 }
 
