@@ -117,7 +117,7 @@ function OrderTimeline({ status }: { status: string }) {
       <div className="hidden sm:block py-3 px-6 border-b border-border/60 bg-muted/15">
         <div className="relative flex items-center justify-between w-full max-w-xl mx-auto">
           {/* Connecting line stopping EXACTLY at center of circle */}
-          <div className="absolute top-[13px] left-[14px] right-[14px] h-[2px] bg-border -z-0">
+          <div className="absolute top-[15px] left-[30px] right-[30px] h-[2px] bg-border -z-0">
             <div
               className="h-full bg-green-600 dark:bg-green-500 transition-all duration-500"
               style={{ width: `${(activeIndex / (steps.length - 1)) * 100}%` }}
