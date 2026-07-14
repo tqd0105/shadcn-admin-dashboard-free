@@ -11,6 +11,13 @@ export interface Notification {
   link?: string;
   is_read: boolean;
   created_at: string;
+  profiles?: {
+    id?: string;
+    full_name?: string;
+    email?: string;
+  } | null;
+  recipients_count?: number;
+  is_broadcast?: boolean;
 }
 
 export async function getUserNotifications(userId: string) {
@@ -66,6 +73,7 @@ export async function broadcastNotification(payload: {
     message: payload.message,
     type: payload.type,
     link: payload.link,
+    is_broadcast: true,
   }));
 
   // 3. Bulk insert
@@ -77,18 +85,35 @@ export async function broadcastNotification(payload: {
 export async function getBroadcastHistory() {
   const { data, error } = await supabase
     .from("notifications")
-    .select("*")
+    .select("*, profiles(id, full_name, email)")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(300);
 
   if (error) return { data: null, error };
 
-  // Filter unique by title + message
-  const uniqueMap = new Map();
-  data?.forEach(item => {
-    const key = `${item.title}|${item.message}`;
+  // Group Broadcast batches accurately while keeping Targeted messages distinct
+  const uniqueMap = new Map<string, Notification>();
+  data?.forEach((item: any) => {
+    const timeBucket = item.created_at ? item.created_at.substring(0, 16) : ""; // YYYY-MM-DDTHH:mm
+    const isBroadcastFlag = item.is_broadcast === true;
+    // Nếu là targeted message, dùng ID để mỗi tin nhắn cá nhân hiển thị trên 1 dòng riêng với thông tin người nhận
+    // Nếu là broadcast, gộp theo title + message + timeBucket để hiển thị số lượng người nhận
+    const key = isBroadcastFlag ? `broadcast|${item.title}|${item.message}|${timeBucket}` : `targeted|${item.id}`;
+
     if (!uniqueMap.has(key)) {
-      uniqueMap.set(key, item);
+      uniqueMap.set(key, {
+        ...item,
+        recipients_count: 1,
+        is_broadcast: isBroadcastFlag,
+      });
+    } else {
+      const existing = uniqueMap.get(key)!;
+      const count = (existing.recipients_count || 1) + 1;
+      uniqueMap.set(key, {
+        ...existing,
+        recipients_count: count,
+        is_broadcast: true,
+      });
     }
   });
 
@@ -109,6 +134,7 @@ export async function sendTargetedNotification(userId: string, payload: {
       message: payload.message,
       type: payload.type,
       link: payload.link,
+      is_broadcast: false,
     });
 }
 

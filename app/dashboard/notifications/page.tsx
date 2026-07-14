@@ -32,10 +32,20 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { IconLoader2, IconSend, IconSearch, IconLink, IconHistory, IconSparkles, IconTrash, IconUser, IconUsers } from "@tabler/icons-react";
-import { broadcastNotification, sendTargetedNotification, getBroadcastHistory, deleteBroadcast, searchUsersForNotification, NotificationType, Notification } from "@/lib/services/notification.service";
+import { broadcastNotification, sendTargetedNotification, getBroadcastHistory, deleteBroadcast, deleteNotification, searchUsersForNotification, NotificationType, Notification } from "@/lib/services/notification.service";
 import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/services/product.service";
 import { getOrders } from "@/lib/services/order.service";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BellRing, ExternalLink } from "lucide-react";
 
 function NotificationsPageContent() {
@@ -64,16 +74,21 @@ function NotificationsPageContent() {
   // History state & search logic
   const [history, setHistory] = useState<Notification[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [deleteTargetItem, setDeleteTargetItem] = useState<Notification | null>(null);
   const [historySearch, setHistorySearch] = useState("");
 
   const filteredHistory = history.filter((item) => {
     if (!historySearch.trim()) return true;
     const q = historySearch.toLowerCase();
+    const recipientName = item.profiles?.full_name?.toLowerCase() || "";
+    const recipientEmail = item.profiles?.email?.toLowerCase() || "";
     return (
       item.title?.toLowerCase().includes(q) ||
       item.message?.toLowerCase().includes(q) ||
       item.link?.toLowerCase().includes(q) ||
-      item.type?.toLowerCase().includes(q)
+      item.type?.toLowerCase().includes(q) ||
+      recipientName.includes(q) ||
+      recipientEmail.includes(q)
     );
   });
 
@@ -184,14 +199,28 @@ function NotificationsPageContent() {
     }
   };
 
-  const handleDeleteSentItem = async (item: Notification) => {
-    if (!confirm("Bạn có chắc muốn thu hồi thông báo này khỏi tất cả tài khoản?")) return;
-    const { error } = await deleteBroadcast(item.title, item.message);
+  const handleDeleteSentItem = (item: Notification) => {
+    setDeleteTargetItem(item);
+  };
+
+  const executeDeleteSentItem = async () => {
+    if (!deleteTargetItem) return;
+    const item = deleteTargetItem;
+    setDeleteTargetItem(null);
+
+    // Nếu là thông báo cá nhân, xóa chính xác ID đó; nếu là Broadcast, xóa tất cả các thông báo cùng title & message
+    const { error } = item.is_broadcast
+      ? await deleteBroadcast(item.title, item.message)
+      : await deleteNotification(item.id);
+
     if (error) {
       toast.error("Lỗi khi thu hồi thông báo.");
     } else {
       toast.success("Đã thu hồi thông báo thành công.");
-      setHistory(prev => prev.filter(h => !(h.title === item.title && h.message === item.message)));
+      setHistory(prev => item.is_broadcast
+        ? prev.filter(h => !(h.title === item.title && h.message === item.message))
+        : prev.filter(h => h.id !== item.id)
+      );
     }
   };
 
@@ -504,10 +533,22 @@ function NotificationsPageContent() {
                   filteredHistory.map((item) => (
                     <div key={item.id} className="p-3.5 rounded-xl border bg-card text-card-foreground shadow-sm space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-semibold bg-secondary/50">
-                          {getTypeName(item.type)}
-                        </Badge>
-                        <span className="text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-semibold bg-secondary/50">
+                            {getTypeName(item.type)}
+                          </Badge>
+                          {item.is_broadcast ? (
+                            <Badge className="text-[10px] px-2.5 py-0.5 font-semibold bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-300/40 gap-1 flex items-center">
+                              <IconUsers className="size-3.5" /> Gửi tất cả ({item.recipients_count} user)
+                            </Badge>
+                          ) : (
+                            <div className="flex items-center gap-1.5 bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-300/40 rounded-full px-2.5 py-0.5 text-[11px] font-medium max-w-[220px] truncate">
+                              <IconUser className="size-3.5 shrink-0" />
+                              <span className="truncate">Gửi cho: {item.profiles?.full_name || item.profiles?.email?.split('@')[0] || "Cá nhân"}</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-muted-foreground shrink-0">
                           {formatDate(item.created_at)}
                         </span>
                       </div>
@@ -547,7 +588,8 @@ function NotificationsPageContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-32">Loại</TableHead>
+                      <TableHead className="w-28">Loại</TableHead>
+                      <TableHead className="w-52">Đối tượng nhận</TableHead>
                       <TableHead>Tiêu đề & Nội dung</TableHead>
                       <TableHead>Đính kèm</TableHead>
                       <TableHead>Thời gian gửi</TableHead>
@@ -557,13 +599,13 @@ function NotificationsPageContent() {
                   <TableBody>
                     {loadingHistory ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center">
+                        <TableCell colSpan={6} className="h-32 text-center">
                           <IconLoader2 className="size-6 animate-spin mx-auto text-muted-foreground" />
                         </TableCell>
                       </TableRow>
                     ) : filteredHistory.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground text-sm">
+                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground text-sm">
                           {historySearch ? "Không tìm thấy thông báo nào khớp từ khóa." : "Chưa có lịch sử gửi thông báo nào."}
                         </TableCell>
                       </TableRow>
@@ -574,6 +616,24 @@ function NotificationsPageContent() {
                             <Badge variant="outline" className="text-[10px] whitespace-nowrap">
                               {getTypeName(item.type)}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {item.is_broadcast ? (
+                              <Badge className="text-xs px-2.5 py-1 font-semibold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-300/40 gap-1.5 flex items-center w-fit">
+                                <IconUsers className="size-4 shrink-0" />
+                                <span>Gửi tất cả ({item.recipients_count} user)</span>
+                              </Badge>
+                            ) : (
+                              <div className="flex flex-col text-xs bg-blue-500/10 dark:bg-blue-950/40 border border-blue-300/40 dark:border-blue-800/60 rounded-lg p-2 max-w-[210px]">
+                                <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 font-semibold">
+                                  <IconUser className="size-4 shrink-0" />
+                                  <span className="truncate">Gửi: {item.profiles?.full_name || item.profiles?.email?.split('@')[0] || "Khách hàng"}</span>
+                                </div>
+                                {item.profiles?.email && (
+                                  <span className="text-[10px] text-muted-foreground ml-5 truncate font-mono mt-0.5">{item.profiles.email}</span>
+                                )}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="max-w-xs min-w-[180px]">
                             <p className="font-semibold text-xs text-foreground">{item.title}</p>
@@ -608,6 +668,37 @@ function NotificationsPageContent() {
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Modal xác nhận thu hồi / xóa thông báo */}
+              <AlertDialog open={!!deleteTargetItem} onOpenChange={(open) => !open && setDeleteTargetItem(null)}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
+                      <IconTrash className="size-5" /> Xác nhận thu hồi thông báo
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2 text-sm text-muted-foreground pt-1">
+                      {deleteTargetItem?.is_broadcast ? (
+                        <span>
+                          Bạn có chắc chắn muốn thu hồi thông báo phát sóng <strong>&quot;{deleteTargetItem?.title}&quot;</strong> khỏi toàn bộ <strong>{deleteTargetItem?.recipients_count} thành viên</strong> không? Hành động này sẽ xóa thông báo khỏi hộp thư của tất cả người nhận.
+                        </span>
+                      ) : (
+                        <span>
+                          Bạn có chắc chắn muốn thu hồi thông báo cá nhân <strong>&quot;{deleteTargetItem?.title}&quot;</strong> đã gửi riêng cho <strong>{deleteTargetItem?.profiles?.full_name || deleteTargetItem?.profiles?.email || "thành viên này"}</strong> không?
+                        </span>
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Hủy bỏ</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={executeDeleteSentItem}
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+                    >
+                      Đồng ý thu hồi
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </TabsContent>
