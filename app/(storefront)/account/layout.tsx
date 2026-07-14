@@ -88,7 +88,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">
-          <div className=" rounded-xl shadow-sm border p-6 min-h-[400px]">
+          <div className=" rounded-xl shadow-sm border p-4 md:p-6 min-h-[400px]">
             {children}
           </div>
         </main>
