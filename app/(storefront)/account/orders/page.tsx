@@ -430,7 +430,7 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-0">
+    <div className="container mx-auto py-4 md:px-0">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6">Lịch sử Mua hàng</h1>
       
       {/* 1. Status Filter Pills */}
@@ -477,11 +477,11 @@ export default function MyOrdersPage() {
       {/* 2. Smart Search & Time Filter Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6 bg-card/60 p-3.5 rounded-xl border border-border/70 shadow-2xs">
         {/* Search Box */}
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
-            placeholder="Tìm theo mã đơn (#ORD...), mã thanh toán hoặc tên sản phẩm..."
+            placeholder="Tìm theo mã đơn, mã thanh toán hoặc tên sản phẩm..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-9 h-9 text-xs bg-background border-border/60 focus-visible:ring-primary rounded-lg w-full"
@@ -654,7 +654,7 @@ export default function MyOrdersPage() {
                             {item.product_variants && (
                               <p className="text-xs text-muted-foreground mt-0.5">Phân loại: <span className="font-medium text-foreground/80">{item.product_variants.name}</span></p>
                             )}
-                            <div className="flex items-center gap-3 mt-1.5 text-xs">
+                            <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs">
                               <span className="text-muted-foreground">Số lượng: <strong className="text-foreground">x{item.quantity}</strong></span>
                               <span className="text-muted-foreground/40">•</span>
                               <span className="font-bold text-sm text-primary">{formatCurrency(item.price)}</span>
