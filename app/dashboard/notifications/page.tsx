@@ -35,7 +35,6 @@ import { IconLoader2, IconSend, IconSearch, IconLink, IconHistory, IconSparkles,
 import { broadcastNotification, sendTargetedNotification, getBroadcastHistory, deleteBroadcast, deleteNotification, searchUsersForNotification, NotificationType, Notification } from "@/lib/services/notification.service";
 import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/services/product.service";
-import { getOrders } from "@/lib/services/order.service";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,7 +45,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { BellRing, ExternalLink } from "lucide-react";
 
 function NotificationsPageContent() {
   const [sendMode, setSendMode] = useState<"broadcast" | "targeted">("broadcast");
@@ -54,16 +52,6 @@ function NotificationsPageContent() {
   const [userSearch, setUserSearch] = useState("");
   const [userResults, setUserResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
-
-  const [orderAlerts, setOrderAlerts] = useState<any[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-
-  const fetchOrderAlerts = async () => {
-    setLoadingOrders(true);
-    const { data } = await getOrders("", 1, 50);
-    if (data) setOrderAlerts(data);
-    setLoadingOrders(false);
-  };
 
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -90,17 +78,6 @@ function NotificationsPageContent() {
       recipientName.includes(q) ||
       recipientEmail.includes(q)
     );
-  });
-
-  // Order alerts search logic
-  const [orderAlertSearch, setOrderAlertSearch] = useState("");
-  const filteredOrderAlerts = orderAlerts.filter((o) => {
-    if (!orderAlertSearch.trim()) return true;
-    const q = orderAlertSearch.toLowerCase();
-    const shortId = o.id ? o.id.split("-")[0].toLowerCase() : "";
-    const name = (o.profiles?.full_name || o.addresses?.full_name || o.profiles?.email?.split("@")[0] || "").toLowerCase();
-    const phone = (o.addresses?.phone || o.profiles?.phone || "").toLowerCase();
-    return shortId.includes(q) || name.includes(q) || phone.includes(q);
   });
 
   // Product search state
@@ -262,7 +239,7 @@ function NotificationsPageContent() {
       </div>
 
       <Tabs defaultValue="compose" className="space-y-4">
-        <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden h-auto p-1 gap-1 justify-start sm:grid sm:grid-cols-3 sm:justify-center">
+        <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden h-auto p-1 gap-1 justify-start sm:grid sm:grid-cols-2 sm:justify-center">
           <TabsTrigger value="compose" className="gap-1.5 shrink-0 px-3 py-2 text-xs sm:text-sm whitespace-nowrap flex-1">
             <IconSend className="size-4 shrink-0" />
             <span className="sm:hidden">Soạn tin</span>
@@ -272,11 +249,6 @@ function NotificationsPageContent() {
             <IconHistory className="size-4 shrink-0" />
             <span className="sm:hidden">Lịch sử</span>
             <span className="hidden sm:inline">Lịch sử đã gửi</span>
-          </TabsTrigger>
-          <TabsTrigger value="system-alerts" onClick={fetchOrderAlerts} className="gap-1.5 shrink-0 px-3 py-2 text-xs sm:text-sm whitespace-nowrap flex-1 relative text-emerald-600 font-bold data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all">
-            <BellRing className="size-4 shrink-0" />
-            <span className="sm:hidden">Đơn hàng</span>
-            <span className="hidden sm:inline">Nhật ký Đơn hàng</span>
           </TabsTrigger>
         </TabsList>
 
@@ -699,84 +671,6 @@ function NotificationsPageContent() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="system-alerts">
-          <Card>
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-emerald-600 text-lg sm:text-xl">
-                  <BellRing className="size-5 shrink-0" /> Nhật Ký Đơn Hàng 
-                </CardTitle>
-                <CardDescription>
-                  Toàn bộ lịch sử các thông báo đơn hàng mới được đẩy Realtime tới Admin. Nếu chưa thấy chuông báo, bạn có thể xem lại tại đây.
-                </CardDescription>
-              </div>
-              <div className="relative w-full sm:w-72 shrink-0">
-                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Tìm mã đơn, tên khách, SĐT..."
-                  value={orderAlertSearch}
-                  onChange={(e) => setOrderAlertSearch(e.target.value)}
-                  className="pl-9 bg-background h-9 text-xs sm:text-sm"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loadingOrders ? (
-                <div className="flex justify-center py-8">
-                  <IconLoader2 className="size-6 animate-spin text-primary" />
-                </div>
-              ) : filteredOrderAlerts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  {orderAlertSearch ? "Không tìm thấy đơn hàng nào khớp từ khóa." : "Chưa có đơn hàng nào được ghi nhận."}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredOrderAlerts.map((o) => {
-                    const shortId = o.id ? o.id.split("-")[0].toUpperCase() : "ORD";
-                    const isCancelled = o.status === "cancelled";
-                    return (
-                      <div key={o.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-xl border bg-card hover:border-emerald-500/50 transition-all shadow-sm">
-                        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-                          <div className={`p-2.5 rounded-xl shrink-0 ${isCancelled ? "bg-red-600 text-white dark:bg-red-500 dark:text-white" : "bg-emerald-500 text-white dark:bg-emerald-400 dark:text-black"}`}>
-                            <BellRing className="size-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-bold text-sm">#{shortId}</span>
-                              <Badge variant={isCancelled ? "destructive" : "default"} className="text-[10px] h-4">
-                                {isCancelled ? "Đã hủy đơn" : "Đơn mới nhận"}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                              Khách hàng: <span className="font-medium text-foreground">{o.profiles?.full_name || o.addresses?.full_name || o.profiles?.email?.split("@")[0] || "Khách mua"}</span> 
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                              Số điện thoại: <span className="font-medium text-foreground">{o.addresses?.phone || o.profiles?.phone || "Chưa cập nhật SĐT"}</span> 
-                            </p>
-                            <p className="text-[11px] text-muted-foreground/80 mt-1 sm:mt-0.5">
-                              {formatDate(o.created_at)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                          <span className="font-bold text-base text-emerald-600 dark:text-emerald-400">
-                            +{Number(o.total_amount || 0).toLocaleString("vi-VN")} đ
-                          </span>
-                          <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs h-8 shrink-0">
-                            <a href="/dashboard/orders">
-                              Xem đơn <ExternalLink className="size-3" />
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

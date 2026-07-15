@@ -62,6 +62,14 @@ export function AdminRealtimeNotifier() {
 
   const triggerOrderNotification = useCallback((order: any) => {
     if (!order?.id || notifiedIds.current.has(order.id)) return;
+
+    // Nếu là đơn thanh toán tự động (banking / VietQR / non-cod) mà trạng thái vẫn là "pending" (chưa thanh toán xong)
+    // -> Tuyệt đối không phát tiếng chuông Đơn mới và thông báo cho Admin!
+    const isBanking = order.payment_method === "banking" || order.payment_method?.includes("VietQR") || (order.payment_method && order.payment_method !== "cod");
+    if (isBanking && order.status === "pending") {
+      return;
+    }
+
     notifiedIds.current.add(order.id);
 
     playCashChime();
@@ -80,6 +88,7 @@ export function AdminRealtimeNotifier() {
 
     const shortId = order.id ? order.id.split("-")[0].toUpperCase() : "";
     const amountStr = order.total_amount ? Number(order.total_amount).toLocaleString("vi-VN") + " đ" : "Đơn mới";
+    const isPaidBanking = isBanking && (order.status === "paid" || order.status === "completed");
 
     toast.custom((t) => (
       <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-emerald-500/30 bg-background/95 backdrop-blur-xl shadow-2xl shadow-emerald-500/10 w-full max-w-[330px] transition-all animate-in fade-in zoom-in-95">
@@ -93,10 +102,15 @@ export function AdminRealtimeNotifier() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[11px] tracking-wider uppercase text-emerald-600 dark:text-emerald-400">Đơn mới!</span>
+              <span className="font-bold text-[11px] tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
+                {isPaidBanking ? "Đã thanh toán!" : "Đơn mới!"}
+              </span>
               <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">#{shortId}</span>
             </div>
             <p className="text-xs font-extrabold truncate text-foreground mt-0.5">{amountStr}</p>
+            {isPaidBanking && (
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium truncate mt-0.5">Khách đã chuyển khoản VietQR thành công</p>
+            )}
           </div>
         </div>
         <button
@@ -205,7 +219,22 @@ export function AdminRealtimeNotifier() {
         triggerOrderRef.current(payload.new);
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (payload) => {
-        triggerUpdateRef.current(payload.new as any);
+        const newOrder = payload.new as any;
+        const isBanking = newOrder?.payment_method === "banking" || newOrder?.payment_method?.includes("VietQR") || (newOrder?.payment_method && newOrder?.payment_method !== "cod");
+        if (isBanking && (newOrder.status === "paid" || newOrder.status === "completed") && !notifiedIds.current.has(newOrder.id)) {
+          triggerOrderRef.current(newOrder);
+          return;
+        }
+        triggerUpdateRef.current(newOrder);
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "payments" }, async (payload) => {
+        const newPay = payload.new as any;
+        if ((newPay?.status === "MATCHED" || newPay?.status === "MANUAL") && newPay?.order_id && !notifiedIds.current.has(newPay.order_id)) {
+          const { data: orderData } = await supabase.from("orders").select("*").eq("id", newPay.order_id).maybeSingle();
+          if (orderData && !notifiedIds.current.has(orderData.id)) {
+            triggerOrderRef.current({ ...orderData, status: "paid" });
+          }
+        }
       })
       .on("broadcast", { event: "NEW_ORDER" }, (payload) => {
         if (payload.payload) triggerOrderRef.current(payload.payload);

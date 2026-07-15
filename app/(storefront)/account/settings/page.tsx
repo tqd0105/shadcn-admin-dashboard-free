@@ -10,9 +10,12 @@ import { IconLoader2, IconUpload, IconCamera } from "@tabler/icons-react";
 import { Eye, EyeOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function AccountSettingsPage() {
   const { user, profile, loading: authLoading } = useAuth();
+  const authProvider = user?.app_metadata?.provider || "email";
+  const isOAuth = ["google", "github", "facebook", "apple"].includes(authProvider);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -82,7 +85,7 @@ export default function AccountSettingsPage() {
       return;
     }
 
-    if (formData.password) {
+    if (!isOAuth && formData.password) {
       if (formData.password.length < 8) {
         toast.error("Mật khẩu mới phải có ít nhất 8 ký tự.");
         return;
@@ -112,8 +115,8 @@ export default function AccountSettingsPage() {
 
       if (profileError) throw profileError;
 
-      // 2. Cập nhật mật khẩu nếu có nhập (đã validate ở trên)
-      if (formData.password) {
+      // 2. Cập nhật mật khẩu nếu có nhập (chỉ áp dụng khi không phải OAuth)
+      if (!isOAuth && formData.password) {
         const { error: passwordError } = await updatePassword(formData.password);
         if (passwordError) throw passwordError;
       }
@@ -210,60 +213,84 @@ export default function AccountSettingsPage() {
         </div>
 
         <div className="space-y-4 pt-4">
-          <h2 className="text-lg font-semibold border-b pb-2">Đổi mật khẩu</h2>
-          <p className="text-sm text-muted-foreground mb-4">Bỏ trống nếu bạn không muốn đổi mật khẩu.</p>
+          <h2 className="text-lg font-semibold border-b pb-2">Bảo mật & Đăng nhập</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu mới</Label>
-              <div className="relative">
-                <Input 
-                  id="password" 
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password} 
-                  onChange={handleChange}
-                  placeholder="Ít nhất 8 ký tự, 1 chữ hoa, 1 số"
-                  className="pr-10"
-                />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
+          {isOAuth ? (
+            <div className="p-5 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="p-3 rounded-xl   bg-white dark:bg-gray-900 border shadow-2xs shrink-0 flex items-center justify-center">
+                  <Image src="/icons/google.png" alt="Google" width={40} height={40} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-sm text-foreground">Đăng nhập qua tài khoản Google</h4>
+                    <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-green-600 dark:bg-green-900/60 text-white dark:text-green-300 border border-green-200 dark:border-green-800">
+                      Đã liên kết
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Tài khoản của bạn được bảo mật và quản lý xác thực trực tiếp bởi <strong>Google</strong>. Bạn không cần và không áp dụng việc đổi mật khẩu tại đây.
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm_password">Xác nhận mật khẩu</Label>
-              <div className="relative">
-                <Input 
-                  id="confirm_password" 
-                  name="confirm_password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={formData.confirm_password} 
-                  onChange={handleChange}
-                  placeholder="Nhập lại mật khẩu mới"
-                  className="pr-10"
-                />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">Bỏ trống nếu bạn không muốn đổi mật khẩu.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mật khẩu mới</Label>
+                  <div className="relative">
+                    <Input 
+                      id="password" 
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password} 
+                      onChange={handleChange}
+                      placeholder="Ít nhất 8 ký tự, 1 chữ hoa, 1 số"
+                      className="pr-10"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm_password">Xác nhận mật khẩu</Label>
+                  <div className="relative">
+                    <Input 
+                      id="confirm_password" 
+                      name="confirm_password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirm_password} 
+                      onChange={handleChange}
+                      placeholder="Nhập lại mật khẩu mới"
+                      className="pr-10"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
-        <div className="pt-4 flex justify-end">
+        <div className=" flex justify-end">
           <Button type="submit" disabled={loading} size="lg">
             {loading ? <IconLoader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Lưu thay đổi

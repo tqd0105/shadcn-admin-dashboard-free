@@ -110,9 +110,9 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
           <div className="space-y-10 animate-in fade-in duration-300">
             {/* 1. Rating Overview & Distribution Panel */}
             <div className="bg-card/90 rounded-2xl border border-border/70 p-6 sm:p-8 shadow-2xs">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
                 {/* Left: Big Score Display */}
-                <div className="md:col-span-4 flex flex-col items-center md:items-start justify-center border-b md:border-b-0 md:border-r border-border/60 pb-6 md:pb-0 md:pr-8 text-center md:text-left">
+                <div className="md:col-span-1 lg:col-span-4 flex flex-col items-center md:items-start justify-center border-b md:border-b-0 lg:border-r border-border/60 pb-6 md:pb-0 lg:pr-8 text-center md:text-left">
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl sm:text-6xl font-extrabold tracking-tight text-foreground">
                       {reviews?.length ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) : "0.0"}
@@ -140,7 +140,7 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
                 </div>
 
                 {/* Middle: Rating Breakdown Progress Bars */}
-                <div className="md:col-span-5 space-y-2.5">
+                <div className="md:col-span-1 lg:col-span-5 space-y-2.5">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const total = reviews?.length || 0;
                     const count = total ? reviews.filter((r) => r.rating === star).length : 0;
@@ -165,17 +165,18 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
                 </div>
 
                 {/* Right: Write Review CTA */}
-                <div className="md:col-span-3 flex flex-col items-center md:items-end justify-center pt-4 md:pt-0 border-t md:border-t-0 border-border/60 md:pl-6">
+                <div className="md:col-span-2 lg:col-span-3 flex flex-col sm:flex-row lg:flex-col items-center sm:justify-between lg:items-end justify-center pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-border/60 lg:pl-6 gap-3 sm:gap-4 lg:gap-2">
+                  <div className="text-center sm:text-left lg:text-right">
+                    <span className="text-sm font-semibold text-foreground block">Chia sẻ trải nghiệm của bạn</span>
+                    <span className="text-xs text-muted-foreground block mt-0.5">Đánh giá giúp người mua khác lựa chọn tốt hơn</span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setIsReviewModalOpen(true)}
-                    className="w-full sm:w-auto px-6 py-3 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold text-xs transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
+                    className="w-full sm:w-auto px-6 py-3 rounded-full bg-foreground text-background hover:bg-foreground/90 font-semibold text-xs transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap shrink-0"
                   >
-                    <Sparkles className="size-3.5" /> Viết đánh giá
+                    <Sparkles className="size-3.5 shrink-0" /> Viết đánh giá
                   </button>
-                  <span className="text-[11px] text-muted-foreground mt-2 text-center md:text-right block">
-                    Chia sẻ trải nghiệm của bạn
-                  </span>
                 </div>
               </div>
             </div>

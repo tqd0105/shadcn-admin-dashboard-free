@@ -139,11 +139,51 @@ Admin users noted that sending a targeted notification (`sendTargetedNotificatio
 2. **Definitive `is_broadcast` Flag & Batch Grouping (`getBroadcastHistory()`)**: Added migration `20260714133000_add_is_broadcast_to_notifications.sql` introducing `is_broadcast boolean default false` directly on `public.notifications`. When sending via `broadcastNotification`, `is_broadcast` is explicitly set to `true`; when sending via `sendTargetedNotification`, it is set to `false`. In `getBroadcastHistory()`, items with `is_broadcast === true` are grouped strictly by `broadcast|title|message|timeBucket` displaying count (`Gửi tất cả (N user)`), whereas targeted items (`is_broadcast === false`) are kept completely distinct using `targeted|id` so each recipient (`profiles`) appears accurately in the combined `Đối tượng nhận` column without false assumptions based on total row count.
 3. **Admin History Table & Mobile Cards UI Enhancement**: Added an **`Đối tượng nhận` (`Recipients`)** column and badge across both Desktop `Table` and Mobile `Card` layouts in `app/dashboard/notifications/page.tsx`. Broadcasts display a purple pill `Gửi tất cả (N user)`, while targeted messages display a blue pill showing `IconUser` with `Gửi: Full Name (Email)`.
 4. **Safe Deletion with `AlertDialog` Modal & Service Distinction**: Replaced native browser `confirm()` with a customized UI `AlertDialog` (`components/ui/alert-dialog.tsx`) showing detailed recipient info before deletion. In `executeDeleteSentItem`, if the item is a broadcast (`item.is_broadcast`), it calls `deleteBroadcast(title, message)`; if it is a targeted individual message (`!item.is_broadcast`), it calls `deleteNotification(item.id)` (`lib/services/notification.service.ts`) ensuring only the exact target notification row is removed.
+5. **Auto-Trigger Product Review Modal on Order Receipt (`handleConfirmReceivedOrder`)**: When the user clicks **"Xác nhận đã nhận hàng"** (`completed`) on `app/(storefront)/account/orders/page.tsx`, right after `supabase.from("orders").update(...)` succeeds, `handleConfirmReceivedOrder` finds the first unreviewed product item (`!reviewedProductIds.has(pid)`) in that order and automatically opens `ProductReviewModal` after a smooth 350ms transition. The user can review instantly or close (`onClose`) the modal to review later anytime via the dedicated **"Đánh giá"** button.
+6. **OAuth vs Email/Password Distinction in Account Settings (`AccountSettingsPage`)**: In `app/(storefront)/account/settings/page.tsx`, checked `user?.app_metadata?.provider` to detect OAuth accounts (`google`, `github`, `facebook`, `apple`). When logged in via Google OAuth (`isOAuth === true`), the traditional "Đổi mật khẩu" (`Change Password`) form inputs are dynamically hidden and replaced with a modern security badge (**`🔒 Bảo mật & Đăng nhập`** $\rightarrow$ **`[Google Icon] Đăng nhập qua tài khoản Google - Đã liên kết`**) explaining that password and 2FA are managed directly by Google Security.
 
 ### Consequences
 - Admins can view complete notification history across all users without RLS silent filtering.
 - Instant, unambiguous differentiation between mass broadcasts (`Phát sóng all`) and targeted 1-on-1 member alerts (`Gửi người cụ thể`).
 - Safe, professional UX deletion flow with zero risk of accidentally deleting unrelated notifications via `AlertDialog` confirmation.
+- Seamless, high-conversion post-purchase review UX: customers are prompted at the peak of fulfillment satisfaction (`confirm received`), while retaining total flexibility to postpone reviewing.
+- Industry-standard OAuth security UX: eliminates user confusion and invalid state changes by hiding password update inputs for social login identities (`Google OAuth`).
+
+## 2026-07-15: Migration of Order Logs & Alerts Feed from Notifications to Orders Dashboard (`/dashboard/orders`)
+
+### Context
+Previously, the realtime order alerts feed (`Nhật ký Đơn hàng`) was located inside `app/dashboard/notifications/page.tsx` as a third tab (`system-alerts`) alongside **Soạn tin (`compose`)** and **Lịch sử gửi (`history`)**. Admin users noted that splitting order monitoring across `/dashboard/notifications` and `/dashboard/orders` caused unnecessary context switching (`nên đưa ra một tab khác`). The user selected Option 2 (`Tôi chọn hướng 2`): integrating the Order Logs directly into the Orders Management Page (`app/dashboard/orders/page.tsx`).
+
+### Decision
+1. **Tabs Architecture inside `/dashboard/orders`**: Restructured `app/dashboard/orders/page.tsx` using `Tabs` (`components/ui/tabs.tsx`) with two clean tabs:
+   - `orders-list`: **Danh sách Đơn hàng** (`Orders Table`, Status Quick Tabs, Search, Sort, Date Filter, and Pagination).
+   - `order-logs`: **Nhật ký & Cảnh báo** (`Realtime Order Feed`), displaying a searchable timeline of the latest 50 order events (`fetchOrderAlerts` using `getOrders("", 1, 50)`).
+2. **Unified Realtime State & Glowing Notification Badge**: Connected `orderAlerts` with the existing realtime `liveOrderIds` set. Whenever a new order arrives via Supabase Realtime (`postgres_changes` / `broadcast NEW_ORDER`), both the orders table and the `order-logs` tab automatically refresh (`fetchOrderAlerts()`), and the **Nhật ký & Cảnh báo** tab trigger displays a glowing animated emerald ping indicator (`✨ Có N đơn hàng mới`) until acknowledged.
+3. **Smooth Cross-Tab & Detail Modal Navigation**: In the `order-logs` tab, replaced the generic page navigation link (`<a href="/dashboard/orders">`) with two direct interactive actions:
+   - **Xem chi tiết (`handleViewDetails(o.id)`)**: Instantly opens the rich order detail modal (`selectedOrder`) directly inside `/dashboard/orders` without page reload.
+   - **Mở trong bảng**: Switches the active tab to `orders-list` (`setActiveTab("orders-list")`) and pre-fills the search input with the short order ID (`updateFilter("search", shortId)`), jumping the admin straight to the target order row.
+4. **Focused Notifications Page (`/dashboard/notifications`)**: Cleaned up `app/dashboard/notifications/page.tsx` by removing the `system-alerts` tab, `orderAlerts` states, and order service imports (`getOrders`), returning `/dashboard/notifications` to a 100% focused Admin-to-Customer notification center (`Soạn tin mới` & `Lịch sử đã gửi`).
+
+### Consequences
+- Eliminates cognitive load and page reloads when checking order alerts by consolidating all order tracking into a single cohesive dashboard (`/dashboard/orders`).
+- Admin notification center (`/dashboard/notifications`) is simpler, cleaner, and strictly focused on push messaging.
+- Realtime responsiveness is enhanced across both tabular and feed views.
+
+## 2026-07-15: Admin Realtime Audio & Notification Badge Refinement for Automated Payments (`VietQR/Banking`)
+
+### Context
+When a customer placed an order using COD (`paymentMethod: "cod"`), the Admin Dashboard immediately sounded an audio alert (`playCashChime`) and displayed a "New Order" notification popup (`Đơn mới!`). However, for automated online payments (`VietQR/banking`), the existing system triggered the exact same `NEW_ORDER` broadcast and `postgres_changes INSERT` notification right upon order creation (`order.status === "pending"`)—before the customer had even transferred the money (`đối với thanh toán tự động thì phải thanh toán xong mới báo ở admin`).
+
+### Decision
+1. **Conditional Realtime Broadcast in `placeOrder` (`checkout.service.ts`)**: Modified step 6 of `placeOrder()` so that `BroadcastChannel("admin_orders_channel")` and Supabase Realtime channel (`global-admin-orders-notifier`) `NEW_ORDER` events are only broadcast immediately for non-banking orders (`checkoutData.paymentMethod !== "banking" && !checkoutData.paymentMethod?.includes("VietQR")`). For automated payments, immediate audio alerting is postponed until payment confirmation.
+2. **Pending Banking Order Filtering in `triggerOrderNotification` (`admin-realtime-notifier.tsx`)**: Added an early check at the entry of `triggerOrderNotification(order)`: if the incoming order is a banking/VietQR order and `order.status === "pending"`, the function returns immediately without adding the order ID to `notifiedIds.current`, without sounding `playCashChime()`, and without showing the popup toast.
+3. **Automated Trigger on Payment Completion (`UPDATE` events on `orders` & `payments`)**: In `admin-realtime-notifier.tsx`, configured the `postgres_changes` listener on `orders` `UPDATE` to check if `(newOrder.payment_method === "banking" || newOrder.payment_method?.includes("VietQR")) && (newOrder.status === "paid" || newOrder.status === "completed") && !notifiedIds.current.has(newOrder.id)`. When this occurs (e.g., when the `verify-bank-payment` edge function runs `markPaymentAsMatched`), the system calls `triggerOrderNotification(newOrder)`, plays the `playCashChime()` (`Ting Ting... Ting Ting`), increments the unread badge (`admin_unread_order_ids`), and displays a customized emerald toast badge saying **`Đã thanh toán!`** (`Khách đã chuyển khoản VietQR thành công`). Added a parallel `UPDATE` listener on the `payments` table (`MATCHED`/`MANUAL`) to guarantee instantaneous alerting even if the payment table updates milliseconds ahead of the order table.
+4. **Client-Side Match Broadcast (`app/(storefront)/checkout/payment/[orderId]/page.tsx`)**: In `checkStatusAndExpiry()`, when `payData.status === "MATCHED" || payData.status === "MANUAL"`, the client page posts a `NEW_ORDER` message (`{ type: "NEW_ORDER", order: { ...targetOrder, status: "paid" } }`) across `BroadcastChannel("admin_orders_channel")` to immediately alert any open Admin tabs on the same device.
+
+### Consequences
+- Admin managers no longer experience false positive audio alarms (`Ting Ting`) for unpaid pending VietQR checkout attempts.
+- Automated payments sound the cash chime exactly when the bank transfer completes and the order transitions to `paid`, providing accurate and delightful real-time order fulfillment awareness.
+
 
 
 

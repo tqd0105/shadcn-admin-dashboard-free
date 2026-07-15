@@ -184,28 +184,28 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 pt-6">
+      <div className="flex flex-wrap items-center gap-3 pt-6">
         <button 
           onClick={handleAddToCart}
           disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="flex-1 flex justify-center items-center h-12 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 min-w-[210px] flex justify-center items-center h-12 px-5 py-3 bg-primary text-primary-foreground font-semibold text-sm sm:text-base rounded-xl shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
         >
-          <span className="material-symbols-outlined mr-2">shopping_bag</span>
-          {isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
+          <span className="material-symbols-outlined text-[20px] mr-2 shrink-0">shopping_bag</span>
+          <span>{isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}</span>
         </button>
         <button 
           onClick={handleBuyNow}
           disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="flex-1 flex justify-center items-center h-12 py-3 bg-background border border-primary text-primary font-semibold rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 min-w-[130px] flex justify-center items-center h-12 px-5 py-3 bg-background border border-primary text-primary font-semibold text-sm sm:text-base rounded-xl hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
         >
-          {isAdding ? "Đang xử lý..." : "Mua ngay"}
+          <span>{isAdding ? "Đang xử lý..." : "Mua ngay"}</span>
         </button>
         <button 
           onClick={handleToggleWishlist}
           disabled={isTogglingHeart}
-          className="flex justify-center items-center h-12 w-12 bg-background border border-outline-variant text-muted-foreground rounded-md hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
+          className="flex justify-center items-center h-12 w-12 bg-background border border-outline-variant text-muted-foreground rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
         >
-          <Heart className={cn("w-5 h-5 transition-colors", isWishlisted && "fill-red-500 text-red-500")} />
+          <Heart className={cn("w-5 h-5 transition-colors shrink-0", isWishlisted && "fill-red-500 text-red-500")} />
         </button>
       </div>
 

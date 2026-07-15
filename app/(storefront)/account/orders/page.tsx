@@ -267,6 +267,31 @@ export default function MyOrdersPage() {
           status: "completed",
         });
       }
+
+      // Tự động mở popup đánh giá sản phẩm sau khi xác nhận đã nhận hàng
+      const confirmedOrder = orders.find(o => o.id === orderToReceive);
+      if (confirmedOrder?.order_items && confirmedOrder.order_items.length > 0) {
+        const unreviewedItem = confirmedOrder.order_items.find((item: any) => {
+          const pid = item.product_id || item.products?.id;
+          return pid && !reviewedProductIds.has(pid);
+        }) || confirmedOrder.order_items[0];
+
+        const pid = unreviewedItem.product_id || unreviewedItem.products?.id;
+        if (pid && orderToReceive) {
+          const targetOrderId = orderToReceive;
+          setTimeout(() => {
+            setItemToReview({
+              productId: pid,
+              productName: unreviewedItem.products?.name || "Sản phẩm",
+              productImage: unreviewedItem.products?.image_url,
+              variantName: unreviewedItem.product_variants?.name,
+              price: unreviewedItem.price,
+              orderId: targetOrderId
+            });
+            setReviewModalOpen(true);
+          }, 350);
+        }
+      }
     } catch (err: any) {
       console.error("Lỗi xác nhận nhận hàng:", err);
       toast.error(err.message || "Không thể xác nhận nhận hàng. Vui lòng thử lại sau.");
@@ -672,12 +697,12 @@ export default function MyOrdersPage() {
                               className="h-8 px-3 text-xs font-semibold hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-2xs"
                             >
                               <Link href={`/product/${productId}`}>
-                                Xem sản phẩm
+                                Mua lại sản phẩm
                               </Link>
                             </Button>
 
                             {/* Nút Đánh giá sản phẩm khi đơn hàng đã giao hoặc hoàn tất (delivered / completed) */}
-                            {(order.status === "delivered" || order.status === "completed") && (
+                            {(order.status === "completed") && (
                               reviewedProductIds.has(productId) ? (
                                 <Button
                                   type="button"

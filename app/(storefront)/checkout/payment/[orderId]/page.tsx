@@ -238,6 +238,14 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       const targetOrder = currentOrder || orderRef.current;
       if (targetOrder) {
         triggerSuccessEmail(targetOrder, payData);
+        if (typeof window !== "undefined" && window.BroadcastChannel) {
+          try {
+            new BroadcastChannel("admin_orders_channel").postMessage({
+              type: "NEW_ORDER",
+              order: { ...targetOrder, status: "paid" }
+            });
+          } catch {}
+        }
       }
       return;
     }
