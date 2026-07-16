@@ -63,7 +63,7 @@ export default function CheckoutPage() {
   }, []);
 
   const loadCart = useCallback(async () => {
-    setTimeout(() => setLoading(true), 0);
+    setLoading(true);
     const { data, error } = await getCart();
     if (!error && data) {
       setCartItems(data);

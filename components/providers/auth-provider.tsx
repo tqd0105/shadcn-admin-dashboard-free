@@ -2,6 +2,7 @@
 
 import { getProfile, updateProfile } from "@/lib/services/profile.service";
 import { getRole } from "@/lib/services/role.service";
+import { syncGuestCartToSupabase } from "@/lib/services/cart.service";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js"
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (user) {
                 lastUserIdRef.current = user.id;
                 await fetchProfileAndRole(user);
+                await syncGuestCartToSupabase();
             }
             setLoading(false);
         };
@@ -92,6 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (currentUser && currentUser.id !== lastUserIdRef.current) {
                 lastUserIdRef.current = currentUser.id;
                 await fetchProfileAndRole(currentUser);
+                const { mergedCount } = await syncGuestCartToSupabase();
+                if (mergedCount > 0) {
+                    window.dispatchEvent(new Event("cart-updated"));
+                }
+                if (typeof window !== "undefined" && window.location.pathname === "/cart") {
+                    router.push("/checkout");
+                }
             }
 
             if (event === "SIGNED_OUT") {
@@ -104,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => {
             subscription?.unsubscribe();
         };
-    }, [fetchProfileAndRole]);
+    }, [fetchProfileAndRole, router]);
 
     // Periodic check for session expiration (in case Supabase does not emit SIGNED_OUT)
     useEffect(() => {

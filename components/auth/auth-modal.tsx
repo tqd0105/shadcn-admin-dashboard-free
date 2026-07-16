@@ -11,8 +11,10 @@ import { IconLoader2 } from "@tabler/icons-react";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { isEmailRegistered, sendOtp, verifyOtp, completeRegister } from "@/lib/services/register.service";
+import { useRouter } from "next/navigation";
 
 export function AuthModal() {
+  const router = useRouter();
   const { isOpen, closeModal, view, setView } = useAuthModal();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,10 +43,11 @@ export function AuthModal() {
     setLoading(true);
     setErrorMsg("");
     try {
+      const targetPath = typeof window !== "undefined" && window.location.pathname === "/cart" ? "/checkout" : (typeof window !== "undefined" ? window.location.pathname : "/");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}${targetPath}`,
         },
       });
       if (error) throw error;
@@ -65,6 +68,9 @@ export function AuthModal() {
       if (error) throw error;
       toast.success("Đăng nhập thành công!");
       closeModal();
+      if (typeof window !== "undefined" && window.location.pathname === "/cart") {
+        router.push("/checkout");
+      }
     } catch (err: any) {
       let msg = err.message || "Lỗi đăng nhập";
       if (msg === "Invalid login credentials") msg = "Email hoặc mật khẩu không chính xác.";
@@ -135,6 +141,9 @@ export function AuthModal() {
       await completeRegister(fullName, password);
       toast.success("Đăng ký hoàn tất! Chào mừng bạn.");
       closeModal();
+      if (typeof window !== "undefined" && window.location.pathname === "/cart") {
+        router.push("/checkout");
+      }
     } catch (err: any) {
       toast.error(err.message || "Lỗi cập nhật thông tin");
       setErrorMsg(err.message || "Đã xảy ra lỗi khi hoàn tất đăng ký.");

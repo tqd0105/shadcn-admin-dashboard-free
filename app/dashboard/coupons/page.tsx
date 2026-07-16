@@ -33,8 +33,7 @@ import {
   getCoupons, 
   createCoupon, 
   updateCoupon, 
-  deleteCoupon,
-  setFeaturedCoupon
+  deleteCoupon
 } from "@/lib/services/coupon.service";
 
 export default function CouponsPage() {
@@ -170,18 +169,6 @@ export default function CouponsPage() {
     }
   };
 
-  const handleToggleFeatured = async (id: string, currentStatus: boolean) => {
-    if (currentStatus) {
-      // Un-feature it
-      const { error } = await updateCoupon(id, { is_featured: false });
-      if (!error) setRefreshTrigger((prev) => prev + 1);
-    } else {
-      // Set as featured
-      const { error } = await setFeaturedCoupon(id);
-      if (!error) setRefreshTrigger((prev) => prev + 1);
-    }
-  };
-
   if (role !== "admin") return null;
 
   return (
@@ -189,7 +176,7 @@ export default function CouponsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Mã giảm giá (Coupons)</h1>
-          <p className="text-gray-500 text-sm">Quản lý các mã giảm giá và hiển thị trên trang chủ</p>
+          <p className="text-gray-500 text-sm">Quản lý toàn bộ mã giảm giá và chương trình ưu đãi của hệ thống</p>
         </div>
         <Button onClick={handleOpenCreateDialog}>
           <IconPlus className="w-4 h-4 mr-2" /> Thêm Mã mới
@@ -201,25 +188,24 @@ export default function CouponsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Mã code</TableHead>
-              <TableHead>Tiêu đề (Home)</TableHead>
+              <TableHead>Mô tả ngắn</TableHead>
               <TableHead>Giảm giá</TableHead>
               <TableHead>Đã dùng</TableHead>
               <TableHead>Hạn sử dụng</TableHead>
               <TableHead>Active</TableHead>
-              <TableHead>Hiện trang chủ</TableHead>
               <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   <IconLoader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
                 </TableCell>
               </TableRow>
             ) : coupons.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={7} className="h-24 text-center text-gray-500">
                   Chưa có mã giảm giá nào.
                 </TableCell>
               </TableRow>
@@ -241,12 +227,6 @@ export default function CouponsPage() {
                     <Switch
                       checked={coupon.is_active}
                       onCheckedChange={() => handleToggleActive(coupon.id, coupon.is_active)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={coupon.is_featured}
-                      onCheckedChange={() => handleToggleFeatured(coupon.id, coupon.is_featured)}
                     />
                   </TableCell>
                   <TableCell className="text-right">
@@ -311,13 +291,13 @@ export default function CouponsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Tiêu đề (Hiển thị trang chủ)</Label>
+              <Label>Mô tả ngắn / Tiêu đề</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="VD: Mã giảm 20% cho đơn hàng đầu tiên"
               />
-              <p className="text-xs text-gray-500">Dùng để mời gọi khách hàng copy mã nếu mã này được chọn hiển thị ở trang chủ.</p>
+              <p className="text-xs text-gray-500">Ghi chú hoặc giải thích điều kiện áp dụng cho mã giảm giá.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

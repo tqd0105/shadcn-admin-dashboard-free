@@ -73,6 +73,18 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
             <CheckCircle2 className="w-3.5 h-3.5" /> Đã thanh toán
           </span>
         );
+      case "completed":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn thành
+          </span>
+        );
+      case "processing":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+            <Clock className="w-3.5 h-3.5" /> Đang chuẩn bị
+          </span>
+        );
       case "delivered":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-600 border border-blue-500/20">

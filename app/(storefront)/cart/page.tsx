@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getCart, updateCartItemQuantity, removeFromCart } from "@/lib/services/cart.service";
+import { getCart, updateCartItemQuantity, removeFromCart, getGuestCartItems, updateGuestCartQuantity, removeFromGuestCart } from "@/lib/services/cart.service";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,51 +15,72 @@ import {
 } from "@/components/ui/table";
 import { IconLoader2, IconTrash, IconMinus, IconPlus, IconShoppingCart, IconReceipt2 } from "@tabler/icons-react";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useAuthModal } from "@/lib/store/use-auth-modal";
 import Link from "next/link";
 
 export default function CartPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { openModal } = useAuthModal();
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const loadCart = useCallback(async () => {
-    setTimeout(() => setLoading(true), 0);
-    const { data, error } = await getCart();
-    if (!error && data) {
-      setCartItems(data);
+    setLoading(true);
+    if (user) {
+      const { data, error } = await getCart();
+      if (!error && data) {
+        setCartItems(data);
+      }
+    } else {
+      setCartItems(getGuestCartItems());
     }
     setLoading(false);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {
-      if (user) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadCart();
-      } else {
-        setTimeout(() => setLoading(false), 0);
-      }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadCart();
     }
+    const handleCartUpdate = () => {
+      if (!user) {
+        setCartItems(getGuestCartItems());
+      }
+    };
+    window.addEventListener("cart-updated", handleCartUpdate);
+    return () => {
+      window.removeEventListener("cart-updated", handleCartUpdate);
+    };
   }, [user, authLoading, loadCart]);
 
   const handleUpdateQuantity = async (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setUpdatingId(id);
-    const { error } = await updateCartItemQuantity(id, newQuantity);
-    if (!error) {
-      setCartItems(items => items.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
+    if (user) {
+      const { error } = await updateCartItemQuantity(id, newQuantity);
+      if (!error) {
+        setCartItems(items => items.map(item => item.id === id ? { ...item, quantity: newQuantity } : item));
+      }
+    } else {
+      updateGuestCartQuantity(id, newQuantity);
+      setCartItems(getGuestCartItems());
     }
     setUpdatingId(null);
   };
 
   const handleRemove = async (id: string) => {
     setUpdatingId(id);
-    const { error } = await removeFromCart(id);
-    if (!error) {
-      setCartItems(items => items.filter(item => item.id !== id));
-      window.dispatchEvent(new Event("cart-updated"));
+    if (user) {
+      const { error } = await removeFromCart(id);
+      if (!error) {
+        setCartItems(items => items.filter(item => item.id !== id));
+        window.dispatchEvent(new Event("cart-updated"));
+      }
+    } else {
+      removeFromGuestCart(id);
+      setCartItems(getGuestCartItems());
     }
     setUpdatingId(null);
   };
@@ -91,18 +112,7 @@ export default function CartPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <IconShoppingCart className="h-16 w-16 text-muted-foreground/50" />
-        <h2 className="text-2xl font-bold">Bạn chưa đăng nhập</h2>
-        <p className="text-muted-foreground">Vui lòng đăng nhập để xem giỏ hàng của bạn.</p>
-        <Button asChild>
-          <Link href="/login">Đăng nhập ngay</Link>
-        </Button>
-      </div>
-    );
-  }
+
 
   if (cartItems.length === 0) {
     return (
@@ -280,9 +290,24 @@ export default function CartPage() {
               </div>
             </div>
             
-            <Button className="w-full h-12 text-base font-semibold" size="lg" asChild>
-              <Link href="/checkout">Tiến hành thanh toán</Link>
-            </Button>
+            {user ? (
+              <Button className="w-full h-12 text-base font-semibold" size="lg" asChild>
+                <Link href="/checkout">Tiến hành thanh toán</Link>
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Button 
+                  className="w-full h-12 text-base font-semibold" 
+                  size="lg" 
+                  onClick={() => openModal("login")}
+                >
+                  Tiến hành thanh toán
+                </Button>
+                <p className="text-[12px] text-center text-muted-foreground">
+                  * Vui lòng đăng nhập để hoàn tất đặt hàng. Giỏ hàng sẽ được tự động lưu.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

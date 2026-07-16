@@ -184,6 +184,21 @@ When a customer placed an order using COD (`paymentMethod: "cod"`), the Admin Da
 - Admin managers no longer experience false positive audio alarms (`Ting Ting`) for unpaid pending VietQR checkout attempts.
 - Automated payments sound the cash chime exactly when the bank transfer completes and the order transitions to `paid`, providing accurate and delightful real-time order fulfillment awareness.
 
+## 2026-07-16: Hero Banner Clean Concept (`Option 3`) & Admin Coupon Homepage Option Removal
+
+### Context
+Displaying a hardcoded promo code copy box (`featuredCoupon`) inside the dynamic `HeroBannerClient` carousel (`components/storefront/hero-banner-client.tsx`) caused UX friction: (1) it diluted the unique marketing campaign message of each slide (`PromoBanner`), (2) copying a discount code at the very top of the homepage before exploring any products or prices is conceptually premature, and (3) it cluttered the visual elegance of the Ken Burns hero banners.
+
+### Decision
+1. **Removed Promo Code Box from Hero Banner (`Option 3 - Campaign-Driven Banner Strategy`)**: Removed `initialCoupon` from `HeroBanner` (`components/storefront/hero-banner.tsx`) and `HeroBannerClientProps` (`components/storefront/hero-banner-client.tsx`). Adjusted vertical spacing (`space-y-6 sm:space-y-7` and `pt-4` on the CTA button) so the badge, title, description, and `[ Khám phá ngay ]` CTA button sit with perfect breathing room (`vừa vặn`), maximizing visual appeal without clutter.
+2. **Simplified Admin Coupons Management (`app/dashboard/coupons/page.tsx`)**: Removed the `Hiện trang chủ` (`is_featured`) toggle and column from the Admin Coupons table, updated the modal subtitle and label (`Tiêu đề (Home)` $\rightarrow$ `Mô tả ngắn / Tiêu đề`), and refocused the page on managing all system discount codes clearly without confusing homepage toggles.
+3. **Resolved React 19 / Next.js 16 Linter State-in-Effect Rule**: Replaced cascading `setActiveBanners(initialBanners)` inside `useEffect` with direct render-time assignment (`const activeBanners = initialBanners || []`) and a safe index bounds check (`safeIndex = currentIndex < activeBanners.length ? currentIndex : 0`), achieving `0 errors, 0 warnings` on `pnpm lint` and `pnpm build`.
+
+### Consequences
+- Hero Banner slides focus 100% on high-impact visual campaigns and driving click-throughs to `link_url`.
+- Cleaner Admin Coupons dashboard focused strictly on coupon logic and conditions.
+- Zero cascading render warnings (`react-hooks/set-state-in-effect`).
+
 
 
 

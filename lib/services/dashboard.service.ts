@@ -17,10 +17,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     const [customersRes, productsRes, allOrdersRes, recentOrdersRes] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("products").select("id", { count: "exact", head: true }),
-      supabase.from("orders").select("id, total_amount, status, created_at"),
+      supabase.from("orders").select("id, total_amount, status, payment_method, created_at"),
       supabase
         .from("orders")
-        .select("id, total_amount, status, created_at, profiles(full_name, email)")
+        .select("id, total_amount, status, payment_method, created_at, profiles(full_name, email)")
         .order("created_at", { ascending: false })
         .limit(4),
     ]);
@@ -29,6 +29,24 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     const totalProducts = productsRes.count || 0;
     const allOrders = allOrdersRes.data || [];
     const recentOrders = recentOrdersRes.data || [];
+
+    // Hàm kiểm tra xem đơn hàng có đủ điều kiện ghi nhận doanh thu hay không
+    const isOrderCountedInRevenue = (order: any): boolean => {
+      if (!order || order.status === "cancelled" || order.status === "pending") return false;
+      const status = order.status;
+      const isBanking =
+        order.payment_method === "banking" ||
+        order.payment_method?.includes("VietQR") ||
+        (order.payment_method && order.payment_method !== "cod");
+
+      if (isBanking) {
+        // Thanh toán tự động (VietQR/Banking): Ghi nhận ngay khi thanh toán xong (paid) & các bước tiếp theo (processing, shipping, delivered, completed)
+        return status === "paid" || status === "processing" || status === "shipping" || status === "delivered" || status === "completed";
+      } else {
+        // Thanh toán COD: Ghi nhận khi bưu tá đã giao (delivered) hoặc khách xác nhận đã nhận hàng (completed) hay đã thu tiền (paid)
+        return status === "delivered" || status === "completed" || status === "paid";
+      }
+    };
 
     // 2. Tính toán các chỉ số đơn hàng & doanh thu
     const totalOrders = allOrders.length;
@@ -42,7 +60,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       if (order.status === "pending") {
         pendingOrders++;
       }
-      if (order.status === "paid" || order.status === "delivered") {
+      if (isOrderCountedInRevenue(order)) {
         const amount = Number(order.total_amount) || 0;
         totalRevenue += amount;
 
@@ -89,7 +107,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         const dateStr = orderDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
         if (daysMap[dateStr]) {
           daysMap[dateStr].orders += 1;
-          if (order.status === "paid" || order.status === "delivered") {
+          if (isOrderCountedInRevenue(order)) {
             daysMap[dateStr].revenue += Number(order.total_amount) || 0;
           }
         }

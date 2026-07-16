@@ -30,6 +30,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase/client";
 import { getProduct } from "@/lib/services/product.service";
+import { getGuestCartItems } from "@/lib/services/cart.service";
 import Image from "next/image";
 
 export function SiteHeader() {
@@ -92,9 +93,17 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCartCount(0);
-      return;
+      const updateGuestCount = () => {
+        const items = getGuestCartItems();
+        const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
+        setCartCount(totalQty);
+        initialLoadDone.current = true;
+      };
+      setTimeout(updateGuestCount, 0);
+      window.addEventListener("cart-updated", updateGuestCount);
+      return () => {
+        window.removeEventListener("cart-updated", updateGuestCount);
+      };
     }
     const fetchCount = async () => {
       const { count } = await supabase.from('cart_items').select('id', { count: 'exact' }).eq('user_id', user.id);
@@ -224,6 +233,24 @@ export function SiteHeader() {
                         )}
                       >
                         <Package className="w-4 h-4" /> Tất cả sản phẩm
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        href="/cart"
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
+                          pathname === "/cart" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                        )}
+                      >
+                        <span className="flex items-center gap-3">
+                          <ShoppingCart className="w-4 h-4 text-blue-500" /> Giỏ hàng
+                        </span>
+                        {cartCount > 0 && (
+                          <span className="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                            {cartCount}
+                          </span>
+                        )}
                       </Link>
                     </SheetClose>
                     {/* <SheetClose asChild>
@@ -394,16 +421,10 @@ export function SiteHeader() {
           {/* 1. Khi ĐÃ đăng nhập: Thông báo nằm ở trái ngoài cùng của cụm icon */}
           {user && <NotificationDropdown userId={user.id} />}
 
-          {/* 2. Icon Giỏ hàng (luôn nằm ở giữa khi đăng nhập, hoặc trái của nút Đăng nhập khi chưa đăng nhập - Ẩn trên mobile nếu chưa đăng nhập) */}
+          {/* 2. Icon Giỏ hàng (luôn hiển thị cho cả Thành viên lẫn Khách vãng lai) */}
           <Link
-            href={user ? "/cart" : "#"}
-            className={cn("relative", !user && "hidden md:inline-block")}
-            onClick={(e) => {
-              if (!user) {
-                e.preventDefault();
-                openModal('login');
-              }
-            }}
+            href="/cart"
+            className="relative inline-block"
           >
             <Button
               variant="ghost"

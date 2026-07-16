@@ -77,6 +77,9 @@ export default async function ProductDetailsPage({
           {/* Interactive Client Component for Price, Quantity, Variant Selection & Buttons */}
           <ProductActions 
             productId={product.id}
+            productName={product.name}
+            productImage={product.image_url}
+            productSlug={product.slug || product.id}
             basePrice={product.price}
             discountPercent={product.discount_percent}
             variants={product.product_variants || []}

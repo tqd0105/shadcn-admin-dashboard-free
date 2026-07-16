@@ -74,7 +74,7 @@ export async function updatePromoBanner(id: string, bannerData: Partial<PromoBan
     .update(bannerData)
     .eq("id", id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error updating promo banner:", error);

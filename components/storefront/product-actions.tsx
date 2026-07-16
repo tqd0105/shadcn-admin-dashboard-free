@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { addToCart } from "@/lib/services/cart.service";
+import { addToCart, addToGuestCart } from "@/lib/services/cart.service";
 import { checkWishlisted, removeFromWishlistByProduct } from "@/lib/services/wishlist.service";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
@@ -31,12 +31,15 @@ interface Variant {
 
 interface ProductActionsProps {
   productId: string;
+  productName?: string;
+  productImage?: string;
+  productSlug?: string;
   basePrice: number;
   discountPercent?: number;
   variants: Variant[];
 }
 
-export function ProductActions({ productId, basePrice, discountPercent, variants }: ProductActionsProps) {
+export function ProductActions({ productId, productName, productImage, productSlug, basePrice, discountPercent, variants }: ProductActionsProps) {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
     variants && variants.length > 0 ? variants[0] : null
   );
@@ -95,7 +98,21 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
 
   const handleAddToCart = async () => {
     if (!user) {
-      setShowLoginAlert(true);
+      addToGuestCart({
+        quantity: 1,
+        product_id: productId,
+        variant_id: selectedVariant?.id || null,
+        products: {
+          id: productId,
+          name: productName || "Sản phẩm",
+          price: basePrice,
+          discount_percent: discountPercent,
+          image_url: productImage || "/placeholder.png",
+          slug: productSlug || productId,
+        },
+        product_variants: selectedVariant || null,
+      });
+      toast.success("Đã thêm vào giỏ hàng thành công!");
       return;
     }
     
@@ -113,7 +130,21 @@ export function ProductActions({ productId, basePrice, discountPercent, variants
 
   const handleBuyNow = async () => {
     if (!user) {
-      setShowLoginAlert(true);
+      addToGuestCart({
+        quantity: 1,
+        product_id: productId,
+        variant_id: selectedVariant?.id || null,
+        products: {
+          id: productId,
+          name: productName || "Sản phẩm",
+          price: basePrice,
+          discount_percent: discountPercent,
+          image_url: productImage || "/placeholder.png",
+          slug: productSlug || productId,
+        },
+        product_variants: selectedVariant || null,
+      });
+      router.push("/cart");
       return;
     }
 
