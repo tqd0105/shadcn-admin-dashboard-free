@@ -47,7 +47,7 @@ export function ProductActions({ productId, productName, productImage, productSl
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
   
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { openModal } = useAuthModal();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
 
@@ -97,6 +97,15 @@ export function ProductActions({ productId, productName, productImage, productSl
   const finalOriginalPrice = originalBasePrice + currentPriceModifier; // Strikethrough (Original Price)
 
   const handleAddToCart = async () => {
+    if (role === "admin" || role === "staff") {
+      toast.error(
+        role === "admin"
+          ? "Quản trị viên (Admin) không được mua hàng cá nhân để bảo đảm tính trung thực về doanh thu!"
+          : "Nhân viên (Staff) không thể mua hàng bằng tài khoản nội bộ. Vui lòng dùng tài khoản Khách hàng!"
+      );
+      return;
+    }
+
     if (!user) {
       addToGuestCart({
         quantity: 1,
@@ -129,6 +138,15 @@ export function ProductActions({ productId, productName, productImage, productSl
   };
 
   const handleBuyNow = async () => {
+    if (role === "admin" || role === "staff") {
+      toast.error(
+        role === "admin"
+          ? "Quản trị viên (Admin) không được mua hàng cá nhân để bảo đảm tính trung thực về doanh thu!"
+          : "Nhân viên (Staff) không thể mua hàng bằng tài khoản nội bộ. Vui lòng dùng tài khoản Khách hàng!"
+      );
+      return;
+    }
+
     if (!user) {
       addToGuestCart({
         quantity: 1,

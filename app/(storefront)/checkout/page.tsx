@@ -20,7 +20,7 @@ import Link from "next/link";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
 
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,6 +130,15 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (cartItems.length === 0) return;
 
+    if (role === "admin" || role === "staff") {
+      toast.error(
+        role === "admin"
+          ? "Quản trị viên (Admin) không được tạo đơn hàng cá nhân để bảo đảm tính trung thực về doanh thu!"
+          : "Nhân viên (Staff) không thể tạo đơn hàng bằng tài khoản nội bộ. Vui lòng dùng tài khoản Khách hàng!"
+      );
+      return;
+    }
+
     // Bước 3: Validate số điện thoại Việt Nam
     const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
     if (!phoneRegex.test(formData.phone.trim())) {
@@ -188,6 +197,32 @@ export default function CheckoutPage() {
           <Button asChild size="lg">
             <Link href="/account/orders">Quản lý Đơn hàng </Link>
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (role === "admin" || role === "staff") {
+    return (
+      <div className="container mx-auto py-20 px-4 flex flex-col items-center justify-center min-h-[55vh]">
+        <div className="max-w-xl w-full border-3 border-black p-6 rounded-2xl shadow-lg flex flex-col items-center text-center space-y-4">
+          <Image src="/icons/warning2.png" alt="Warning" width={64} height={64} />
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+            Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {role === "admin"
+              ? "Tài khoản Quản trị viên (Admin) không được tạo đơn hàng và thanh toán cá nhân để bảo đảm tính trung thực cho các báo cáo doanh thu."
+              : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không thể tiến hành thanh toán."}
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row gap-3 w-full justify-center">
+            <Button asChild className="w-full sm:w-auto font-medium">
+              <Link href="/dashboard">Về Dashboard Quản Trị</Link>
+            </Button>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
+              <Link href="/">Về Trang Chủ</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -416,10 +451,23 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base font-semibold" size="lg" disabled={submitting}>
-              {submitting ? <IconLoader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-              {submitting ? "Đang xử lý..." : "Đặt hàng ngay"}
-            </Button>
+            {role === "admin" || role === "staff" ? (
+              <div className="space-y-2">
+                <Button type="button" className="w-full h-12 text-base font-semibold opacity-60 cursor-not-allowed" size="lg" disabled>
+                  Hoàn tất đặt hàng
+                </Button>
+                <p className="text-[12px] text-center text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                  * {role === "admin"
+                    ? "Quản trị viên (Admin) không được tạo đơn hàng thanh toán cá nhân."
+                    : "Nhân viên (Staff) vui lòng dùng tài khoản Khách hàng để thanh toán."}
+                </p>
+              </div>
+            ) : (
+              <Button type="submit" className="w-full h-12 text-base font-semibold" size="lg" disabled={submitting}>
+                {submitting ? <IconLoader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                {submitting ? "Đang xử lý..." : "Đặt hàng ngay"}
+              </Button>
+            )}
           </div>
         </div>
       </form>

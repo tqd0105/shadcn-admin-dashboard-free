@@ -11,7 +11,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 export default function WishlistPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +42,15 @@ export default function WishlistPage() {
   };
 
   const handleAddToCart = async (product: any) => {
+    if (role === "admin" || role === "staff") {
+      toast.error(
+        role === "admin"
+          ? "Quản trị viên (Admin) không được mua hàng cá nhân để bảo đảm tính trung thực về doanh thu!"
+          : "Nhân viên (Staff) không thể mua hàng bằng tài khoản nội bộ. Vui lòng dùng tài khoản Khách hàng!"
+      );
+      return;
+    }
+
     // If product has variants, it's better to direct user to product page.
     // For simplicity here, we try to add it. If it requires variant, we could link them instead.
     const { error } = await addToCart(product.id, 1);
