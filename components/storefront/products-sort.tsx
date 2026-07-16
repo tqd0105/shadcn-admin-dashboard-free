@@ -112,7 +112,7 @@ export function ProductsSort({ categories }: ProductsSortProps) {
 
       <div className="flex items-center gap-3 ml-auto">
         <label htmlFor="sort" className="text-sm font-medium text-muted-foreground hidden sm:block">
-          Sort by:
+          Sắp xếp:
         </label>
         <div className="relative">
           <select
@@ -123,9 +123,9 @@ export function ProductsSort({ categories }: ProductsSortProps) {
             }
             className="appearance-none bg-background border text-foreground text-sm rounded-md pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer min-w-[160px]"
           >
-            <option value="">Newest Arrivals</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
+            <option value="">Mặc định</option>
+            <option value="price_asc">Giá: Từ thấp đến cao</option>
+            <option value="price_desc">Giá: Từ cao đến thấp</option>
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
             <IconChevronDown className="h-4 w-4" />

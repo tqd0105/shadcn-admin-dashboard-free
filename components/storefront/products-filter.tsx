@@ -114,8 +114,8 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
         )}
       >
         <div className="hidden lg:block mb-4">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Products</h1>
-          <p className="text-muted-foreground">Browse our catalog</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Sản phẩm</h1>
+          <p className="text-muted-foreground">Danh sách sản phẩm</p>
         </div>
 
         <div className="space-y-6 lg:border-t lg:pt-6">
@@ -123,7 +123,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
           {categories.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
-                Categories
+                Danh mục
               </h3>
               <ul className="space-y-3 text-muted-foreground">
                 {categories.map((category) => (
@@ -151,7 +151,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
           {brands.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
-                Brands
+                Thương hiệu
               </h3>
               <ul className="space-y-3 text-muted-foreground">
                 {brands.map((brand) => (
@@ -178,7 +178,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
           {/* Price Range */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
-              Price Range
+              Khoảng giá
             </h3>
             <div className="space-y-6 px-1">
               <div className="px-2">
@@ -199,7 +199,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
                   type="number"
                   min="0"
                   max="100000000"
-                  placeholder="Min (₫)"
+                  placeholder="Tối thiểu (đ)"
                   value={minPriceInput}
                   onChange={(e) => setMinPriceInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && applyPriceInputs()}
@@ -210,7 +210,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
                   type="number"
                   min="0"
                   max="100000000"
-                  placeholder="Max (₫)"
+                  placeholder="Tối đa (đ)"
                   value={maxPriceInput}
                   onChange={(e) => setMaxPriceInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && applyPriceInputs()}

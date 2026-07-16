@@ -503,7 +503,7 @@ export function SiteHeader() {
                     <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-primary/10 focus:bg-primary/10 outline-none">
                       <Link href="/dashboard" className="flex items-center w-full group">
                         <div className="  flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
-                          <Image src="/icons/shield.png" alt="Admin" width={25} height={25} className="object-contain" />
+                          <Image src="/icons/dashboard2.png" alt="Admin" width={25} height={25} className="object-contain" />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-semibold text-sm text-primary">Trang Quản trị </span>
