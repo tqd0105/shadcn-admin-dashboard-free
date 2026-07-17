@@ -7,14 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile, updatePassword, uploadAvatar } from "@/lib/services/profile.service";
 import { IconLoader2, IconUpload, IconCamera } from "@tabler/icons-react";
-import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import { Eye, EyeOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import Image from "next/image";
 
 export default function AccountSettingsPage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile } = useAuth();
   const authProvider = user?.app_metadata?.provider || "email";
   const isOAuth = ["google", "github", "facebook", "apple"].includes(authProvider);
   const [loading, setLoading] = useState(false);
@@ -130,8 +129,6 @@ export default function AccountSettingsPage() {
       setLoading(false);
     }
   };
-
-  if (authLoading) return <LuxeLoading label="Đang tải thiết lập tài khoản..." />;
 
   return (
     <div className="max-w-2xl">

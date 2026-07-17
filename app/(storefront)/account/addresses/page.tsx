@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export default function AddressesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,11 +47,11 @@ export default function AddressesPage() {
   }, []);
 
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchAddresses();
     }
-  }, [user, authLoading, fetchAddresses]);
+  }, [user, fetchAddresses]);
 
   const resetForm = () => {
     setFormData({
@@ -128,7 +128,7 @@ export default function AddressesPage() {
     }
   };
 
-  if (authLoading || loading) return <LuxeLoading label="Đang tải Sổ địa chỉ..." />;
+  if (loading) return <LuxeLoading label="Đang tải Sổ địa chỉ..." />;
 
   return (
     <div>

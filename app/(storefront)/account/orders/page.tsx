@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconLoader2, IconPackage, IconX } from "@tabler/icons-react";
 import { LuxeLoading } from "@/components/storefront/luxe-loading";
-import { Clock, Package, Truck, CheckCircle2, AlertTriangle, CreditCard, Star, Search, SearchX, Calendar, RotateCcw, Filter, CheckCheck, Check } from "lucide-react";
+import { Clock, Package, PackageCheck, MapPinned, Truck, CheckCircle2, CircleCheckBig, AlertTriangle, CreditCard, Star, Search, SearchX, Calendar, RotateCcw, Filter, CheckCheck, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,10 +47,10 @@ function OrderTimeline({ status }: { status: string }) {
 
   const steps = [
     { key: "pending", label: "Chờ xử lý", icon: Clock },
-    { key: "paid", label: "Đã xác nhận", icon: Package },
+    { key: "paid", label: "Đã xác nhận", icon: PackageCheck },
     { key: "shipping", label: "Đang giao", icon: Truck },
-    { key: "delivered", label: "Đã giao", icon: CheckCircle2 },
-    { key: "completed", label: "Đã nhận hàng", icon: CheckCheck },
+    { key: "delivered", label: "Đã giao", icon: MapPinned },
+    { key: "completed", label: "Đã nhận hàng", icon: CircleCheckBig },
   ];
 
   // Chuẩn hóa trạng thái (đồng bộ hoàn toàn với danh sách trạng thái trong Admin)
@@ -114,10 +114,10 @@ function OrderTimeline({ status }: { status: string }) {
       </div>
 
       {/* Desktop & Tablet view (>= 640px): Horizontal Circles Timeline */}
-      <div className="hidden sm:block py-3 px-6 border-b border-border/60 bg-muted/15">
-        <div className="relative flex items-center justify-between w-full max-w-xl mx-auto">
-          {/* Connecting line stopping EXACTLY at center of circle */}
-          <div className="absolute top-[15px] left-[30px] right-[30px] h-[2px] bg-border -z-0">
+      <div className="hidden sm:block py-3.5 px-3 md:px-6 border-b border-border/60 bg-muted/15 overflow-hidden">
+        <div className="relative flex items-start justify-between w-full max-w-xl mx-auto">
+          {/* Connecting line stopping EXACTLY at center of circle (w-8 = 32px -> center at 16px) */}
+          <div className="absolute top-[15px] left-[35px] right-[35px] h-[2.5px] bg-border -z-0">
             <div
               className="h-full bg-green-600 dark:bg-green-500 transition-all duration-500"
               style={{ width: `${(activeIndex / (steps.length - 1)) * 100}%` }}
@@ -130,19 +130,19 @@ function OrderTimeline({ status }: { status: string }) {
             const StepIcon = step.icon;
 
             return (
-              <div key={step.key} className="relative z-10 flex flex-col items-center">
+              <div key={step.key} className="relative z-10 flex flex-col items-center flex-1 max-w-[95px]">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all duration-300 ${isCompleted
-                    ? "bg-green-600 border-green-600 text-white shadow-sm"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 shrink-0 ${isCompleted
+                    ? "bg-green-600 border-green-600 text-white shadow-sm scale-105"
                     : isCurrent
-                      ? "bg-background border-green-600 text-green-600 ring-4 ring-green-600/20 font-bold shadow-sm"
+                      ? "bg-background border-2 border-green-600 text-green-600 ring-4 ring-green-600/20 font-bold shadow-sm scale-110"
                       : "bg-muted border-border text-muted-foreground"
                     }`}
                 >
-                  <StepIcon className="w-3.5 h-3.5" />
+                  <StepIcon className="w-4 h-4" />
                 </div>
                 <span
-                  className={`mt-1.5 text-xs text-center transition-colors whitespace-nowrap ${isCurrent
+                  className={`mt-1.5 text-[11px] sm:text-xs text-center transition-colors leading-tight break-words px-0.5 ${isCurrent
                     ? "text-green-600 dark:text-green-400 font-bold"
                     : isCompleted
                       ? "text-foreground font-medium"
@@ -214,7 +214,7 @@ const matchSearchQuery = (order: any, query: string): boolean => {
 };
 
 export default function MyOrdersPage() {
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role } = useAuth();
   const router = useRouter();
 
   const [orders, setOrders] = useState<any[]>([]);
@@ -361,49 +361,47 @@ export default function MyOrdersPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push("/login");
-      } else {
-        setTimeout(() => {
-          fetchOrders(true);
-        }, 0);
+    if (!user) {
+      router.push("/login");
+    } else {
+      setTimeout(() => {
+        fetchOrders(true);
+      }, 0);
 
-        // 1. Đồng bộ qua BroadcastChannel (khi Admin mở cùng trình duyệt cập nhật trạng thái)
-        let bc: BroadcastChannel | null = null;
-        if (typeof window !== "undefined" && window.BroadcastChannel) {
-          bc = new BroadcastChannel("admin_orders_channel");
-          bc.onmessage = (event) => {
-            if (event.data?.type === "ORDER_UPDATED") {
-              fetchOrders(false);
-            }
-          };
-        }
-
-        // 2. Đồng bộ Realtime trực tiếp từ Supabase Postgres
-        const channel = supabase
-          .channel(`customer-orders-${user.id}`)
-          .on(
-            "postgres_changes",
-            { event: "UPDATE", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
-            () => {
-              fetchOrders(false);
-            }
-          )
-          .subscribe();
-
-        // 3. Tự động làm mới ngầm khi người dùng quay lại tab (focus) mà không reload UI
-        const handleFocus = () => fetchOrders(false);
-        window.addEventListener("focus", handleFocus);
-
-        return () => {
-          if (bc) bc.close();
-          supabase.removeChannel(channel);
-          window.removeEventListener("focus", handleFocus);
+      // 1. Đồng bộ qua BroadcastChannel (khi Admin mở cùng trình duyệt cập nhật trạng thái)
+      let bc: BroadcastChannel | null = null;
+      if (typeof window !== "undefined" && window.BroadcastChannel) {
+        bc = new BroadcastChannel("admin_orders_channel");
+        bc.onmessage = (event) => {
+          if (event.data?.type === "ORDER_UPDATED") {
+            fetchOrders(false);
+          }
         };
       }
+
+      // 2. Đồng bộ Realtime trực tiếp từ Supabase Postgres
+      const channel = supabase
+        .channel(`customer-orders-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
+          () => {
+            fetchOrders(false);
+          }
+        )
+        .subscribe();
+
+      // 3. Tự động làm mới ngầm khi người dùng quay lại tab (focus) mà không reload UI
+      const handleFocus = () => fetchOrders(false);
+      window.addEventListener("focus", handleFocus);
+
+      return () => {
+        if (bc) bc.close();
+        supabase.removeChannel(channel);
+        window.removeEventListener("focus", handleFocus);
+      };
     }
-  }, [user, authLoading, router, fetchOrders]);
+  }, [user, router, fetchOrders]);
 
   const confirmCancel = (id: string) => {
     setOrderToCancel(id);
@@ -431,7 +429,7 @@ export default function MyOrdersPage() {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return <LuxeLoading label="Đang truy xuất Đơn hàng của bạn..." />;
   }
 
@@ -518,7 +516,7 @@ export default function MyOrdersPage() {
       </div>
 
       {/* 2. Smart Search & Time Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6 bg-card/60 p-3.5 rounded-xl border border-border/70 shadow-2xs">
+      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 mb-6 bg-card/60 p-3.5 rounded-xl border border-border/70 shadow-2xs">
         {/* Search Box */}
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -542,8 +540,8 @@ export default function MyOrdersPage() {
         </div>
 
         {/* Time Range Selector & Reset Button */}
-        <div className="flex items-center gap-2 overflow-x-auto shrink-0 justify-end">
-          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/40">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 xl:pb-0 shrink-0 justify-start xl:justify-end scrollbar-none">
+          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/40 shrink-0">
             {[
               { key: "all", label: "Tất cả thời gian" },
               { key: "30days", label: "30 ngày" },
@@ -650,9 +648,9 @@ export default function MyOrdersPage() {
                     <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
                       <span className="text-[11px] font-semibold text-muted-foreground bg-background px-2.5 py-1 rounded-md border shadow-2xs">
                         {isBanking ? (
-                          payStatus === 'MATCHED' ? '✅ Đã chuyển khoản' : payStatus === 'MANUAL' ? '✅ Đã xác nhận' : payStatus === 'EXPIRED' ? '❌ Hết hạn ' : '⏳ Chờ chuyển khoản'
+                          payStatus === 'MATCHED' ? '💲 Đã chuyển khoản' : payStatus === 'MANUAL' ? '👌 Đã xác nhận' : payStatus === 'EXPIRED' ? '❌ Hết hạn ' : '🕒 Chờ chuyển khoản'
                         ) : (
-                          (order.status === 'delivered' || order.status === 'completed') ? '✅ Đã thu tiền (COD)' : '💲 Thanh toán khi nhận'
+                          (order.status === 'delivered' || order.status === 'completed') ? '💵 Đã thu tiền (COD)' : '💲 Thanh toán khi nhận'
                         )}
                       </span>
                       {isBanking && (payStatus === 'PENDING' || payStatus === 'CREATED') && order.status === 'pending' && (

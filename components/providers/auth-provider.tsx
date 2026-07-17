@@ -51,6 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const logout = useCallback(async () => {
+        if (typeof window !== "undefined") {
+            sessionStorage.clear();
+        }
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
@@ -103,50 +106,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const { data: roleData } = await rolePromise;
         if (roleData) setRole(roleData.name);
+
+        if (typeof window !== "undefined" && currentProfile) {
+            sessionStorage.setItem(`luxe_auth_cache_${userObj.id}`, JSON.stringify({
+                profile: currentProfile,
+                role: roleData?.name ?? null
+            }));
+        }
     }, []);
 
     const lastUserIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        const init = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(prev => (prev?.id === user?.id ? prev : user));
-            if (user) {
-                lastUserIdRef.current = user.id;
-                // Run profile fetch and guest cart sync in parallel — no dependency between them
-                await Promise.all([
-                    fetchProfileAndRole(user),
-                    syncGuestCartToSupabase(),
-                ]);
+        let isMounted = true;
+
+        const initAuth = async () => {
+            // 1. Kiểm tra nhanh session trong bộ nhớ cục bộ (0ms network latency)
+            const { data: { session } } = await supabase.auth.getSession();
+            const currentUser = session?.user ?? null;
+            if (!isMounted) return;
+
+            setUser(prev => (prev?.id === currentUser?.id ? prev : currentUser));
+
+            if (currentUser) {
+                lastUserIdRef.current = currentUser.id;
+
+                // 2. Kiểm tra bộ nhớ đệm tab (SessionStorage) để mở khóa giao diện NGAY LẬP TỨC (0ms spinner khi F5)
+                if (typeof window !== "undefined") {
+                    const cachedStr = sessionStorage.getItem(`luxe_auth_cache_${currentUser.id}`);
+                    if (cachedStr) {
+                        try {
+                            const cached = JSON.parse(cachedStr);
+                            if (cached.profile) {
+                                setProfile(cached.profile);
+                                if (cached.role) setRole(cached.role);
+                                setLoading(false); // Mở khóa ngay lập tức không chờ truy vấn PostgreSQL!
+                            }
+                        } catch (e) {
+                            console.error("Lỗi parse auth cache", e);
+                        }
+                    }
+                }
+
+                // 3. Chạy fetchProfileAndRole để cập nhật dữ liệu mới nhất (Stale-While-Revalidate)
+                await fetchProfileAndRole(currentUser);
+                if (isMounted) setLoading(false);
+
+                // 4. Đồng bộ giỏ hàng chạy hoàn toàn ngầm trong background, không chặn loading UI
+                syncGuestCartToSupabase().then(({ mergedCount }) => {
+                    if (mergedCount > 0 && typeof window !== "undefined") {
+                        window.dispatchEvent(new Event("cart-updated"));
+                    }
+                }).catch(console.error);
+            } else {
+                if (isMounted) setLoading(false);
             }
-            setLoading(false);
         };
-        init();
+
+        initAuth();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!isMounted) return;
             const currentUser = session?.user ?? null;
             setUser(prev => (prev?.id === currentUser?.id ? prev : currentUser));
 
-            if (currentUser && currentUser.id !== lastUserIdRef.current) {
-                lastUserIdRef.current = currentUser.id;
-                await fetchProfileAndRole(currentUser);
-                const { mergedCount } = await syncGuestCartToSupabase();
-                if (mergedCount > 0) {
-                    window.dispatchEvent(new Event("cart-updated"));
-                }
-                if (typeof window !== "undefined" && window.location.pathname === "/cart") {
-                    router.push("/checkout");
-                }
-            }
+            if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+                if (currentUser && currentUser.id !== lastUserIdRef.current) {
+                    lastUserIdRef.current = currentUser.id;
+                    setLoading(true);
+                    await fetchProfileAndRole(currentUser);
+                    if (isMounted) setLoading(false);
 
-            if (event === "SIGNED_OUT") {
+                    syncGuestCartToSupabase().then(({ mergedCount }) => {
+                        if (mergedCount > 0) {
+                            window.dispatchEvent(new Event("cart-updated"));
+                        }
+                        if (typeof window !== "undefined" && window.location.pathname === "/cart") {
+                            router.push("/checkout");
+                        }
+                    }).catch(console.error);
+                }
+            } else if (event === "SIGNED_OUT") {
                 lastUserIdRef.current = null;
+                if (typeof window !== "undefined") sessionStorage.clear();
+                setUser(null);
                 setProfile(null);
                 setRole(null);
+                if (isMounted) setLoading(false);
             }
         });
 
         return () => {
+            isMounted = false;
             subscription?.unsubscribe();
         };
     }, [fetchProfileAndRole, router]);

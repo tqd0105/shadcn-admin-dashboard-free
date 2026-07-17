@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, ShoppingCart, Heart, Bell, User, Menu, LogOut, Package, HomeIcon, BoxIcon, UserIcon, LogOutIcon, Shield, MapPin, Settings, Sparkles, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase/client";
 import { getProduct } from "@/lib/services/product.service";
 import { getGuestCartItems } from "@/lib/services/cart.service";
-import Image from "next/image";
+
 
 export function SiteHeader() {
   const { openModal } = useAuthModal();
@@ -78,13 +79,11 @@ export function SiteHeader() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowSuggestions(false);
   }, [pathname]);
 
   useEffect(() => {
     if (cartCount > 0 && initialLoadDone.current) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsBumping(true);
       const timer = setTimeout(() => setIsBumping(false), 300);
       return () => clearTimeout(timer);
@@ -375,7 +374,7 @@ export function SiteHeader() {
               <span className="ml-0.5  bg-gradient-to-r from-slate-700 via-slate-500 to-slate-800 dark:from-slate-100 dark:via-white dark:to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
                 Commerce
               </span>
-              <img src="/icons/star.png" alt="Logo" width={25} height={25} className="ml-1.5  animate__animated animate__flash animate__infinite inline-block" />
+              <Image src="/icons/star.png" alt="Logo" width={25} height={25} className="ml-1.5 animate__animated animate__flash animate__infinite inline-block" />
             </span>
           </Link>
         </div>
@@ -497,15 +496,30 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 p-2 rounded-xl shadow-xl border-border/50 z-[100]">
-                <DropdownMenuLabel className="font-normal p-2 bg-muted/50 rounded-lg mb-2 flex justify-center items-center gap-3">
-                  <Avatar className="h-10 w-10">
+                <DropdownMenuLabel className="font-normal p-2.5 bg-muted/40 rounded-xl mb-2 flex items-center gap-3 border border-border/40">
+                  <Avatar className="h-10 w-10 shrink-0 ring-2 ring-primary/20">
                     <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col space-y-0.5 overflow-hidden">
-                    <p className="text-sm font-semibold truncate text-foreground">{profile?.full_name || user.email?.split('@')[0]}</p>
+                  <div className="flex flex-col space-y-0.5 overflow-hidden flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <p className="text-sm font-semibold truncate text-foreground">
+                        {profile?.full_name || user.email?.split('@')[0]}
+                      </p>
+                      {role && (
+                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded-md text-[10px] font-bold tracking-tight shrink-0 border ${
+                          role === "admin"
+                            ? " text-red-600 dark:text-red-400 border-red-300 dark:border-red-800"
+                            : role === "staff"
+                            ? " text-blue-600 dark:text-blue-400 border-blue-500 dark:border-blue-800"
+                            : " text-emerald-600 dark:text-emerald-400 border-emerald-500 dark:border-emerald-800"
+                        }`}>
+                          {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Customer"}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>

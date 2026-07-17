@@ -12,7 +12,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 export default function WishlistPage() {
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,11 +26,11 @@ export default function WishlistPage() {
   }, []);
 
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchWishlist();
     }
-  }, [user, authLoading, fetchWishlist]);
+  }, [user, fetchWishlist]);
 
   const handleRemove = async (id: string) => {
     const { error } = await removeFromWishlist(id);
@@ -67,7 +67,7 @@ export default function WishlistPage() {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
   };
 
-  if (authLoading || loading) return <LuxeLoading label="Đang tải danh sách yêu thích..." />;
+  if (loading) return <LuxeLoading label="Đang tải danh sách yêu thích..." />;
 
   return (
     <div>

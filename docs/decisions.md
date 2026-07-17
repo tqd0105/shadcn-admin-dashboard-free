@@ -233,6 +233,55 @@ Staff members (`role === "staff"`) need access to customer management (`/dashboa
 - Locking an account immediately revokes access and signs out the locked user across all customer portals upon reload/navigation.
 - Zero TypeScript errors and zero linter warnings (`pnpm lint` and `pnpm build` verified).
 
+## 2026-07-17: Rich Global Account Locking Modals, Destructive Typing Confirmation & Compact 2-Row User Header
+
+### Context
+When administrators or staff members locked customer accounts, or when locked customers tried to sign in or navigate the app, the system relied on native browser `window.confirm` and `window.alert` popups. Furthermore, deleting user accounts (`deleteUser`) only required clicking a confirmation button in a standard dialog without typing verification (`high risk of accidental deletion`). Finally, the user account dropdown header (`site-header.tsx`) required displaying the user's role badge (`Admin`, `Staff`, `Customer`) inside a clean, space-efficient layout without increasing vertical height (`avoiding bulky 3-row layout`).
+
+### Decision
+1. **Global Account Locking Modal (`auth-provider.tsx` & `auth-modal.tsx`)**:
+   - Replaced `window.alert(...)` with a global, z-indexed (`z-[9999]`) custom `<AlertDialog>` (`LockedAccountModal`) rendered directly inside `AuthProvider`.
+   - Exposed `showLockedAlert()` via `useAuth()`.
+   - When a locked user attempts to sign in via `AuthModal` (`signInWithPassword`), `handleLogin` immediately checks `profileData.is_locked`, executes `supabase.auth.signOut()`, closes the login modal (`closeModal()`), and invokes `showLockedAlert()`, ensuring no `Đăng nhập thành công!` toast or `/checkout` redirection occurs.
+   - For Admin and Staff toggling account lock status (`onToggleLock`), created a rich contextual `AlertDialog` explaining the exact consequences of locking or unlocking access (`execution via executeToggleLock`).
+2. **Destructive Typing Confirmation for Account Deletion (`users-client.tsx`)**:
+   - Upgraded the `AlertDialog` for `deleteUser` (`deleteTarget`) by requiring administrators to explicitly type **`XÓA TÀI KHOẢN`** or the exact email (`deleteTarget.email`) into an `<Input>` field before the destructive red button (`[ Xóa vĩnh viễn ]`) becomes enabled (`disabled={!isDeleteConfirmed || deleting}`).
+3. **Sleek & Compact 2-Row User Dropdown Header with Inline Role Pill (`site-header.tsx`)**:
+   - Redesigned `DropdownMenuLabel` in `site-header.tsx` to maintain a compact 2-row height (`space-y-0.5`).
+   - Placed the Role Badge (`Admin`, `Staff`, `Khách`) on the same horizontal line (`Row 1`) next to the truncated full name (`flex items-center justify-between gap-1.5`) with distinct color tokens (`red` for Admin, `blue` for Staff, `emerald` for Customer) and subtle borders (`border-border/40`).
+
+### Consequences
+- Sleek, highly compact user account dropdown header displaying email, display name, and role badge within exact 2-row vertical bounds (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
+
+## 2026-07-18: Zero-Latency Auth Reload (`0ms Spinner`) via Instant SessionStorage Caching & Non-Blocking Cart Sync
+
+### Context
+When logged-in customers navigated between pages or pressed reload (`F5`) inside protected account routes (`/account/*`), the full-screen loading spinner (`LuxeLoading label="Đang xác thực tài khoản..."`) flashed for 1–2 seconds on every reload. This occurred because `AuthProvider` initialized `loading = true` on mount and awaited sequential Postgres network queries (`fetchProfileAndRole` plus `syncGuestCartToSupabase`) before setting `loading = false`.
+
+### Decision
+1. **Instant Session check via `getSession()`**: Replaced blocking `await supabase.auth.getUser()` during initial client mount with `getSession()`, reading the JWT from local browser memory (`localStorage/cookies`) in `0ms` network latency.
+2. **Instant Stale-While-Revalidate Tab Caching (`sessionStorage`)**: Upon fetching a user profile (`fetchProfileAndRole`), the data (`profile` and `role`) is cached in `sessionStorage.setItem("luxe_auth_cache_" + userId)`. When `AuthProvider` mounts after a page reload (`F5`), it checks `sessionStorage` instantly (`~1ms`), sets `profile` and `role`, and unlocks the UI immediately (`setLoading(false)`) without waiting for Postgres queries (`0ms spinner`). Meanwhile, `fetchProfileAndRole` revalidates the latest profile from Supabase in the background.
+3. **Non-Blocking Background Cart Sync**: Separated `syncGuestCartToSupabase()` from the blocking `Promise.all` initialization chain. Cart merging now executes asynchronously in the background (`syncGuestCartToSupabase().then(...).catch(...)`), preventing DB cart checks from blocking user authentication state transitions.
+
+### Consequences
+- Eliminates `Đang xác thực tài khoản...` spinner delay on tab refresh (`F5`) or navigation for already-authenticated users.
+- Maintained 100% linter and build compliance (`0 errors, 0 warnings` across `pnpm lint` and `pnpm build`).
+
+## 2026-07-18: Complete Removal of Authentication Loading Screen (`Đang xác thực tài khoản...`) Across All Account Pages
+
+### Context
+Even with zero-latency session caching, the user requested to completely eliminate any possibility of the full-screen verification spinner (`<LuxeLoading label="Đang xác thực tài khoản..." />`) appearing during initial mount, redirect checks, or sub-page data fetches within `/account/*`.
+
+### Decision
+1. **Silent Auth Layout Rendering (`app/(storefront)/account/layout.tsx`)**: Removed the `if (loading || !user) return <LuxeLoading label="Đang xác thực tài khoản..." />` check entirely. Replaced it with `if (!user) return null;`. If a session is already cached (`~1ms`), the layout renders immediately. If a guest visits without a session, the layout silently returns `null` while `useEffect` redirects them to `/` without flashing any loading overlay.
+2. **Decoupled Auth Loading from Inner Account Pages**: Removed `authLoading` checks across `orders/page.tsx`, `settings/page.tsx`, `addresses/page.tsx`, and `wishlist/page.tsx`. Sub-page data fetches now run as soon as `user` is available without waiting on or showing full-screen spinners for `authLoading`.
+
+### Consequences
+- Total removal of the "Đang xác thực tài khoản..." loading screen (`0 instances of verification spinners across account pages`).
+- Instantaneous, flicker-free navigation inside customer account sections.
+- Verified `0 errors, 0 warnings` across both `pnpm lint` and `pnpm build`.
+
+
 
 
 

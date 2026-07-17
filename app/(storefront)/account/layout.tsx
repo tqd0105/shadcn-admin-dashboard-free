@@ -13,8 +13,6 @@ import {
   Settings, 
   LogOut 
 } from "lucide-react";
-import { IconLoader2 } from "@tabler/icons-react";
-import { LuxeLoading } from "@/components/storefront/luxe-loading";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -27,8 +25,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     }
   }, [user, loading, router]);
 
-  if (loading || !user) {
-    return <LuxeLoading label="Đang xác thực tài khoản..." />;
+  if (!user) {
+    return null;
   }
 
   const menuItems = [
