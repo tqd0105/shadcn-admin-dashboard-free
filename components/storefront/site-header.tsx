@@ -79,14 +79,18 @@ export function SiteHeader() {
   }, []);
 
   useEffect(() => {
-    setShowSuggestions(false);
+    const timer = setTimeout(() => setShowSuggestions(false), 0);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   useEffect(() => {
     if (cartCount > 0 && initialLoadDone.current) {
-      setIsBumping(true);
-      const timer = setTimeout(() => setIsBumping(false), 300);
-      return () => clearTimeout(timer);
+      const startTimer = setTimeout(() => setIsBumping(true), 0);
+      const endTimer = setTimeout(() => setIsBumping(false), 300);
+      return () => {
+        clearTimeout(startTimer);
+        clearTimeout(endTimer);
+      };
     }
   }, [cartCount]);
 

@@ -281,6 +281,23 @@ Even with zero-latency session caching, the user requested to completely elimina
 - Instantaneous, flicker-free navigation inside customer account sections.
 - Verified `0 errors, 0 warnings` across both `pnpm lint` and `pnpm build`.
 
+## 2026-07-18: Accurate Post-Login Redirection via Role Resolution (`getRole(profileData.role_id)`)
+
+### Context
+When logging in as `admin` or `staff` through either the popup login modal (`AuthModal`) or the standalone login page (`/login`), users were not automatically redirected to `/dashboard`. Investigation revealed that the login handlers checked `profileData?.role`, but the `profiles` table schema only stores `role_id` (a UUID foreign key pointing to the `roles` table). Consequently, `profileData.role` evaluated to `undefined`, causing the handler to default to `router.push("/")`.
+
+### Decision
+1. **Explicit Role Resolution in Auth Handlers (`components/auth/auth-modal.tsx` & `app/(guest)/login/page.tsx`)**: After fetching `getProfile(authData.user.id)`, if `profileData.role_id` exists, the handler explicitly queries `getRole(profileData.role_id)` from `role.service.ts` to extract the role string (`roleData.name`).
+2. **Deterministic Role-Based Routing**:
+   - If `userRole === "admin" || userRole === "staff"`, execute `router.push("/dashboard")`.
+   - If `userRole === "customer"` and the user is on `/cart`, execute `router.push("/checkout")`.
+   - Otherwise, execute `router.push("/")`.
+
+### Consequences
+- Flawless, immediate redirection of administrative and staff accounts to `/dashboard` upon authentication.
+- Guaranteed consistency across both popup modal (`AuthModal`) and full-page (`/login`) entry points.
+- Maintained strict `0 errors, 0 warnings` across both `pnpm lint` and `pnpm build`.
+
 
 
 

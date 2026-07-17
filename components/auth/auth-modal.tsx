@@ -12,6 +12,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { isEmailRegistered, sendOtp, verifyOtp, completeRegister } from "@/lib/services/register.service";
 import { getProfile } from "@/lib/services/profile.service";
+import { getRole } from "@/lib/services/role.service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 
@@ -69,6 +70,7 @@ export function AuthModal() {
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      let userRole = "customer";
       if (authData?.user) {
         const { data: profileData } = await getProfile(authData.user.id);
         if (profileData?.is_locked) {
@@ -77,11 +79,21 @@ export function AuthModal() {
           showLockedAlert();
           return;
         }
+        if (profileData?.role_id) {
+          const { data: roleData } = await getRole(profileData.role_id);
+          if (roleData?.name) {
+            userRole = roleData.name;
+          }
+        }
       }
       toast.success("Đăng nhập thành công!");
       closeModal();
-      if (typeof window !== "undefined" && window.location.pathname === "/cart") {
+      if (userRole === "admin" || userRole === "staff") {
+        router.push("/dashboard");
+      } else if (typeof window !== "undefined" && window.location.pathname === "/cart") {
         router.push("/checkout");
+      } else {
+        router.push("/");
       }
     } catch (err: any) {
       let msg = err.message || "Lỗi đăng nhập";
