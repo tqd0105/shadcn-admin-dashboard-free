@@ -6,6 +6,7 @@ import { getWishlist, removeFromWishlist } from "@/lib/services/wishlist.service
 import { useAuth } from "@/components/providers/auth-provider";
 import { addToCart } from "@/lib/services/cart.service";
 import { IconLoader2, IconHeartBroken, IconTrash, IconShoppingCart } from "@tabler/icons-react";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -66,7 +67,7 @@ export default function WishlistPage() {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
   };
 
-  if (authLoading || loading) return <div className="py-10 text-center"><IconLoader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></div>;
+  if (authLoading || loading) return <LuxeLoading label="Đang tải danh sách yêu thích..." />;
 
   return (
     <div>

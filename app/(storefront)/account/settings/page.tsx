@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile, updatePassword, uploadAvatar } from "@/lib/services/profile.service";
 import { IconLoader2, IconUpload, IconCamera } from "@tabler/icons-react";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import { Eye, EyeOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
@@ -130,7 +131,7 @@ export default function AccountSettingsPage() {
     }
   };
 
-  if (authLoading) return <div className="py-10 text-center"><IconLoader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></div>;
+  if (authLoading) return <LuxeLoading label="Đang tải thiết lập tài khoản..." />;
 
   return (
     <div className="max-w-2xl">

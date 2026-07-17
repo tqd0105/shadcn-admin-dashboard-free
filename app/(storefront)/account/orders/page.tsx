@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconLoader2, IconPackage, IconX } from "@tabler/icons-react";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import { Clock, Package, Truck, CheckCircle2, AlertTriangle, CreditCard, Star, Search, SearchX, Calendar, RotateCcw, Filter, CheckCheck, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,10 +98,10 @@ function OrderTimeline({ status }: { status: string }) {
               >
                 <div
                   className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted
-                      ? "bg-green-600 dark:bg-green-500 text-white shadow-2xs scale-105"
-                      : isCurrent
-                        ? "bg-background border-2 border-green-600 ring-4 ring-green-600/25 shadow-sm scale-110"
-                        : "bg-muted border border-border"
+                    ? "bg-green-600 dark:bg-green-500 text-white shadow-2xs scale-105"
+                    : isCurrent
+                      ? "bg-background border-2 border-green-600 ring-4 ring-green-600/25 shadow-sm scale-110"
+                      : "bg-muted border border-border"
                     }`}
                 >
                   {isCompleted && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -132,20 +133,20 @@ function OrderTimeline({ status }: { status: string }) {
               <div key={step.key} className="relative z-10 flex flex-col items-center">
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all duration-300 ${isCompleted
-                      ? "bg-green-600 border-green-600 text-white shadow-sm"
-                      : isCurrent
-                        ? "bg-background border-green-600 text-green-600 ring-4 ring-green-600/20 font-bold shadow-sm"
-                        : "bg-muted border-border text-muted-foreground"
+                    ? "bg-green-600 border-green-600 text-white shadow-sm"
+                    : isCurrent
+                      ? "bg-background border-green-600 text-green-600 ring-4 ring-green-600/20 font-bold shadow-sm"
+                      : "bg-muted border-border text-muted-foreground"
                     }`}
                 >
                   <StepIcon className="w-3.5 h-3.5" />
                 </div>
                 <span
                   className={`mt-1.5 text-xs text-center transition-colors whitespace-nowrap ${isCurrent
-                      ? "text-green-600 dark:text-green-400 font-bold"
-                      : isCompleted
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground"
+                    ? "text-green-600 dark:text-green-400 font-bold"
+                    : isCompleted
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground"
                     }`}
                 >
                   {step.label}
@@ -431,11 +432,7 @@ export default function MyOrdersPage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="flex justify-center items-center py-20 min-h-[50vh]">
-        <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LuxeLoading label="Đang truy xuất Đơn hàng của bạn..." />;
   }
 
   if (role === "admin" || role === "staff") {
@@ -501,16 +498,16 @@ export default function MyOrdersPage() {
               type="button"
               onClick={() => setSelectedStatus(tab.key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 border ${isActive
-                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                  : "bg-card hover:bg-muted/60 text-muted-foreground border-border/70"
+                ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                : "bg-card hover:bg-muted/60 text-muted-foreground border-border/70"
                 }`}
             >
               <TabIcon className="size-3.5" />
               <span>{tab.label}</span>
               <span
                 className={`ml-0.5 px-1.5 py-0.5 text-[10px] rounded-full font-bold ${isActive
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
                   }`}
               >
                 {count}
@@ -558,8 +555,8 @@ export default function MyOrdersPage() {
                 type="button"
                 onClick={() => setSelectedTimeRange(t.key)}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all shrink-0 ${selectedTimeRange === t.key
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
               >
                 {t.label}

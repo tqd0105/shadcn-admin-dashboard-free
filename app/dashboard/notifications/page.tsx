@@ -394,6 +394,8 @@ function NotificationsPageContent() {
                   <Button variant="outline" size="sm" type="button" onClick={() => setLink("/account/orders")} className="h-7 text-xs bg-background">
                     📋 Lịch sử đơn hàng
                   </Button>
+
+                  
                 </div>
 
                 {/* Tìm kiếm sản phẩm thông minh */}

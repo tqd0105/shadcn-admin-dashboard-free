@@ -8,8 +8,15 @@ export function SiteFooter() {
     <footer className="bg-secondary/20 mt-20">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 px-4 md:px-10 py-16 max-w-7xl mx-auto w-full">
         <div className="col-span-1">
-          <Link href="/" className="text-xl font-bold block mb-6 text-primary">
-            LuxeCommerce
+          <Link href="/" className="group text-xl md:text-2xl font-black tracking-tighter inline-flex items-center gap-2.5 mb-6 transition-all duration-300">
+            <span className="flex items-center tracking-tight">
+              <span className="bg-gradient-to-r from-violet-500 via-purple-400 to-fuchsia-400 dark:from-violet-300 dark:via-purple-200 dark:to-fuchsia-300 bg-clip-text text-transparent animate-shimmer-metallic drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]">
+                Luxe
+              </span>
+              <span className="ml-0.5 bg-gradient-to-r from-slate-700 via-slate-500 to-slate-800 dark:from-slate-100 dark:via-white dark:to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                Commerce
+              </span>
+            </span>
           </Link>
           <p className="text-sm text-muted-foreground mb-6">Trải nghiệm mua sắm đẳng cấp với những sản phẩm được tuyển chọn kỹ lưỡng.</p>
           <div className="flex gap-4">

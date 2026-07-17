@@ -160,8 +160,14 @@ export function SiteHeader() {
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                           <div className="mt-1 flex items-center gap-1.5">
                             {role === "admin" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/15 text-destructive border border-destructive/20">
-                                <Shield className="w-3 h-3" /> Quản trị viên
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/15 text-destructive">
+                                {/* <Shield className="w-3 h-3" />  */}
+                                Quản trị viên
+                              </span>
+                            ) : role === "staff" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 ">
+                                {/* <Shield className="w-3 h-3" /> */}
+                                 Nhân viên
                               </span>
                             ) : (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
@@ -179,7 +185,7 @@ export function SiteHeader() {
                             href="/dashboard"
                             className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold text-sm shadow-md shadow-red-500/20 hover:opacity-95 transition-opacity"
                           >
-                            <LayoutDashboard className="w-4 h-4" /> Bảng Quản Trị Admin
+                            <Image src="/icons/dashboard3.png" alt="Logo" width={20} height={20} /> Bảng Quản Trị (Admin)
                           </Link>
                         </SheetClose>
                       )}
@@ -235,24 +241,27 @@ export function SiteHeader() {
                         <Package className="w-4 h-4" /> Tất cả sản phẩm
                       </Link>
                     </SheetClose>
-                    <SheetClose asChild>
-                      <Link
-                        href="/cart"
-                        className={cn(
-                          "flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
-                          pathname === "/cart" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
-                        )}
-                      >
-                        <span className="flex items-center gap-3">
-                          <ShoppingCart className="w-4 h-4 text-blue-500" /> Giỏ hàng
-                        </span>
-                        {cartCount > 0 && (
-                          <span className="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
-                            {cartCount}
+                    {/* Cart link — ẩn với Admin và Staff */}
+                    {role !== "admin" && role !== "staff" && (
+                      <SheetClose asChild>
+                        <Link
+                          href="/cart"
+                          className={cn(
+                            "flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
+                            pathname === "/cart" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                          )}
+                        >
+                          <span className="flex items-center gap-3">
+                            <ShoppingCart className="w-4 h-4 text-blue-500" /> Giỏ hàng
                           </span>
-                        )}
-                      </Link>
-                    </SheetClose>
+                          {cartCount > 0 && (
+                            <span className="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                              {cartCount}
+                            </span>
+                          )}
+                        </Link>
+                      </SheetClose>
+                    )}
                     {/* <SheetClose asChild>
                       <Link
                         href="/account/wishlist"
@@ -266,8 +275,8 @@ export function SiteHeader() {
                     </SheetClose> */}
                   </div>
 
-                  {/* Cá Nhân (Chỉ hiện khi đăng nhập) */}
-                  {user && (
+                  {/* Cá Nhân (Chỉ hiện khi đăng nhập — Customer) */}
+                  {user && role !== "admin" && role !== "staff" && (
                     <div className="space-y-1 pt-2 border-t">
                       <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
                         Tài khoản của tôi
@@ -313,6 +322,24 @@ export function SiteHeader() {
                       </SheetClose>
                     </div>
                   )}
+
+                  {/* Staff: shortcut vào Staff Dashboard */}
+                  {user && role === "staff" && (
+                    <div className="space-y-1 pt-2 border-t">
+                      <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
+                        Khu vực nội bộ
+                      </p>
+                      <SheetClose asChild>
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors"
+                        >
+                            <Image src="/icons/dashboard5.png" alt="Logo" width={20} height={20} />         
+                           Bảng điều hành (Staff)
+                        </Link>
+                      </SheetClose>
+                    </div>
+                  )}
                 </div>
 
                 {/* 3. Chân Drawer */}
@@ -336,9 +363,20 @@ export function SiteHeader() {
               </SheetContent>
             </Sheet>
           </div>
-          <Link href="/" className="text-lg md:text-xl font-bold tracking-tight flex-shrink-0 text-primary flex items-center gap-3">
-            <Image src="/icons/luxecommerce.png" alt="Logo" width={32} height={32} className="rounded-full" />
-             LuxeCommerce
+          <Link href="/" className="group text-xl md:text-2xl font-black tracking-tighter flex-shrink-0 flex items-center gap-2.5 transition-all duration-300">
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-500 blur-lg opacity-50 group-hover:opacity-80 transition duration-800 animate-pulse" />
+              <Image src="/icons/luxecommerce.png" alt="Logo" width={34} height={34} className="relative  " />
+            </div>
+            <span className="flex items-center tracking-tight ">
+              <span className="bg-gradient-to-r from-violet-500 via-purple-400 to-fuchsia-400 dark:from-violet-300 dark:via-purple-200 dark:to-fuchsia-300 bg-clip-text text-transparent animate-shimmer-metallic drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]">
+                Luxe
+              </span>
+              <span className="ml-0.5  bg-gradient-to-r from-slate-700 via-slate-500 to-slate-800 dark:from-slate-100 dark:via-white dark:to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                Commerce
+              </span>
+              <img src="/icons/star.png" alt="Logo" width={25} height={25} className="ml-1.5  animate__animated animate__flash animate__infinite inline-block" />
+            </span>
           </Link>
         </div>
 
@@ -421,27 +459,29 @@ export function SiteHeader() {
           {/* 1. Khi ĐÃ đăng nhập: Thông báo nằm ở trái ngoài cùng của cụm icon */}
           {user && <NotificationDropdown userId={user.id} />}
 
-          {/* 2. Icon Giỏ hàng (luôn hiển thị cho cả Thành viên lẫn Khách vãng lai) */}
-          <Link
-            href="/cart"
-            className="relative inline-block"
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "text-muted-foreground hover:text-primary relative transition-all duration-300",
-                isBumping ? "scale-125 text-primary" : "scale-100"
-              )}
+          {/* 2. Icon Giỏ hàng — ẩn với Admin và Staff */}
+          {role !== "admin" && role !== "staff" && (
+            <Link
+              href="/cart"
+              className="relative inline-block"
             >
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
-                  {cartCount}
-                </span>
-              )}
-            </Button>
-          </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "text-muted-foreground hover:text-primary relative transition-all duration-300",
+                  isBumping ? "scale-125 text-primary" : "scale-100"
+                )}
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
+                    {cartCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+          )}
 
           {/* 3. Phải ngoài cùng: Avatar (nếu đăng nhập) hoặc Nút Đăng nhập (nếu chưa) */}
           {user ? (
@@ -502,12 +542,29 @@ export function SiteHeader() {
                     <DropdownMenuSeparator className="bg-border/50 my-2" />
                     <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-primary/10 focus:bg-primary/10 outline-none">
                       <Link href="/dashboard" className="flex items-center w-full group">
-                        <div className="  flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
+                        <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
                           <Image src="/icons/dashboard2.png" alt="Admin" width={25} height={25} className="object-contain" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-primary">Trang Quản trị </span>
+                          <span className="font-semibold text-sm text-primary">Trang Quản trị</span>
                           <span className="text-[10px] text-primary/70">Dành riêng cho Admin</span>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {role === "staff" && (
+                  <>
+                    <DropdownMenuSeparator className="bg-border/50 my-2" />
+                    <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-amber-500/10 focus:bg-amber-500/10 outline-none">
+                      <Link href="/dashboard" className="flex items-center w-full group">
+                        <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
+                          <Image src="/icons/dashboard2.png" alt="Staff" width={25} height={25} className="object-contain" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-sm text-amber-600 dark:text-amber-400">Bảng điều hành</span>
+                          <span className="text-[10px] text-amber-600/70 dark:text-amber-400/70">Khu vực dành cho Nhân viên</span>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -525,14 +582,24 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button
-              className="inline-flex rounded-full ml-1.5 md:ml-2 font-bold px-3.5 py-1.5 h-8 text-xs md:h-9 md:px-4 md:text-sm shadow-md shadow-primary/20 transition-all active:scale-95 shrink-0"
-              onClick={() => openModal('login')}
-            >
-              Đăng nhập
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="inline-flex md:hidden rounded-full hover:bg-primary/10 transition-all ml-1.5 h-9 w-9 p-0 shrink-0"
+                onClick={() => openModal('login')}
+                title="Đăng nhập"
+              >
+                <Image src="/icons/login.png" alt="Đăng nhập" width={40} height={40} className="object-contain" />
+              </Button>
+              <Button
+                className="hidden md:inline-flex rounded-full ml-2 font-bold px-4 py-1.5 h-9 text-sm shadow-md shadow-primary/20 transition-all active:scale-95 shrink-0"
+                onClick={() => openModal('login')}
+              >
+                Đăng nhập
+              </Button>
+            </>
           )}
-
         </div>
       </div>
     </header>

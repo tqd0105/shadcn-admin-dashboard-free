@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   getCategories,
   createCategory,
@@ -56,6 +57,7 @@ type Category = {
 };
 
 function CategoriesPageContent() {
+  const { role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -163,10 +165,10 @@ function CategoriesPageContent() {
   // Submit create/update
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setErrorMsg("Name is required");
+      setErrorMsg("Please enter a category name");
       return;
     }
-    
+    if (!editingCategory && role !== "admin") return;
     setSaving(true);
     setErrorMsg("");
 
@@ -233,10 +235,12 @@ function CategoriesPageContent() {
             Manage your product categories
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <IconPlus className="size-4" />
-          Add Category
-        </Button>
+        {role === "admin" && (
+          <Button onClick={openCreate} className="gap-2">
+            <IconPlus className="size-4" />
+            Add Category
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -294,13 +298,15 @@ function CategoriesPageContent() {
                       >
                         <IconEdit className="size-4 text-muted-foreground hover:text-foreground" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeleteTarget(category)}
-                      >
-                        <IconTrash className="size-4 text-destructive" />
-                      </Button>
+                      {role === "admin" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeleteTarget(category)}
+                        >
+                          <IconTrash className="size-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -392,32 +398,34 @@ function CategoriesPageContent() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Category</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">&ldquo;{deleteTarget?.name}&rdquo;</span>?
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
-            >
-              {deleting && <IconLoader2 className="size-4 animate-spin" />}
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {role === "admin" && (
+        <AlertDialog
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Category</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <span className="font-semibold">&ldquo;{deleteTarget?.name}&rdquo;</span>?
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              >
+                {deleting && <IconLoader2 className="size-4 animate-spin" />}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
@@ -429,7 +437,7 @@ export default function CategoriesPage() {
         <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
       </div>
     }>
-      <RoleGuard allowedRoles={["admin"]}>
+      <RoleGuard allowedRoles={["admin", "staff"]}>
         <CategoriesPageContent />
       </RoleGuard>
     </Suspense>

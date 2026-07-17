@@ -11,10 +11,13 @@ import { IconLoader2 } from "@tabler/icons-react";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { isEmailRegistered, sendOtp, verifyOtp, completeRegister } from "@/lib/services/register.service";
+import { getProfile } from "@/lib/services/profile.service";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 
 export function AuthModal() {
   const router = useRouter();
+  const { showLockedAlert } = useAuth();
   const { isOpen, closeModal, view, setView } = useAuthModal();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,8 +67,17 @@ export function AuthModal() {
     setLoading(true);
     setErrorMsg("");
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      if (authData?.user) {
+        const { data: profileData } = await getProfile(authData.user.id);
+        if (profileData?.is_locked) {
+          await supabase.auth.signOut();
+          closeModal();
+          showLockedAlert();
+          return;
+        }
+      }
       toast.success("Đăng nhập thành công!");
       closeModal();
       if (typeof window !== "undefined" && window.location.pathname === "/cart") {

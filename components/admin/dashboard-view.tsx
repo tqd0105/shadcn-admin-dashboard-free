@@ -29,6 +29,7 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { getDashboardStats, DashboardStats } from "@/lib/services/dashboard.service";
+import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
 interface DashboardViewProps {
@@ -36,6 +37,7 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ initialStats }: DashboardViewProps) {
+  const { role } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>(initialStats);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -155,72 +157,135 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
 
       {/* 2. 4 Lưới Chỉ Số KPI (Metric Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Thẻ 1: Doanh thu */}
-        <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-muted-foreground">Doanh thu ròng</span>
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold shadow-inner">
-              <DollarSign className="w-6 h-6" />
+        {role === "admin" ? (
+          <>
+            {/* Thẻ 1: Doanh thu */}
+            <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground">Doanh thu ròng</span>
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold shadow-inner">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                  {formatCurrency(stats.totalRevenue)}
+                </h3>
+                <div className={cn(
+                  "flex items-center gap-1.5 text-xs font-semibold pt-1",
+                  (stats.revenueGrowth || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
+                )}>
+                  <TrendingUp className={cn("w-4 h-4", (stats.revenueGrowth || 0) < 0 && "rotate-180")} />
+                  <span>
+                    {(stats.revenueGrowth || 0) >= 0 ? `+${stats.revenueGrowth || 0}%` : `${stats.revenueGrowth}%`} so với 7 ngày trước
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-              {formatCurrency(stats.totalRevenue)}
-            </h3>
-            <div className={cn(
-              "flex items-center gap-1.5 text-xs font-semibold pt-1",
-              (stats.revenueGrowth || 0) >= 0 ? "text-emerald-600" : "text-rose-600"
-            )}>
-              <TrendingUp className={cn("w-4 h-4", (stats.revenueGrowth || 0) < 0 && "rotate-180")} />
-              <span>
-                {(stats.revenueGrowth || 0) >= 0 ? `+${stats.revenueGrowth || 0}%` : `${stats.revenueGrowth}%`} so với 7 ngày trước
-              </span>
-            </div>
-          </div>
-        </div>
 
-        {/* Thẻ 2: Đơn hàng */}
-        <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-muted-foreground">Tổng đơn hàng</span>
-            <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold shadow-inner">
-              <ShoppingCart className="w-6 h-6" />
+            {/* Thẻ 2: Đơn hàng */}
+            <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground">Tổng đơn hàng</span>
+                <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold shadow-inner">
+                  <ShoppingCart className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                  {stats.totalOrders} <span className="text-sm font-normal text-muted-foreground">đơn</span>
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 pt-1">
+                  <Clock className="w-4 h-4 animate-pulse" />
+                  <span>{stats.pendingOrders} đơn mới chờ duyệt</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-              {stats.totalOrders} <span className="text-sm font-normal text-muted-foreground">đơn</span>
-            </h3>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 pt-1">
-              <Clock className="w-4 h-4 animate-pulse" />
-              <span>{stats.pendingOrders} đơn mới chờ duyệt</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Thẻ 3: Khách hàng */}
-        <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-muted-foreground">Khách hàng thành viên</span>
-            <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold shadow-inner">
-              <Users className="w-6 h-6" />
+            {/* Thẻ 3: Khách hàng */}
+            <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground">Khách hàng thành viên</span>
+                <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold shadow-inner">
+                  <Users className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                  {stats.totalCustomers} <span className="text-sm font-normal text-muted-foreground">tài khoản</span>
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 pt-1">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Cộng đồng mua sắm tích cực</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-              {stats.totalCustomers} <span className="text-sm font-normal text-muted-foreground">tài khoản</span>
-            </h3>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 pt-1">
-              <Sparkles className="w-4 h-4" />
-              <span>Cộng đồng mua sắm tích cực</span>
+          </>
+        ) : (
+          <>
+            {/* Thẻ Staff 1: Tổng đơn hàng */}
+            <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground">Tổng đơn hàng</span>
+                <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold shadow-inner">
+                  <ShoppingCart className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                  {stats.totalOrders} <span className="text-sm font-normal text-muted-foreground">đơn</span>
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 pt-1">
+                  <span>toàn bộ hệ thống</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Thẻ 4: Sản phẩm */}
+            {/* Thẻ Staff 2: Chờ xử lý */}
+            <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground">Đơn chờ duyệt</span>
+                <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shadow-inner">
+                  <Clock className="w-6 h-6 animate-pulse" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-amber-600 tracking-tight">
+                  {stats.pendingOrders} <span className="text-sm font-normal text-muted-foreground">đơn</span>
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 pt-1">
+                  <span>Cần xác nhận ngay</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Thẻ Staff 3: Đang giao / xử lý */}
+            <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-muted-foreground">Đang xử lý & giao</span>
+                <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold shadow-inner">
+                  <Package className="w-6 h-6" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                  {stats.processingOrders || 0} <span className="text-sm font-normal text-muted-foreground">đơn</span>
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 pt-1">
+                  <span>Đang vận chuyển / chuẩn bị</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Thẻ 4 (Chung cho Admin và Staff): Sản phẩm */}
         <div className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
           <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-orange-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
           <div className="flex items-center justify-between mb-4">
@@ -243,82 +308,84 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
 
       {/* 3. Khu vực Biểu đồ & Đơn hàng mới nhất */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Biểu đồ Recharts */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border/60 shadow-sm space-y-6 flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" /> Xu hướng doanh thu 7 ngày qua
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Đồ thị thể hiện dòng tiền từ các đơn hàng thành công theo thời gian
-              </p>
-            </div>
-            <div className="flex items-center gap-4 text-xs font-semibold text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" /> Doanh thu (₫)
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full h-[320px] pt-4">
-            {stats.chartData && stats.chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={stats.chartData}
-                  margin={{ top: 10, right: 10, left: 20, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#88888820" vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-                  />
-                  <Tooltip
-                    formatter={(value: any) => [formatCurrency(Number(value || 0)), "Doanh thu"]}
-                    labelStyle={{ fontWeight: "bold", color: "#111827" }}
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      borderRadius: "12px",
-                      border: "1px solid #e5e7eb",
-                      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#10b981"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-                Chưa có dữ liệu giao dịch gần đây
+        {/* Biểu đồ Recharts (Chỉ Admin mới xem doanh thu) */}
+        {role === "admin" && (
+          <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border/60 shadow-sm space-y-6 flex flex-col justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" /> Xu hướng doanh thu 7 ngày qua
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Đồ thị thể hiện dòng tiền từ các đơn hàng thành công theo thời gian
+                </p>
               </div>
-            )}
+              <div className="flex items-center gap-4 text-xs font-semibold text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" /> Doanh thu (₫)
+                </span>
+              </div>
+            </div>
+
+            <div className="w-full h-[320px] pt-4">
+              {stats.chartData && stats.chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={stats.chartData}
+                    margin={{ top: 10, right: 10, left: 20, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#88888820" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                    />
+                    <Tooltip
+                      formatter={(value: any) => [formatCurrency(Number(value || 0)), "Doanh thu"]}
+                      labelStyle={{ fontWeight: "bold", color: "#111827" }}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        borderRadius: "12px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                  Chưa có dữ liệu giao dịch gần đây
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Danh sách 5 đơn hàng mới nhất */}
-        <div className="lg:col-span-1 p-6 rounded-2xl bg-card border border-border/60 shadow-sm flex flex-col justify-between space-y-6">
+        <div className={cn("p-6 rounded-2xl bg-card border border-border/60 shadow-sm flex flex-col justify-between space-y-6", role === "admin" ? "lg:col-span-1" : "lg:col-span-3")}>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-extrabold text-foreground">Đơn hàng mới nhất</h2>

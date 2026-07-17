@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
+import { useAuth } from "@/components/providers/auth-provider";
 import { getOrders, updateOrderStatus, getOrderById, deleteOrderAdmin } from "@/lib/services/order.service";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -74,6 +75,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 };
 
 function OrdersContent() {
+  const { role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -579,9 +581,11 @@ function OrdersContent() {
                       <Button variant="ghost" size="icon" onClick={() => handleViewDetails(order.id)} title="Xem chi tiết">
                         <IconEye className="h-4 w-4 text-blue-600" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(order.id)} title="Xóa đơn hàng">
-                        <IconTrash className="h-4 w-4 text-red-600" />
-                      </Button>
+                      {role === "admin" && (
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(order.id)} title="Xóa đơn hàng">
+                          <IconTrash className="h-4 w-4 text-red-600" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -879,33 +883,35 @@ function OrdersContent() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Bạn có chắc chắn muốn xóa đơn hàng này?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hành động này sẽ xóa vĩnh viễn đơn hàng #{deleteId?.split("-")[0].toUpperCase()} cùng tất cả danh sách sản phẩm bên trong khỏi cơ sở dữ liệu và không thể khôi phục.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteOrder}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white font-semibold"
-            >
-              {isDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {role === "admin" && (
+        <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bạn có chắc chắn muốn xóa đơn hàng này?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hành động này sẽ xóa vĩnh viễn đơn hàng #{deleteId?.split("-")[0].toUpperCase()} cùng tất cả danh sách sản phẩm bên trong khỏi cơ sở dữ liệu và không thể khôi phục.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteOrder}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white font-semibold"
+              >
+                {isDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
 
 export default function OrdersPage() {
   return (
-    <RoleGuard allowedRoles={["admin"]}>
+    <RoleGuard allowedRoles={["admin", "staff"]}>
       <Suspense fallback={<div>Loading orders...</div>}>
         <OrdersContent />
       </Suspense>

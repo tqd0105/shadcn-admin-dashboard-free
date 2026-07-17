@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function Page() {
   return (
-    <RoleGuard allowedRoles={["admin"]}>
+    <RoleGuard allowedRoles={["admin", "staff"]}>
       <UsersClient />
     </RoleGuard>
   );

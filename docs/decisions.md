@@ -11,6 +11,21 @@ The storefront Home page previously contained hardcoded mock banner content in `
 3. **Integrated `@dnd-kit` for Admin Reordering**: Implemented `DndContext` and `SortableContext` with vertical list strategy in `/dashboard/promo-banners`. Dragging rows triggers array reordering and sequential updates to `order_index` saved in batch via `updatePromoBannerOrders`.
 4. **Resolved JSX Accessibility Warnings**: Aliased `import { Image as ImageIcon } from "lucide-react"` to prevent conflicts with Next.js image JSX lint rules.
 
+## 2026-07-17: Staff Role Dashboard Inheritance & Operational Authorization Boundary
+
+### Context
+When adapting the LuxeCommerce admin panel for operational staff members (`role === "staff"`), we needed to balance two requirements: (1) Staff must be able to perform daily operations like checking new orders, changing order fulfillment statuses (`processing`, `shipping`, `delivered`, `cancelled`), and viewing products, while (2) Staff must be restricted from permanent database deletions (`deleteOrderAdmin`, `deleteProduct`), sensitive financial revenue charts, and system settings (`settings`, `coupons`, `roles`, `users`).
+
+### Decision
+1. **Inheritance-Based Dashboard View (`components/admin/dashboard-view.tsx`)**: Instead of creating a separate dashboard page for staff, `DashboardView` checks `useAuth().role`. When `role === "staff"`, the financial Recharts area chart (`Xu hướng doanh thu 7 ngày qua`) and revenue metric cards are dynamically replaced with operational KPIs (`pendingOrders`, `processingOrders`, `totalOrders`, `totalProducts`), and the **Đơn hàng mới nhất** feed expands from 1 column (`lg:col-span-1`) to full width (`lg:col-span-3`).
+2. **Boundary Checks on Action Buttons (`orders/page.tsx`, `products/page.tsx`)**: Both pages wrap `RoleGuard allowedRoles={["admin", "staff"]}`. However, permanent deletion buttons (`IconTrash`) and confirmation dialogs (`AlertDialog` calling `deleteOrderAdmin` / `deleteProduct`) as well as product creation (`Add Product`) are strictly wrapped in `role === "admin"` conditionals. Staff retain full permission to inspect details (`IconEye`) and transition order status to `cancelled` via the standard update select box.
+3. **Menu Filtering (`components/app-sidebar.tsx`) & Route Guards (`RoleGuard`)**: `Settings` and `Coupons` pages are protected with `<RoleGuard allowedRoles={["admin"]}>` to block direct URL navigation, while the sidebar menu dynamically filters out admin-only links for staff users.
+
+### Consequences
+- Seamless operational experience where staff share a cohesive layout with administrators without seeing confusing financial or system configuration options.
+- Complete data protection against accidental or unauthorized deletion of order records or inventory items.
+- Maintained 100% linter (`pnpm lint`) and build (`pnpm build`) compliance with zero errors or warnings.
+
 ## 2026-06-25: Admin Orders Responsive Optimization, Safe Delete & Smart Search API
 
 ### Context
@@ -198,6 +213,26 @@ Displaying a hardcoded promo code copy box (`featuredCoupon`) inside the dynamic
 - Hero Banner slides focus 100% on high-impact visual campaigns and driving click-throughs to `link_url`.
 - Cleaner Admin Coupons dashboard focused strictly on coupon logic and conditions.
 - Zero cascading render warnings (`react-hooks/set-state-in-effect`).
+
+## 2026-07-17: Staff Customer Management & Account Locking (`Part 4: Users / Customers`)
+
+### Context
+Staff members (`role === "staff"`) need access to customer management (`/dashboard/users`) to assist customers with account support, creating customer profiles, updating details, or locking/unlocking abusive accounts. However, under strict role isolation and business rules: (1) Staff must never see, modify, or delete internal `Admin` or `Staff` accounts, (2) Staff must not be able to elevate customer roles to Admin or Staff, and (3) Staff must not delete accounts or reset passwords.
+
+### Decision
+1. **Server-Side Role Filtering in `getUsers` (`user.service.ts`)**: Added an optional `roleFilter` parameter to `getUsers`. When `role === "staff"`, `users-client.tsx` passes `roleFilter = "customer"`. This uses `role:roles!inner(id, name)` with `.eq("role.name", "customer")` so pagination (`count: "exact"`) reflects only customer profiles without exposing Admin/Staff records to Staff on either the client or server.
+2. **Account Locking & Instant Sign-Out (`profiles.is_locked`)**: Created database migration `20260717140000_add_is_locked_to_profiles.sql` adding `is_locked BOOLEAN DEFAULT false` to `profiles`. Added an instant lock check inside `fetchProfileAndRole()` (`auth-provider.tsx`) that calls `supabase.auth.signOut()`, clears session states, alerts the user, and redirects to `/login` if `currentProfile.is_locked` is true.
+3. **Staff Role Guard & UI Protection (`/dashboard/users`)**: Updated `page.tsx` with `<RoleGuard allowedRoles={["admin", "staff"]}>`. In `users-client.tsx` and `data-table.tsx`:
+   - Hidden the `Xóa tài khoản` (`onDelete`) action when `role !== "admin"`.
+   - Added `Khóa / Mở khóa tài khoản` action to the row dropdown and an interactive `Switch` inside the user modal.
+   - Restricted the `Vai trò` dropdown options to only `"customer"` and disabled changing the role dropdown when `role === "staff"`.
+   - Added `Customers` (`Khách hàng`) navigation item to `components/app-sidebar.tsx` for Staff.
+
+### Consequences
+- Staff can effectively support and manage customers (`role === "customer"`) inside `/dashboard/users` while remaining completely segregated from internal `Admin` and `Staff` user accounts.
+- Locking an account immediately revokes access and signs out the locked user across all customer portals upon reload/navigation.
+- Zero TypeScript errors and zero linter warnings (`pnpm lint` and `pnpm build` verified).
+
 
 
 

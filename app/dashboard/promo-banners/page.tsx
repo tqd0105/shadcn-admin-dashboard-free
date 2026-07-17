@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   PromoBanner,
   getPromoBannersAdmin,
@@ -94,6 +95,7 @@ interface SortableRowProps {
   handleOpenEdit: (banner: PromoBanner) => void;
   setBannerToDelete: (id: string) => void;
   setIsDeleteDialogOpen: (open: boolean) => void;
+  role: string | null;
 }
 
 function SortableBannerRow({
@@ -102,6 +104,7 @@ function SortableBannerRow({
   handleOpenEdit,
   setBannerToDelete,
   setIsDeleteDialogOpen,
+  role,
 }: SortableRowProps) {
   const {
     attributes,
@@ -167,18 +170,20 @@ function SortableBannerRow({
             <IconEdit className="w-4 h-4" />
             <span className="sr-only">Sửa</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setBannerToDelete(banner.id);
-              setIsDeleteDialogOpen(true);
-            }}
-            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <IconTrash className="w-4 h-4" />
-            <span className="sr-only">Xóa</span>
-          </Button>
+          {role === "admin" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setBannerToDelete(banner.id);
+                setIsDeleteDialogOpen(true);
+              }}
+              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <IconTrash className="w-4 h-4" />
+              <span className="sr-only">Xóa</span>
+            </Button>
+          )}
         </div>
       </TableCell>
     </TableRow>
@@ -186,6 +191,7 @@ function SortableBannerRow({
 }
 
 function PromoBannersPageContent() {
+  const { role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -468,7 +474,7 @@ function PromoBannersPageContent() {
   };
 
   const confirmDelete = async () => {
-    if (!bannerToDelete) return;
+    if (!bannerToDelete || role !== "admin") return;
     setIsSubmitting(true);
     const { error } = await deletePromoBanner(bannerToDelete);
     setIsSubmitting(false);
@@ -614,6 +620,7 @@ function PromoBannersPageContent() {
                         handleOpenEdit={handleOpenEdit}
                         setBannerToDelete={setBannerToDelete}
                         setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                        role={role}
                       />
                     ))}
                   </SortableContext>
@@ -912,30 +919,32 @@ function PromoBannersPageContent() {
       </Dialog>
 
       {/* Delete Alert Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa Banner?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hành động này không thể hoàn tác. Banner sẽ bị xóa vĩnh viễn khỏi hệ thống.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                confirmDelete();
-              }}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Xác nhận xóa
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {role === "admin" && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Xác nhận xóa Banner?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hành động này không thể hoàn tác. Banner sẽ bị xóa vĩnh viễn khỏi hệ thống.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSubmitting}>Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDelete();
+                }}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Xác nhận xóa
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       {/* Quick Create Category Dialog */}
       <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
         <DialogContent className="sm:max-w-[425px]" style={{ zIndex: 10000 }}>
@@ -982,7 +991,7 @@ function PromoBannersPageContent() {
 
 export default function PromoBannersPage() {
   return (
-    <RoleGuard allowedRoles={["admin"]}>
+    <RoleGuard allowedRoles={["admin", "staff"]}>
       <Suspense fallback={
         <div className="flex items-center justify-center h-[60vh]">
           <IconLoader2 className="w-8 h-8 animate-spin text-primary" />

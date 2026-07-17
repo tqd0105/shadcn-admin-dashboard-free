@@ -16,6 +16,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { IconLoader2, IconCheck } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import Link from "next/link";
 
 export default function CheckoutPage() {
@@ -176,11 +177,7 @@ export default function CheckoutPage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LuxeLoading label="Đang chuẩn bị thông tin thanh toán..." />;
   }
 
   if (success) {

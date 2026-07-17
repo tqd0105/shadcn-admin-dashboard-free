@@ -28,7 +28,7 @@ export default function Page({children}: { children: React.ReactNode}) {
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4  md:gap-6 p-4 lg:p-6">
               <AuthGuard>
-                <RoleGuard allowedRoles={["admin"]}>
+                <RoleGuard allowedRoles={["admin", "staff"]}>
                   <AdminRealtimeNotifier />
                   {children}
                 </RoleGuard>

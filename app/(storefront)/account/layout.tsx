@@ -14,6 +14,7 @@ import {
   LogOut 
 } from "lucide-react";
 import { IconLoader2 } from "@tabler/icons-react";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -27,11 +28,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <IconLoader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LuxeLoading label="Đang xác thực tài khoản..." />;
   }
 
   const menuItems = [

@@ -201,4 +201,68 @@
   z-index: 9999;
 }
 
+/* =========================================================
+   LUXE COMMERCE - METALLIC SHIMMER & GLITTER EFFECTS
+========================================================= */
+
+@keyframes shimmer-metallic {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes sparkle-glitter {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35) rotate(180deg);
+    filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.9));
+  }
+}
+
+@keyframes luxe-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-shimmer-metallic {
+  background-size: 200% 200%;
+  animation: shimmer-metallic 4s ease infinite;
+}
+
+.animate-sparkle-glitter {
+  animation: sparkle-glitter 2.5s ease-in-out infinite;
+}
+
+.animate-luxe-float {
+  animation: luxe-float 5s ease-in-out infinite;
+}
+
+
+.animate__animated.animate__flash {
+  --animate-duration: 3s;
+}
+
+@keyframes luxe-bounce {
+  0%, 100% {
+    transform: translateY(-80%); /* Nhảy cao hẳn lên 40% thay vì 25% */
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
 

@@ -5,6 +5,7 @@ export interface DashboardStats {
   revenueGrowth: number;
   totalOrders: number;
   pendingOrders: number;
+  processingOrders: number;
   totalCustomers: number;
   totalProducts: number;
   recentOrders: any[];
@@ -51,6 +52,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     // 2. Tính toán các chỉ số đơn hàng & doanh thu
     const totalOrders = allOrders.length;
     let pendingOrders = 0;
+    let processingOrders = 0;
     let totalRevenue = 0;
     let thisWeekRevenue = 0;
     let lastWeekRevenue = 0;
@@ -59,6 +61,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     allOrders.forEach((order) => {
       if (order.status === "pending") {
         pendingOrders++;
+      }
+      if (order.status === "processing" || order.status === "shipping" || order.status === "paid") {
+        processingOrders++;
       }
       if (isOrderCountedInRevenue(order)) {
         const amount = Number(order.total_amount) || 0;
@@ -125,6 +130,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       revenueGrowth,
       totalOrders,
       pendingOrders,
+      processingOrders,
       totalCustomers,
       totalProducts,
       recentOrders,
@@ -137,6 +143,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       revenueGrowth: 0,
       totalOrders: 0,
       pendingOrders: 0,
+      processingOrders: 0,
       totalCustomers: 0,
       totalProducts: 0,
       recentOrders: [],

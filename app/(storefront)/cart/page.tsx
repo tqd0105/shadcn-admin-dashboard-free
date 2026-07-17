@@ -16,6 +16,7 @@ import {
 import { IconLoader2, IconTrash, IconMinus, IconPlus, IconShoppingCart, IconReceipt2 } from "@tabler/icons-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useAuthModal } from "@/lib/store/use-auth-modal";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import Link from "next/link";
 
 export default function CartPage() {
@@ -105,11 +106,7 @@ export default function CartPage() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LuxeLoading label="Đang đồng bộ Giỏ hàng..." />;
   }
 
 

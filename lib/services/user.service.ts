@@ -2,7 +2,7 @@
 
 import { supabaseAdmin } from "../supabase/admin";
 
-export async function getUsers(search = "", page = 1, pageSize = 10) {
+export async function getUsers(search = "", page = 1, pageSize = 10, roleFilter?: string) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -10,11 +10,15 @@ export async function getUsers(search = "", page = 1, pageSize = 10) {
         .from("profiles")
         .select(`
             *,
-            role:roles (
+            role:roles${roleFilter ? "!inner" : ""} (
                 id,
                 name
             )
         `, { count: "exact" });
+
+    if (roleFilter) {
+        query = query.eq("role.name", roleFilter);
+    }
 
     if (search) {
         query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
@@ -35,7 +39,7 @@ export async function getUsers(search = "", page = 1, pageSize = 10) {
 }
 
 export async function createUser(payload: any) {
-    const { full_name, email, password, role_id } = payload;
+    const { full_name, email, password, role_id, is_locked = false } = payload;
     
     // 1. Create User in Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -55,14 +59,14 @@ export async function createUser(payload: any) {
     // We update it to the correct role_id and full_name.
     const { error: profileError } = await supabaseAdmin
         .from("profiles")
-        .update({ full_name, role_id })
+        .update({ full_name, role_id, is_locked })
         .eq("id", userId);
         
     if (profileError) {
         // Fallback: upsert
         const { error: upsertError } = await supabaseAdmin
             .from("profiles")
-            .upsert({ id: userId, email, full_name, role_id });
+            .upsert({ id: userId, email, full_name, role_id, is_locked });
         if (upsertError) return { error: upsertError };
     }
 
@@ -70,11 +74,16 @@ export async function createUser(payload: any) {
 }
 
 export async function updateUser(id: string, payload: any) {
-    const { full_name, role_id } = payload;
+    const { full_name, role_id, is_locked } = payload;
     
+    const updateData: any = {};
+    if (full_name !== undefined) updateData.full_name = full_name;
+    if (role_id !== undefined) updateData.role_id = role_id;
+    if (is_locked !== undefined) updateData.is_locked = is_locked;
+
     const { data, error } = await supabaseAdmin
         .from("profiles")
-        .update({ full_name, role_id })
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();

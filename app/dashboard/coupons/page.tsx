@@ -28,6 +28,7 @@ import {
   IconTrash,
   IconLoader2,
 } from "@tabler/icons-react";
+import RoleGuard from "@/components/guards/role-guard";
 import { 
   Coupon, 
   getCoupons, 
@@ -36,7 +37,7 @@ import {
   deleteCoupon
 } from "@/lib/services/coupon.service";
 
-export default function CouponsPage() {
+function CouponsContent() {
   const { role } = useAuth();
   const router = useRouter();
 
@@ -61,7 +62,7 @@ export default function CouponsPage() {
   });
 
   useEffect(() => {
-    if (role && role !== "admin") {
+    if (role && role !== "admin" && role !== "staff") {
       router.push("/dashboard");
     }
   }, [role, router]);
@@ -151,6 +152,7 @@ export default function CouponsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (role !== "admin") return;
     if (!confirm("Bạn có chắc chắn muốn xóa mã này?")) return;
     const { error } = await deleteCoupon(id);
     if (error) {
@@ -169,7 +171,7 @@ export default function CouponsPage() {
     }
   };
 
-  if (role !== "admin") return null;
+  if (role !== "admin" && role !== "staff") return null;
 
   return (
     <div className="p-6">
@@ -237,13 +239,15 @@ export default function CouponsPage() {
                     >
                       <IconEdit className="w-4 h-4 text-gray-500" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(coupon.id)}
-                    >
-                      <IconTrash className="w-4 h-4 text-red-500" />
-                    </Button>
+                    {role === "admin" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(coupon.id)}
+                      >
+                        <IconTrash className="w-4 h-4 text-red-500" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -348,5 +352,13 @@ export default function CouponsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function CouponsPage() {
+  return (
+    <RoleGuard allowedRoles={["admin", "staff"]}>
+      <CouponsContent />
+    </RoleGuard>
   );
 }

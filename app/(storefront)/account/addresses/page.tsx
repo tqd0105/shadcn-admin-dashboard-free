@@ -5,6 +5,7 @@ import { getAddresses, addAddress, updateAddress, deleteAddress } from "@/lib/se
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { IconLoader2, IconPlus, IconTrash, IconEdit, IconMapPinFilled } from "@tabler/icons-react";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import {
   Dialog,
   DialogContent,
@@ -127,7 +128,7 @@ export default function AddressesPage() {
     }
   };
 
-  if (authLoading || loading) return <div className="py-10 text-center"><IconLoader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></div>;
+  if (authLoading || loading) return <LuxeLoading label="Đang tải Sổ địa chỉ..." />;
 
   return (
     <div>

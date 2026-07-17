@@ -51,7 +51,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ]
     : [
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        { title: "Orders", url: "/dashboard/orders", icon: IconListDetails },
         { title: "Products", url: "/dashboard/products", icon: IconFolder },
+        { title: "Categories", url: "/dashboard/categories", icon: IconTags },
+        { title: "Coupons", url: "/dashboard/coupons", icon: IconTicket },
+        { title: "Banners", url: "/dashboard/promo-banners", icon: IconPhoto },
+        { title: "Customers", url: "/dashboard/users", icon: IconUsers },
       ];
 
   const data = {

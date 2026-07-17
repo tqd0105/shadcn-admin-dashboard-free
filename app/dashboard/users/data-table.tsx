@@ -36,6 +36,7 @@ export type UserRow = {
   role: { id: string; name: string };
   avatar_url?: string;
   created_at: string;
+  is_locked?: boolean;
 };
 
 interface UsersDataTableProps {
@@ -49,6 +50,8 @@ interface UsersDataTableProps {
   loading?: boolean;
   onEdit: (user: UserRow) => void;
   onDelete: (user: UserRow) => void;
+  onToggleLock?: (user: UserRow, is_locked: boolean) => void;
+  role?: string | null;
 }
 
 export default function UsersDataTable({
@@ -61,7 +64,9 @@ export default function UsersDataTable({
   onSearchChange,
   loading,
   onEdit,
-  onDelete
+  onDelete,
+  onToggleLock,
+  role,
 }: UsersDataTableProps) {
   const columns: ColumnDef<UserRow>[] = [
     {
@@ -98,6 +103,22 @@ export default function UsersDataTable({
       cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString("vi-VN")
     },
     {
+      accessorKey: "is_locked",
+      header: "Trạng thái",
+      cell: ({ row }) => {
+        const locked = row.original.is_locked;
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            locked
+              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+              : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+          }`}>
+            {locked ? "Đã khóa" : "Hoạt động"}
+          </span>
+        );
+      }
+    },
+    {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
@@ -114,7 +135,19 @@ export default function UsersDataTable({
               <DropdownMenuLabel>Hành động</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onEdit(user)}>Chỉnh sửa</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(user)} className="text-red-600">Xóa tài khoản</DropdownMenuItem>
+              {onToggleLock && (
+                <DropdownMenuItem onClick={() => onToggleLock(user, !user.is_locked)}>
+                  {user.is_locked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                </DropdownMenuItem>
+              )}
+              {role === "admin" && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onDelete(user)} className="text-red-600">
+                    Xóa tài khoản
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
