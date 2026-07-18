@@ -131,8 +131,8 @@ export function SiteHeader() {
     };
   }, [user]);
   return (
-    <header className="border-b bg-background sticky top-0 z-50">
-      <div className="flex flex-wrap md:flex-nowrap justify-between items-center w-full px-4 md:px-10 max-w-7xl mx-auto py-3 md:py-0 md:h-20 z-50 gap-y-3 md:gap-y-0">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/10 transition-all duration-300">
+      <div className="flex flex-wrap md:flex-nowrap justify-between items-center w-full px-4 md:px-8 max-w-[1440px] mx-auto py-3 md:py-0 md:h-[80px] z-50 gap-y-3 md:gap-y-0">
         {/* Brand */}
         <div className="flex items-center gap-2 md:gap-4 order-1">
           {/* Mobile Menu */}
@@ -170,7 +170,7 @@ export function SiteHeader() {
                             ) : role === "staff" ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 ">
                                 {/* <Shield className="w-3 h-3" /> */}
-                                 Nhân viên
+                                Nhân viên
                               </span>
                             ) : (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
@@ -230,7 +230,9 @@ export function SiteHeader() {
                           pathname === "/" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
                         )}
                       >
-                        <HomeIcon className="w-4 h-4" /> Trang chủ
+                        <Image src="/icons/home_black.png" alt="Home" width={20} height={20} className="dark:hidden" />
+                        <Image src="/icons/home_white.png" alt="Home" width={20} height={20} className="hidden dark:block" />
+                        Trang chủ
                       </Link>
                     </SheetClose>
                     <SheetClose asChild>
@@ -241,7 +243,9 @@ export function SiteHeader() {
                           pathname?.startsWith("/products") ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
                         )}
                       >
-                        <Package className="w-4 h-4" /> Tất cả sản phẩm
+                        <Image src="/icons/product_black.png" alt="Products" width={20} height={20} className="dark:hidden" />
+                        <Image src="/icons/product_white.png" alt="Products" width={20} height={20} className="hidden dark:block" />
+                        Tất cả sản phẩm
                       </Link>
                     </SheetClose>
                     {/* Cart link — ẩn với Admin và Staff */}
@@ -337,8 +341,8 @@ export function SiteHeader() {
                           href="/dashboard"
                           className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors"
                         >
-                            <Image src="/icons/dashboard5.png" alt="Logo" width={20} height={20} />         
-                           Bảng điều hành (Staff)
+                          <Image src="/icons/dashboard5.png" alt="Logo" width={20} height={20} />
+                          Bảng điều hành (Staff)
                         </Link>
                       </SheetClose>
                     </div>
@@ -384,9 +388,9 @@ export function SiteHeader() {
         </div>
 
         {/* Search (Row 2 on Mobile, Center on Desktop) */}
-        <div ref={searchRef} className="flex w-full md:w-auto order-3 md:order-2 md:flex-1 max-w-2xl md:mx-10 relative">
-          <form action="/products" method="GET" className="w-full relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <div ref={searchRef} className="flex w-full md:w-auto order-3 md:order-2 md:flex-1 md:max-w-[480px] lg:max-w-xl md:mx-8 relative group">
+          <form action="/products" method="GET" className="w-full relative flex items-center">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors group-focus-within:text-primary" />
             <input
               name="search"
               value={searchQuery}
@@ -395,7 +399,7 @@ export function SiteHeader() {
                 setShowSuggestions(true);
               }}
               onFocus={() => setShowSuggestions(true)}
-              className="w-full bg-secondary/50 py-2.5 pl-12 pr-4 rounded-full border-transparent focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-shadow outline-none"
+              className="w-full bg-muted/50 hover:bg-muted/80 focus:bg-background py-2.5 pl-11 pr-4 rounded-full border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 text-sm font-medium transition-all outline-none shadow-sm placeholder:text-muted-foreground/70"
               placeholder="Tìm kiếm sản phẩm cao cấp..."
               type="text"
               required
@@ -444,47 +448,66 @@ export function SiteHeader() {
         </div>
 
         {/* Actions (Right) */}
-        <div className="flex items-center gap-2 flex-shrink-0 order-2 md:order-3">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 order-2 md:order-3">
           {/* Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-6 ">
-            <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/">Trang chủ</Link>
-            <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/products" || pathname?.startsWith("/products/") ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/products">Sản phẩm</Link>
-            {user ? (
-              <Link className={`text-sm font-medium transition-colors duration-200 ${pathname === "/account/wishlist" ? "text-primary border-b-2 border-primary pb-1" : "text-muted-foreground hover:text-primary"}`} href="/account/wishlist">Yêu thích</Link>
-            ) : (
-              <button onClick={() => openModal('login')} className="text-sm font-medium transition-colors duration-200 text-muted-foreground hover:text-primary cursor-pointer">Yêu thích</button>
-            )}
-            <div className="flex items-center ">
-              <ThemeToggle />
-            </div>
+          <nav className="hidden lg:flex items-center gap-1 mr-3 bg-muted/40 p-1 rounded-full border border-border/40">
+            <Link className={cn("flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 group hover:-translate-y-[1px] hover:shadow-sm active:scale-95 active:translate-y-0", pathname === "/" ? "bg-background shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-primary ring-1 ring-border/30" : "text-muted-foreground hover:text-foreground hover:bg-background/60")} href="/">
+              <Image src="/icons/home_black.png" alt="Home" width={18} height={18} className="dark:hidden opacity-90 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3" />
+              <Image src="/icons/home_white.png" alt="Home" width={18} height={18} className="hidden dark:block opacity-90 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3" />
+              Trang chủ
+            </Link>
+            <Link className={cn("flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 group hover:-translate-y-[1px] hover:shadow-sm active:scale-95 active:translate-y-0", pathname === "/products" || pathname?.startsWith("/products/") ? "bg-background shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-primary ring-1 ring-border/30" : "text-muted-foreground hover:text-foreground hover:bg-background/60")} href="/products">
+              <Image src="/icons/product_black.png" alt="Products" width={18} height={18} className="dark:hidden opacity-90 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3" />
+              <Image src="/icons/product_white.png" alt="Products" width={18} height={18} className="hidden dark:block opacity-90 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3" />
+              Sản phẩm
+            </Link>
           </nav>
 
-          {/* 1. Khi ĐÃ đăng nhập: Thông báo nằm ở trái ngoài cùng của cụm icon */}
-          {user && <NotificationDropdown userId={user.id} />}
+          <div className="flex items-center gap-1 md:gap-1.5 lg:border-l-2 lg:border-border/100 lg:pl-4 h-4">
+            <div className="mr-1">
+              <ThemeToggle />
+            </div>
 
-          {/* 2. Icon Giỏ hàng — ẩn với Admin và Staff */}
-          {role !== "admin" && role !== "staff" && (
-            <Link
-              href="/cart"
-              className="relative inline-block"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "text-muted-foreground hover:text-primary relative transition-all duration-300",
-                  isBumping ? "scale-125 text-primary" : "scale-100"
-                )}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background shadow-sm">
-                    {cartCount}
-                  </span>
-                )}
+            {/* Yêu thích (Icon) */}
+            {user ? (
+              <Link href="/account/wishlist" className="relative inline-block">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300 rounded-full h-9 w-9">
+                  <Image src="/icons/love3.png" alt="Wishlist" width={20} height={20} />
+                </Button>
+              </Link>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => openModal('login')} className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300 rounded-full h-9 w-9">
+                <Image src="/icons/love3.png" alt="Wishlist" width={20} height={20} />
               </Button>
-            </Link>
-          )}
+            )}
+
+            {/* 1. Thông báo (Tạm ẩn theo yêu cầu của User) */}
+            {/* {user && <NotificationDropdown userId={user.id} />} */}
+
+            {/* 2. Icon Giỏ hàng — ẩn với Admin và Staff */}
+            {role !== "admin" && role !== "staff" && (
+              <Link
+                href="/cart"
+                className="relative inline-block"
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full h-9 w-9 relative transition-all duration-300",
+                    isBumping ? "scale-125 text-primary" : "scale-100"
+                  )}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm ring-2 ring-background">
+                      {cartCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
+          </div>
 
           {/* 3. Phải ngoài cùng: Avatar (nếu đăng nhập) hoặc Nút Đăng nhập (nếu chưa) */}
           {user ? (
@@ -513,13 +536,12 @@ export function SiteHeader() {
                         {profile?.full_name || user.email?.split('@')[0]}
                       </p>
                       {role && (
-                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded-md text-[10px] font-bold tracking-tight shrink-0 border ${
-                          role === "admin"
+                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded-md text-[10px] font-bold tracking-tight shrink-0 border ${role === "admin"
                             ? " text-red-600 dark:text-red-400 border-red-300 dark:border-red-800"
                             : role === "staff"
-                            ? " text-blue-600 dark:text-blue-400 border-blue-500 dark:border-blue-800"
-                            : " text-emerald-600 dark:text-emerald-400 border-emerald-500 dark:border-emerald-800"
-                        }`}>
+                              ? " text-blue-600 dark:text-blue-400 border-blue-500 dark:border-blue-800"
+                              : " text-emerald-600 dark:text-emerald-400 border-emerald-500 dark:border-emerald-800"
+                          }`}>
                           {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Customer"}
                         </span>
                       )}

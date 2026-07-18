@@ -53,7 +53,7 @@ export function HeroBannerClient({ initialBanners }: HeroBannerClientProps) {
               }`}
               src={banner.image_url}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent" />
           </div>
         ))}
       </div>

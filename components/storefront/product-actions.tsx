@@ -185,13 +185,13 @@ export function ProductActions({ productId, productName, productImage, productSl
       {/* Price & Detailed Discount Display - Shimmering Luxury VIP Banner */}
       <div className="relative group rounded-3xl p-[2px] bg-gradient-to-r from-red-500 via-amber-400 to-rose-600 shadow-[0_10px_35px_rgba(239,68,68,0.25)] dark:shadow-[0_10px_35px_rgba(239,68,68,0.35)] transition-all duration-500 hover:shadow-[0_15px_45px_rgba(245,158,11,0.35)] overflow-hidden">
         {/* Shimmer light sweep beam */}
-        <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 dark:via-white/15 to-transparent animate-shimmer-sweep pointer-events-none z-20" />
+        <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/100 dark:via-white/50 to-transparent animate-shimmer-sweep pointer-events-none z-20" />
         
         {/* Ambient glowing background orbs */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-amber-400/30 via-red-500/20 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-700 animate-pulse" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-amber-400/30 via-red-500/20 to-transparent  rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-700 animate-pulse" />
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-rose-500/20 via-orange-400/20 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
 
-        <div className="relative z-10 rounded-[22px] bg-white p-4 sm:p-6 backdrop-blur-xl space-y-4 overflow-hidden border border-white/60 dark:border-white/10">
+        <div className="relative z-10 rounded-[22px] bg-white dark:bg-black p-4 sm:p-6 backdrop-blur-xl space-y-4 overflow-hidden border border-white/60 dark:border-white/10">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-3">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 ">
               <span className="text-3xl sm:text-4xl xl:text-5xl font-black bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 dark:from-red-400 dark:via-rose-400 dark:to-amber-400 bg-clip-text text-transparent tracking-tight leading-none drop-shadow-sm">

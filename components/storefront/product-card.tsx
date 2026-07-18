@@ -33,7 +33,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group border rounded-xl overflow-hidden bg-card transition-all duration-300 hover:shadow-lg relative flex flex-col h-full">
       {hasDiscount && (
-        <Badge className="absolute top-5 left-4 z-10 bg-red-600 hover:bg-red-700 pointer-events-none">
+        <Badge className="absolute top-6 left-6 z-10 bg-red-600 hover:bg-red-700 text-black dark:text-white pointer-events-none">
           -{product.discount_percent}%
         </Badge>
       )}
