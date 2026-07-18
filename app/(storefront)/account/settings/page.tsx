@@ -131,114 +131,138 @@ export default function AccountSettingsPage() {
   };
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Cài đặt tài khoản</h1>
-
-      <div className="mb-8 flex flex-col sm:flex-row items-center gap-6 p-6 border rounded-xl bg-card">
-        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-          <Avatar className="h-24 w-24  shadow-md group-hover:opacity-80 transition-opacity">
-            <AvatarImage src={avatarUrl || ""} />
-            <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
-              {user?.email?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-            {uploadingAvatar ? (
-              <IconLoader2 className="w-6 h-6 text-white animate-spin" />
-            ) : (
-              <IconCamera className="w-8 h-8 text-white" />
-            )}
-          </div>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/png, image/jpeg, image/webp" 
-            onChange={handleAvatarChange}
-            disabled={uploadingAvatar}
-          />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Ảnh đại diện</h3>
-          <p className="text-sm text-muted-foreground mt-1 mb-3">
-            Hỗ trợ PNG, JPG, WEBP. Kích thước tối đa 5MB.
-          </p>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
-            {uploadingAvatar ? "Đang tải lên..." : "Chọn ảnh mới"}
-          </Button>
-        </div>
+    <div className="max-w-2xl mx-auto space-y-8 pb-10 mt-2">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Cài đặt tài khoản</h1>
+        <p className="text-muted-foreground mt-2 text-sm sm:text-base">Quản lý thông tin cá nhân và bảo mật tài khoản của bạn.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold border-b pb-2">Thông tin cá nhân</h2>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email đăng nhập</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={user?.email || ""} 
-              disabled 
-              className="bg-muted text-muted-foreground"
-            />
-            <p className="text-xs text-muted-foreground">Không thể thay đổi email lúc này.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="full_name">Họ và tên</Label>
-              <Input 
-                id="full_name" 
-                name="full_name"
-                value={formData.full_name} 
-                onChange={handleChange}
-                placeholder="Nhập họ và tên..."
-              />
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        {/* Avatar Section */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 sm:p-8 bg-card/60 backdrop-blur-xl rounded-[24px] border border-border/50 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 to-transparent" />
+          <div className="relative group cursor-pointer shrink-0" onClick={() => fileInputRef.current?.click()}>
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/30 to-primary/0 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <Avatar className="h-28 w-28 shadow-xl ring-4 ring-background relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
+              <AvatarImage src={avatarUrl || ""} className="object-cover" />
+              <AvatarFallback className="bg-primary/5 text-primary text-3xl font-bold">
+                {user?.email?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
+              {uploadingAvatar ? (
+                <IconLoader2 className="size-8 text-white animate-spin" />
+              ) : (
+                <IconCamera className="size-8 text-white shadow-sm" />
+              )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Số điện thoại</Label>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/png, image/jpeg, image/webp" 
+              onChange={handleAvatarChange}
+              disabled={uploadingAvatar}
+            />
+          </div>
+          <div className="text-center sm:text-left pt-2">
+            <h3 className="text-lg font-bold">Ảnh đại diện</h3>
+            <p className="text-[13px] text-muted-foreground mt-1.5 mb-4 max-w-sm leading-relaxed mx-auto sm:mx-0">
+              Dùng định dạng PNG, JPG hoặc WEBP. Kích thước tối đa là 5MB.
+            </p>
+            <Button type="button" variant="outline" className="rounded-xl border-border/60 shadow-sm hover:bg-muted/50" onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
+              {uploadingAvatar ? "Đang tải lên..." : "Chọn ảnh mới"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Personal Info Section */}
+        <div className="p-6 sm:p-8 bg-card/60 backdrop-blur-xl rounded-[24px] border border-border/50 shadow-sm space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold">Thông tin cá nhân</h2>
+            <p className="text-sm text-muted-foreground">Cập nhật thông tin liên hệ của bạn.</p>
+          </div>
+          
+          <div className="space-y-5">
+            <div className="space-y-2.5">
+              <Label htmlFor="email" className="text-[13px] font-semibold text-foreground/80">Email đăng nhập</Label>
               <Input 
-                id="phone" 
-                name="phone"
-                type="tel"
-                value={formData.phone} 
-                onChange={handleChange}
-                placeholder="Ví dụ: 0912345678"
+                id="email" 
+                type="email" 
+                value={user?.email || ""} 
+                disabled 
+                className="h-11 bg-muted/50 border-transparent text-muted-foreground opacity-70 cursor-not-allowed rounded-xl font-medium"
               />
+              <p className="text-[11px] font-medium text-muted-foreground/70">Tài khoản email được liên kết không thể thay đổi lúc này.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2.5">
+                <Label htmlFor="full_name" className="text-[13px] font-semibold text-foreground/80">Họ và tên</Label>
+                <Input 
+                  id="full_name" 
+                  name="full_name"
+                  value={formData.full_name} 
+                  onChange={handleChange}
+                  placeholder="Nhập họ và tên..."
+                  className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all"
+                />
+              </div>
+              <div className="space-y-2.5">
+                <Label htmlFor="phone" className="text-[13px] font-semibold text-foreground/80">Số điện thoại</Label>
+                <Input 
+                  id="phone" 
+                  name="phone"
+                  type="tel"
+                  value={formData.phone} 
+                  onChange={handleChange}
+                  placeholder="Ví dụ: 0912345678"
+                  className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4 pt-4">
-          <h2 className="text-lg font-semibold border-b pb-2">Bảo mật & Đăng nhập</h2>
+        {/* Security Section */}
+        <div className="p-6 sm:p-8 bg-card/60 backdrop-blur-xl rounded-[24px] border border-border/50 shadow-sm space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold">Bảo mật & Đăng nhập</h2>
+            <p className="text-sm text-muted-foreground">Quản lý cách bạn đăng nhập vào hệ thống.</p>
+          </div>
           
           {isOAuth ? (
-            <div className="p-5 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-3.5">
-                <div className="p-3 rounded-xl   bg-white dark:bg-gray-900 border shadow-2xs shrink-0 flex items-center justify-center">
-                  <Image src="/icons/google.png" alt="Google" width={40} height={40} />
+            <div className="relative overflow-hidden rounded-2xl border border-green-200/50 dark:border-green-900/30 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20 p-5 sm:p-6 shadow-sm">
+              <div className="absolute -top-4 -right-4 p-4 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+                <Image src="/icons/google.png" alt="Google Background" width={120} height={120} />
+              </div>
+              <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 z-10">
+                <div className="p-3.5 rounded-[18px] bg-white dark:bg-gray-900 border border-border/50 shadow-sm shrink-0 flex items-center justify-center">
+                  <Image src="/icons/google.png" alt="Google" width={32} height={32} />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-sm text-foreground">Đăng nhập qua tài khoản Google</h4>
-                    <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-green-600 dark:bg-green-900/60 text-white dark:text-green-300 border border-green-200 dark:border-green-800">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
+                    <h4 className="font-bold text-[15px] text-foreground">Xác thực bằng Google</h4>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
                       Đã liên kết
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Tài khoản của bạn được bảo mật và quản lý xác thực trực tiếp bởi <strong>Google</strong>. Bạn không cần và không áp dụng việc đổi mật khẩu tại đây.
+                  <p className="text-[13px] text-muted-foreground leading-relaxed max-w-lg">
+                    Tài khoản của bạn được quản lý bảo mật trực tiếp bởi <strong>Google</strong>. 
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <>
-              <p className="text-sm text-muted-foreground mb-4">Bỏ trống nếu bạn không muốn đổi mật khẩu.</p>
+            <div className="space-y-5">
+              <div className="bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 px-4 py-3 rounded-xl text-[13px] border border-blue-200/50 dark:border-blue-800/50">
+                Bỏ trống các trường bên dưới nếu bạn không muốn đổi mật khẩu.
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Mật khẩu mới</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-2.5">
+                  <Label htmlFor="password" className="text-[13px] font-semibold text-foreground/80">Mật khẩu mới</Label>
                   <div className="relative">
                     <Input 
                       id="password" 
@@ -246,22 +270,22 @@ export default function AccountSettingsPage() {
                       type={showPassword ? "text" : "password"}
                       value={formData.password} 
                       onChange={handleChange}
-                      placeholder="Ít nhất 8 ký tự, 1 chữ hoa, 1 số"
-                      className="pr-10"
+                      placeholder="Ít nhất 8 ký tự, 1 hoa, 1 số"
+                      className="h-11 pr-10 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all"
                     />
                     <Button 
                       type="button" 
                       variant="ghost" 
                       size="icon" 
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 size-9 hover:bg-muted text-muted-foreground rounded-lg"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </Button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm_password">Xác nhận mật khẩu</Label>
+                <div className="space-y-2.5">
+                  <Label htmlFor="confirm_password" className="text-[13px] font-semibold text-foreground/80">Xác nhận mật khẩu mới</Label>
                   <div className="relative">
                     <Input 
                       id="confirm_password" 
@@ -270,28 +294,33 @@ export default function AccountSettingsPage() {
                       value={formData.confirm_password} 
                       onChange={handleChange}
                       placeholder="Nhập lại mật khẩu mới"
-                      className="pr-10"
+                      className="h-11 pr-10 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all"
                     />
                     <Button 
                       type="button" 
                       variant="ghost" 
                       size="icon" 
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 size-9 hover:bg-muted text-muted-foreground rounded-lg"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </Button>
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
 
-        <div className=" flex justify-end">
-          <Button type="submit" disabled={loading} size="lg">
-            {loading ? <IconLoader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Lưu thay đổi
+        <div className="flex justify-end pt-4">
+          <Button 
+            type="submit" 
+            disabled={loading} 
+            size="lg"
+            className="rounded-full px-8 h-12 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all font-bold text-[14px]"
+          >
+            {loading ? <IconLoader2 className="size-5 mr-2 animate-spin" /> : null}
+            Lưu Thay Đổi
           </Button>
         </div>
       </form>

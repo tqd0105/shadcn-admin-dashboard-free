@@ -2,7 +2,16 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
-import { IconX, IconChevronDown } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Category {
   id: string;
@@ -20,7 +29,7 @@ export function ProductsSort({ categories }: ProductsSortProps) {
 
   const currentCategories = searchParams.getAll("categories");
   const currentBrands = searchParams.getAll("brands");
-  const currentSort = searchParams.get("sort") || "";
+  const currentSort = searchParams.get("sort") || "default";
 
   const createQueryString = useCallback(
     (name: string, value: string, action: "add" | "remove" | "set") => {
@@ -53,8 +62,6 @@ export function ProductsSort({ categories }: ProductsSortProps) {
   };
 
   const clearAll = () => {
-    // Only keep sort and page if needed, but usually clear all means clear all filters.
-    // Let's clear categories, brands, minPrice, maxPrice
     const params = new URLSearchParams(searchParams.toString());
     params.delete("categories");
     params.delete("brands");
@@ -64,73 +71,90 @@ export function ProductsSort({ categories }: ProductsSortProps) {
     router.push(pathname + "?" + params.toString());
   };
 
+  const handleSortChange = (val: string) => {
+    if (val === "default") {
+      router.push(pathname + "?" + createQueryString("sort", "", "set"));
+    } else {
+      router.push(pathname + "?" + createQueryString("sort", val, "set"));
+    }
+  };
+
   const hasFilters = currentCategories.length > 0 || currentBrands.length > 0;
 
   return (
-    <div className="flex justify-between items-center bg-card border rounded-lg p-3 shadow-sm">
-      <div className="hidden sm:flex flex-wrap gap-2 items-center">
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center bg-card border rounded-2xl p-4 shadow-sm gap-4">
+      {/* Active Filters */}
+      <div className="flex flex-wrap gap-2 items-center">
+        {hasFilters && <span className="text-sm text-muted-foreground mr-1 hidden sm:inline-block">Đang lọc:</span>}
+        
         {currentCategories.map((catId) => {
           const catName = categories.find((c) => c.id === catId)?.name || catId;
           return (
-            <span
+            <Badge
               key={`cat-${catId}`}
-              className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+              variant="secondary"
+              className="pl-3 pr-1.5 py-1 text-[13px] font-medium flex items-center gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-0"
             >
               {catName}
               <button
                 onClick={() => removeCategory(catId)}
-                className="hover:text-primary/70 focus:outline-none"
+                className="hover:bg-primary/20 p-0.5 rounded-full transition-colors focus:outline-none"
               >
-                <IconX className="h-3 w-3" />
+                <IconX className="h-3.5 w-3.5" />
               </button>
-            </span>
+            </Badge>
           );
         })}
+
         {currentBrands.map((brand) => (
-          <span
+          <Badge
             key={`brand-${brand}`}
-            className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            variant="secondary"
+            className="pl-3 pr-1.5 py-1 text-[13px] font-medium flex items-center gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-0"
           >
             {brand}
             <button
               onClick={() => removeBrand(brand)}
-              className="hover:text-primary/70 focus:outline-none"
+              className="hover:bg-primary/20 p-0.5 rounded-full transition-colors focus:outline-none"
             >
-              <IconX className="h-3 w-3" />
+              <IconX className="h-3.5 w-3.5" />
             </button>
-          </span>
+          </Badge>
         ))}
+
         {hasFilters && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clearAll}
-            className="text-muted-foreground hover:text-primary text-xs underline ml-2"
+            className="text-xs h-7 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 ml-1 rounded-full px-3"
           >
-            Clear All
-          </button>
+            Xóa tất cả
+          </Button>
         )}
       </div>
 
-      <div className="flex items-center gap-3 ml-auto">
-        <label htmlFor="sort" className="text-sm font-medium text-muted-foreground hidden sm:block">
-          Sắp xếp:
+      {/* Sorting Dropdown */}
+      <div className="flex items-center gap-3 ml-auto w-full sm:w-auto">
+        <label htmlFor="sort" className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+          Sắp xếp theo:
         </label>
-        <div className="relative">
-          <select
-            id="sort"
-            value={currentSort}
-            onChange={(e) =>
-              router.push(pathname + "?" + createQueryString("sort", e.target.value, "set"))
-            }
-            className="appearance-none bg-background border text-foreground text-sm rounded-md pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer min-w-[160px]"
-          >
-            <option value="">Mặc định</option>
-            <option value="price_asc">Giá: Từ thấp đến cao</option>
-            <option value="price_desc">Giá: Từ cao đến thấp</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
-            <IconChevronDown className="h-4 w-4" />
-          </div>
-        </div>
+        <Select value={currentSort} onValueChange={handleSortChange}>
+          <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-full bg-background border-border/50 shadow-sm focus:ring-primary/20">
+            <SelectValue placeholder="Mặc định" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl border-border/50 shadow-lg">
+            <SelectItem value="default" className="rounded-lg cursor-pointer">
+              Mặc định
+            </SelectItem>
+            <SelectItem value="price_asc" className="rounded-lg cursor-pointer">
+              Giá: Từ thấp đến cao
+            </SelectItem>
+            <SelectItem value="price_desc" className="rounded-lg cursor-pointer">
+              Giá: Từ cao đến thấp
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

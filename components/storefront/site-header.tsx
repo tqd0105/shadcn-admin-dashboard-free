@@ -143,38 +143,35 @@ export function SiteHeader() {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 flex flex-col h-full bg-background overflow-hidden border-r">
+              <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 flex flex-col h-full bg-background/60 backdrop-blur-2xl overflow-hidden border-r border-border/50 shadow-2xl">
                 <SheetTitle className="sr-only">Menu Điều Hướng</SheetTitle>
                 {/* 1. Header Khu Vực Tài Khoản */}
-                <div className="p-6 pb-5 bg-muted/30 border-b">
+                <div className="p-6 pb-5 bg-card/40 border-b border-border/50 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
+                  <div className="relative z-10">
                   {user ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
-                          <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
-                          <AvatarFallback className="bg-primary text-primary-foreground font-bold">
-                            {user.email?.slice(0, 2).toUpperCase()}
+                        <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-md ring-4 ring-primary/5">
+                          <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} className="object-cover" />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/50 text-primary-foreground font-bold text-lg">
+                            {user.email?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-base truncate text-foreground">
+                          <h4 className="font-bold text-[17px] truncate text-foreground">
                             {profile?.full_name || user.user_metadata?.full_name || "Khách hàng"}
                           </h4>
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                          <div className="mt-1 flex items-center gap-1.5">
-                            {role === "admin" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/15 text-destructive">
-                                {/* <Shield className="w-3 h-3" />  */}
-                                Quản trị viên
-                              </span>
-                            ) : role === "staff" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 ">
-                                {/* <Shield className="w-3 h-3" /> */}
-                                Nhân viên
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
-                                Thành viên
+                          <p className="text-[13px] text-muted-foreground truncate">{user.email}</p>
+                          <div className="mt-1.5 flex items-center gap-1.5">
+                            {role && (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-sm ${role === "admin"
+                                  ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                                  : role === "staff"
+                                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                }`}>
+                                {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Thành viên"}
                               </span>
                             )}
                           </div>
@@ -186,9 +183,9 @@ export function SiteHeader() {
                         <SheetClose asChild>
                           <Link
                             href="/dashboard"
-                            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold text-sm shadow-md shadow-red-500/20 hover:opacity-95 transition-opacity"
+                            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-[14px] bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold text-[14.5px] shadow-md shadow-red-500/20 hover:opacity-90 hover:scale-[1.02] transition-all duration-300"
                           >
-                            <Image src="/icons/dashboard3.png" alt="Logo" width={20} height={20} /> Bảng Quản Trị (Admin)
+                            <Image src="/icons/dashboard3.png" alt="Logo" width={22} height={22} className="object-contain" /> Bảng Quản Trị (Admin)
                           </Link>
                         </SheetClose>
                       )}
@@ -213,6 +210,7 @@ export function SiteHeader() {
                       </SheetClose>
                     </div>
                   )}
+                  </div>
                 </div>
 
                 {/* 2. Menu Điều Hướng Cuộn */}
@@ -226,12 +224,12 @@ export function SiteHeader() {
                       <Link
                         href="/"
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
-                          pathname === "/" ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                          "flex items-center gap-3 px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] transition-all duration-200",
+                          pathname === "/" ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20" : "text-foreground/70 hover:bg-muted/50 hover:text-foreground"
                         )}
                       >
-                        <Image src="/icons/home_black.png" alt="Home" width={20} height={20} className="dark:hidden" />
-                        <Image src="/icons/home_white.png" alt="Home" width={20} height={20} className="hidden dark:block" />
+                        <Image src="/icons/home_black.png" alt="Home" width={22} height={22} className="dark:hidden" />
+                        <Image src="/icons/home_white.png" alt="Home" width={22} height={22} className="hidden dark:block" />
                         Trang chủ
                       </Link>
                     </SheetClose>
@@ -239,17 +237,17 @@ export function SiteHeader() {
                       <Link
                         href="/products"
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-colors",
-                          pathname?.startsWith("/products") ? "bg-primary/10 text-primary font-bold" : "text-foreground/80 hover:bg-muted"
+                          "flex items-center gap-3 px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] transition-all duration-200",
+                          pathname?.startsWith("/products") ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20" : "text-foreground/70 hover:bg-muted/50 hover:text-foreground"
                         )}
                       >
-                        <Image src="/icons/product_black.png" alt="Products" width={20} height={20} className="dark:hidden" />
-                        <Image src="/icons/product_white.png" alt="Products" width={20} height={20} className="hidden dark:block" />
+                        <Image src="/icons/product_black.png" alt="Products" width={22} height={22} className="dark:hidden" />
+                        <Image src="/icons/product_white.png" alt="Products" width={22} height={22} className="hidden dark:block" />
                         Tất cả sản phẩm
                       </Link>
                     </SheetClose>
                     {/* Cart link — ẩn với Admin và Staff */}
-                    {role !== "admin" && role !== "staff" && (
+                    {/* {role !== "admin" && role !== "staff" && (
                       <SheetClose asChild>
                         <Link
                           href="/cart"
@@ -268,7 +266,7 @@ export function SiteHeader() {
                           )}
                         </Link>
                       </SheetClose>
-                    )}
+                    )} */}
                     {/* <SheetClose asChild>
                       <Link
                         href="/account/wishlist"
@@ -284,20 +282,20 @@ export function SiteHeader() {
 
                   {/* Cá Nhân (Chỉ hiện khi đăng nhập — Customer) */}
                   {user && role !== "admin" && role !== "staff" && (
-                    <div className="space-y-1 pt-2 border-t">
-                      <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
+                    <div className="space-y-1 pt-2 border-t border-border/40">
+                      <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2 mt-2">
                         Tài khoản của tôi
                       </p>
                       <SheetClose asChild>
                         <Link
                           href="/cart"
-                          className="flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                          className="flex items-center justify-between px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] text-foreground/70 hover:bg-muted/50 hover:text-foreground transition-all duration-200"
                         >
                           <span className="flex items-center gap-3">
-                            <ShoppingCart className="w-4 h-4 text-blue-500" /> Giỏ hàng
+                            <ShoppingCart className="w-5 h-5 text-blue-500" /> Giỏ hàng
                           </span>
                           {cartCount > 0 && (
-                            <span className="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                            <span className="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                               {cartCount}
                             </span>
                           )}
@@ -306,25 +304,25 @@ export function SiteHeader() {
                       <SheetClose asChild>
                         <Link
                           href="/account/orders"
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                          className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] text-foreground/70 hover:bg-muted/50 hover:text-foreground transition-all duration-200"
                         >
-                          <BoxIcon className="w-4 h-4 text-amber-500" /> Lịch sử đơn hàng
+                          <BoxIcon className="w-5 h-5 text-amber-500" /> Lịch sử đơn hàng
                         </Link>
                       </SheetClose>
                       <SheetClose asChild>
                         <Link
                           href="/account/addresses"
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                          className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] text-foreground/70 hover:bg-muted/50 hover:text-foreground transition-all duration-200"
                         >
-                          <MapPin className="w-4 h-4 text-emerald-500" /> Sổ địa chỉ nhận hàng
+                          <MapPin className="w-5 h-5 text-emerald-500" /> Sổ địa chỉ nhận hàng
                         </Link>
                       </SheetClose>
                       <SheetClose asChild>
                         <Link
                           href="/account/settings"
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-foreground/80 hover:bg-muted transition-colors"
+                          className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] text-foreground/70 hover:bg-muted/50 hover:text-foreground transition-all duration-200"
                         >
-                          <Settings className="w-4 h-4 text-gray-500" /> Cài đặt tài khoản
+                          <Settings className="w-5 h-5 text-gray-500" /> Cài đặt tài khoản
                         </Link>
                       </SheetClose>
                     </div>
@@ -332,16 +330,16 @@ export function SiteHeader() {
 
                   {/* Staff: shortcut vào Staff Dashboard */}
                   {user && role === "staff" && (
-                    <div className="space-y-1 pt-2 border-t">
-                      <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
+                    <div className="space-y-1 pt-2 border-t border-border/40">
+                      <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2 mt-2">
                         Khu vực nội bộ
                       </p>
                       <SheetClose asChild>
                         <Link
                           href="/dashboard"
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors"
+                          className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] font-bold text-[14.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 shadow-sm transition-all duration-200"
                         >
-                          <Image src="/icons/dashboard5.png" alt="Logo" width={20} height={20} />
+                          <Image src="/icons/dashboard5.png" alt="Logo" width={22} height={22} />
                           Bảng điều hành (Staff)
                         </Link>
                       </SheetClose>
@@ -350,19 +348,19 @@ export function SiteHeader() {
                 </div>
 
                 {/* 3. Chân Drawer */}
-                <div className="p-4 border-t bg-muted/20 space-y-3 mt-auto">
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <span className="text-sm font-semibold text-foreground/80">Giao diện (Sáng/Tối)</span>
+                <div className="p-4 border-t border-border/50 bg-card/40 space-y-3 mt-auto">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-[13.5px] font-bold text-foreground/80">Giao diện (Sáng/Tối)</span>
                     <ThemeToggle />
                   </div>
                   {user && (
                     <SheetClose asChild>
                       <Button
                         variant="ghost"
-                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-bold text-sm h-11 px-4 rounded-xl"
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-500/10 dark:hover:bg-red-900/30 font-bold text-[14px] h-12 px-4 rounded-[14px] transition-all duration-200"
                         onClick={logout}
                       >
-                        <LogOut className="w-4 h-4 mr-3" /> Đăng xuất tài khoản
+                        <LogOut className="w-5 h-5 mr-3" /> Đăng xuất tài khoản
                       </Button>
                     </SheetClose>
                   )}
@@ -464,22 +462,24 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-1 md:gap-1.5 lg:border-l-2 lg:border-border/100 lg:pl-4 h-4">
-            <div className="mr-1">
+            <div className="mr-1 hidden md:block">
               <ThemeToggle />
             </div>
 
             {/* Yêu thích (Icon) */}
-            {user ? (
-              <Link href="/account/wishlist" className="relative inline-block">
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300 rounded-full h-9 w-9">
+            <div className="hidden md:block">
+              {user ? (
+                <Link href="/account/wishlist" className="relative inline-block">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300 rounded-full h-9 w-9">
+                    <Image src="/icons/love3.png" alt="Wishlist" width={20} height={20} />
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="ghost" size="icon" onClick={() => openModal('login')} className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300 rounded-full h-9 w-9">
                   <Image src="/icons/love3.png" alt="Wishlist" width={20} height={20} />
                 </Button>
-              </Link>
-            ) : (
-              <Button variant="ghost" size="icon" onClick={() => openModal('login')} className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300 rounded-full h-9 w-9">
-                <Image src="/icons/love3.png" alt="Wishlist" width={20} height={20} />
-              </Button>
-            )}
+              )}
+            </div>
 
             {/* 1. Thông báo (Tạm ẩn theo yêu cầu của User) */}
             {/* {user && <NotificationDropdown userId={user.id} />} */}
@@ -500,7 +500,7 @@ export function SiteHeader() {
                 >
                   <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm ring-2 ring-background">
+                    <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-red-600 text-primary-foreground dark:text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm ring-2 ring-background">
                       {cartCount}
                     </span>
                   )}
@@ -513,81 +513,81 @@ export function SiteHeader() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="inline-flex rounded-full border-2 border-transparent hover:border-primary/20 transition-all ml-1.5 md:ml-2 h-9 w-9 p-0 shrink-0">
+                <Button variant="ghost" size="icon" className="inline-flex rounded-full border-2 border-transparent hover:border-primary/30 transition-all ml-1.5 md:ml-2 h-10 w-10 p-0 shrink-0 shadow-sm hover:shadow-md">
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/50 text-primary-foreground font-bold text-xs">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 p-2 rounded-xl shadow-xl border-border/50 z-[100]">
-                <DropdownMenuLabel className="font-normal p-2.5 bg-muted/40 rounded-xl mb-2 flex items-center gap-3 border border-border/40">
-                  <Avatar className="h-10 w-10 shrink-0 ring-2 ring-primary/20">
-                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold">
+              <DropdownMenuContent align="end" className="w-64 p-2.5 rounded-[24px] shadow-2xl border border-border/50 bg-card/80 backdrop-blur-xl z-[100]">
+                <DropdownMenuLabel className="font-normal p-3 bg-gradient-to-br from-primary/5 to-transparent rounded-[16px] mb-2 flex items-center gap-3 border border-primary/10 shadow-inner">
+                  <Avatar className="h-11 w-11 shrink-0 ring-2 ring-primary/20 shadow-sm">
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/50 text-primary-foreground font-bold">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col space-y-0.5 overflow-hidden flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1.5">
-                      <p className="text-sm font-semibold truncate text-foreground">
+                      <p className="text-[14.5px] font-bold truncate text-foreground">
                         {profile?.full_name || user.email?.split('@')[0]}
                       </p>
                       {role && (
-                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded-md text-[10px] font-bold tracking-tight shrink-0 border ${role === "admin"
-                            ? " text-red-600 dark:text-red-400 border-red-300 dark:border-red-800"
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide shrink-0 shadow-sm ${role === "admin"
+                            ? "bg-red-500/10 text-red-600 dark:text-red-400"
                             : role === "staff"
-                              ? " text-blue-600 dark:text-blue-400 border-blue-500 dark:border-blue-800"
-                              : " text-emerald-600 dark:text-emerald-400 border-emerald-500 dark:border-emerald-800"
+                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                           }`}>
                           {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Customer"}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-[12px] text-muted-foreground truncate font-medium">
                       {user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-border/50 mb-2" />
+                <DropdownMenuSeparator className="bg-border/40 mb-2" />
 
-                <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-secondary focus:bg-secondary outline-none">
-                  <Link href="/account" className="flex items-center w-full">
-                    <div className="  flex items-center justify-center mr-3 shrink-0">
-                      <Image src="/icons/user.png" alt="Tài khoản" width={25} height={25} className="object-contain" />
+                <DropdownMenuItem asChild className="px-4 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:shadow-sm focus:bg-primary/10 outline-none">
+                  <Link href="/account" className="flex items-center w-full group">
+                    <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                      <Image src="/icons/user.png" alt="Tài khoản" width={22} height={22} className="object-contain" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-sm">Tài khoản của tôi</span>
-                      <span className="text-[10px] text-muted-foreground">Quản lý thông tin cá nhân</span>
+                      <span className="font-bold text-[13.5px] group-hover:text-primary transition-colors">Tài khoản của tôi</span>
+                      <span className="text-[11px] text-muted-foreground font-medium mt-0.5">Quản lý thông tin cá nhân</span>
                     </div>
                   </Link>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-secondary focus:bg-secondary outline-none mt-1">
-                  <Link href="/account/orders" className="flex items-center w-full">
-                    <div className="  flex items-center justify-center mr-3 shrink-0">
-                      <Image src="/icons/cart-history.png" alt="Đơn hàng" width={25} height={25} className="object-contain" />
+                <DropdownMenuItem asChild className="px-4 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 hover:bg-primary/10 hover:shadow-sm focus:bg-primary/10 outline-none mt-1">
+                  <Link href="/account/orders" className="flex items-center w-full group">
+                    <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 group-hover:-rotate-3 transition-transform">
+                      <Image src="/icons/cart-history.png" alt="Đơn hàng" width={22} height={22} className="object-contain" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-sm">Lịch sử mua hàng</span>
-                      <span className="text-[10px] text-muted-foreground">Theo dõi đơn hàng của bạn</span>
+                      <span className="font-bold text-[13.5px] group-hover:text-primary transition-colors">Lịch sử mua hàng</span>
+                      <span className="text-[11px] text-muted-foreground font-medium mt-0.5">Theo dõi đơn hàng của bạn</span>
                     </div>
                   </Link>
                 </DropdownMenuItem>
 
                 {role === "admin" && (
                   <>
-                    <DropdownMenuSeparator className="bg-border/50 my-2" />
-                    <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-primary/10 focus:bg-primary/10 outline-none">
+                    <DropdownMenuSeparator className="bg-border/40 my-2" />
+                    <DropdownMenuItem asChild className="px-4 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 hover:bg-blue-500/10 hover:shadow-sm focus:bg-blue-500/10 outline-none">
                       <Link href="/dashboard" className="flex items-center w-full group">
                         <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
-                          <Image src="/icons/dashboard2.png" alt="Admin" width={25} height={25} className="object-contain" />
+                          <Image src="/icons/dashboard2.png" alt="Admin" width={22} height={22} className="object-contain" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-blue-500 dark:text-blue-400">Trang Quản trị</span>
-                          <span className="text-[10px] text-blue-500/70 dark:text-blue-400/70">Dành riêng cho Admin</span>
+                          <span className="font-bold text-[13.5px] text-blue-600 dark:text-blue-400">Trang Quản trị</span>
+                          <span className="text-[11px] text-blue-600/70 dark:text-blue-400/70 font-medium mt-0.5">Dành riêng cho Admin</span>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -596,28 +596,28 @@ export function SiteHeader() {
 
                 {role === "staff" && (
                   <>
-                    <DropdownMenuSeparator className="bg-border/50 my-2" />
-                    <DropdownMenuItem asChild className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-amber-500/10 focus:bg-amber-500/10 outline-none">
+                    <DropdownMenuSeparator className="bg-border/40 my-2" />
+                    <DropdownMenuItem asChild className="px-4 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 hover:bg-amber-500/10 hover:shadow-sm focus:bg-amber-500/10 outline-none">
                       <Link href="/dashboard" className="flex items-center w-full group">
                         <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
-                          <Image src="/icons/dashboard2.png" alt="Staff" width={25} height={25} className="object-contain" />
+                          <Image src="/icons/dashboard2.png" alt="Staff" width={22} height={22} className="object-contain" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-blue-600 dark:text-blue-400">Bảng điều hành</span>
-                          <span className="text-[10px] text-blue-600/70 dark:text-blue-400/70">Khu vực dành cho Nhân viên</span>
+                          <span className="font-bold text-[13.5px] text-amber-600 dark:text-amber-400">Bảng điều hành</span>
+                          <span className="text-[11px] text-amber-600/70 dark:text-amber-400/70 font-medium mt-0.5">Khu vực dành cho Nhân viên</span>
                         </div>
                       </Link>
                     </DropdownMenuItem>
                   </>
                 )}
 
-                <DropdownMenuSeparator className="bg-border/50 my-2" />
+                <DropdownMenuSeparator className="bg-border/40 my-2" />
 
-                <DropdownMenuItem onClick={() => logout()} className="px-4 py-1.5 rounded-lg cursor-pointer transition-colors text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-950/50 outline-none w-full">
-                  <div className=" flex items-center justify-center mr-3 shrink-0">
-                    <Image src="/icons/logout.png" alt="Đăng xuất" width={25} height={25} className="object-contain" />
+                <DropdownMenuItem onClick={() => logout()} className="px-4 py-2.5 rounded-[14px] cursor-pointer transition-all duration-200 text-red-600 focus:text-red-700 hover:bg-red-500/10 hover:shadow-sm focus:bg-red-500/10 dark:hover:bg-red-900/30 outline-none w-full group">
+                  <div className="flex items-center justify-center mr-3 shrink-0 group-hover:scale-110 transition-transform">
+                    <Image src="/icons/logout.png" alt="Đăng xuất" width={22} height={22} className="object-contain" />
                   </div>
-                  <span className="font-medium text-sm">Đăng xuất</span>
+                  <span className="font-bold text-[13.5px]">Đăng xuất</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
