@@ -39,7 +39,7 @@ export default async function ProductDetailsPage({
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         {/* Left: Gallery */}
         <div className="w-full">
-          <ProductGallery images={images} productName={product.name} />
+          <ProductGallery images={images} productName={product.name} discountPercent={product.discount_percent} />
         </div>
 
         {/* Right: Product Info & Actions */}

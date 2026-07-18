@@ -39,6 +39,11 @@ import { IconLoader2, IconLock, IconLockOpen, IconAlertTriangle } from "@tabler/
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import UsersDataTable, { UserRow } from "./data-table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown, ShieldAlert, User as UserIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 const emptyForm = { full_name: "", email: "", password: "", role_id: "", is_locked: false };
 
@@ -75,6 +80,15 @@ export default function UsersClient() {
   // Lock modal states
   const [lockTarget, setLockTarget] = useState<{ user: UserRow; action: "lock" | "unlock" } | null>(null);
   const [locking, setLocking] = useState(false);
+
+  // Transfer Admin modal states
+  const [transferAdminDialogOpen, setTransferAdminDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ type: "update" | "delete", targetId: string, payload?: any } | null>(null);
+  const [transferTargetId, setTransferTargetId] = useState<string>("");
+  const [transferring, setTransferring] = useState(false);
+  const [transferSearch, setTransferSearch] = useState("");
+  const [transferUsers, setTransferUsers] = useState<UserRow[]>([]);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -113,6 +127,52 @@ export default function UsersClient() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    if (!transferAdminDialogOpen) return;
+    const fetchTransferCandidates = async () => {
+      const { data } = await getUsers(transferSearch, 1, 10);
+      if (data) {
+        setTransferUsers(data.filter((u: any) => u.id !== pendingAction?.targetId));
+      }
+    };
+    const timeout = setTimeout(fetchTransferCandidates, 300);
+    return () => clearTimeout(timeout);
+  }, [transferSearch, transferAdminDialogOpen, pendingAction?.targetId]);
+
+  const executeTransferAndContinue = async () => {
+    if (!transferTargetId || !pendingAction) return;
+    setTransferring(true);
+    try {
+      const adminRole = roles.find(r => r.name === "admin");
+      if (!adminRole) throw new Error("Admin role not found");
+
+      // 1. Nâng cấp người được chọn lên Admin
+      const { error: transferError } = await updateUser(transferTargetId, { role_id: adminRole.id });
+      if (transferError) throw transferError;
+
+      // 2. Tiếp tục hành động còn dang dở
+      if (pendingAction.type === "update") {
+        const { error: updateError } = await updateUser(pendingAction.targetId, pendingAction.payload);
+        if (updateError) throw updateError;
+      } else if (pendingAction.type === "delete") {
+        const { error: deleteError } = await deleteUser(pendingAction.targetId);
+        if (deleteError) throw deleteError;
+      }
+
+      setTransferAdminDialogOpen(false);
+      setTransferTargetId("");
+      setPendingAction(null);
+      setDialogOpen(false);
+      setDeleteTarget(null);
+      setDeleteConfirmText("");
+      fetchUsers();
+    } catch (err: any) {
+      alert("Lỗi khi chuyển quyền: " + (err.message || "Unknown error"));
+    } finally {
+      setTransferring(false);
+    }
+  };
 
   useEffect(() => {
     const loadRoles = async () => {
@@ -192,7 +252,14 @@ export default function UsersClient() {
           payload.role_id = form.role_id;
         }
         const { error } = await updateUser(editingUser.id, payload);
-        if (error) throw error;
+        if (error) {
+          if (error.message && error.message.includes("ít nhất 1 Admin")) {
+            setPendingAction({ type: "update", targetId: editingUser.id, payload });
+            setTransferAdminDialogOpen(true);
+            return;
+          }
+          throw error;
+        }
       } else {
         const payload: any = {
           email: form.email,
@@ -218,7 +285,14 @@ export default function UsersClient() {
     setDeleting(true);
     try {
       const { error } = await deleteUser(deleteTarget.id);
-      if (error) throw error;
+      if (error) {
+        if (error.message && error.message.includes("ít nhất 1 Admin")) {
+          setPendingAction({ type: "delete", targetId: deleteTarget.id });
+          setTransferAdminDialogOpen(true);
+          return;
+        }
+        throw error;
+      }
       setDeleteTarget(null);
       setDeleteConfirmText("");
       fetchUsers();
@@ -459,6 +533,104 @@ export default function UsersClient() {
             >
               {locking && <IconLoader2 className="mr-2 size-4 animate-spin" />}
               {lockTarget?.action === "lock" ? "Xác nhận Khóa" : "Xác nhận Mở khóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Transfer Admin Dialog */}
+      <AlertDialog open={transferAdminDialogOpen} onOpenChange={setTransferAdminDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md overflow-visible">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2.5 text-orange-600 dark:text-orange-400">
+              <div >
+                <Image src="/icons/warning1.png" alt="lock" width={35} height={35} />
+              </div>
+              <AlertDialogTitle className="text-xl font-bold">
+                Chuyển giao Quyền Quản Trị
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="space-y-4 pt-2 text-foreground/90 text-sm">
+              <p>
+                Bạn đang thực hiện thao tác xóa hoặc hạ cấp tài khoản <strong>Admin duy nhất</strong> của hệ thống.
+              </p>
+              <div className="bg-orange-50 dark:bg-orange-950/40 p-3.5 rounded-lg border border-orange-200 dark:border-orange-900/60 text-xs text-orange-700 dark:text-orange-300 leading-relaxed">
+                Để tiếp tục, vui lòng chọn một tài khoản khác để chuyển quyền Admin. Hệ thống không thể không có người quản trị.
+              </div>
+              <div className="flex flex-col gap-2 pt-2">
+                <Label>Chọn Quản trị viên mới</Label>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={popoverOpen}
+                      className="w-full justify-between"
+                    >
+                      {transferTargetId
+                        ? transferUsers.find((user) => user.id === transferTargetId)?.full_name || "Đã chọn 1 tài khoản"
+                        : "Tìm kiếm người dùng (Tên/Email)..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[380px] p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput 
+                        placeholder="Nhập tên hoặc email..." 
+                        value={transferSearch}
+                        onValueChange={setTransferSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty>Không tìm thấy tài khoản nào.</CommandEmpty>
+                        <CommandGroup>
+                          {transferUsers.map((user) => (
+                            <CommandItem
+                              key={user.id}
+                              value={user.id}
+                              onSelect={(currentValue) => {
+                                setTransferTargetId(currentValue === transferTargetId ? "" : currentValue);
+                                setPopoverOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  transferTargetId === user.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={user.avatar_url || ""} />
+                                  <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{user.full_name}</span>
+                                <span className="text-muted-foreground text-xs block truncate w-32">({user.email})</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel disabled={transferring} onClick={() => {
+              setPendingAction(null);
+              setTransferTargetId("");
+            }}>Hủy bỏ</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+              disabled={!transferTargetId || transferring}
+              onClick={(e) => {
+                e.preventDefault();
+                executeTransferAndContinue();
+              }}
+            >
+              {transferring && <IconLoader2 className="mr-2 size-4 animate-spin" />}
+              Xác nhận Chuyển quyền & Tiếp tục
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -37,12 +37,12 @@ export function ProductCard({ product }: ProductCardProps) {
           -{product.discount_percent}%
         </Badge>
       )}
-      <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary mb-4 w-full block hover-scale-img cursor-pointer">
+      <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary/30 mb-4 w-full block cursor-pointer">
         <Image
           fill
           unoptimized
           alt={product.name}
-          className="object-cover"
+          className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
           src={product.image_url || "/placeholder-image.jpg"}
         />
       </Link>

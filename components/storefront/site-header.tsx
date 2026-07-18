@@ -368,7 +368,7 @@ export function SiteHeader() {
           </div>
           <Link href="/" className="group text-xl md:text-2xl font-black tracking-tighter flex-shrink-0 flex items-center gap-2.5 transition-all duration-300">
             <div className="relative">
-              <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-500 blur-lg opacity-50 group-hover:opacity-80 transition duration-800 animate-pulse" />
+              <div className="absolute -inset-1 rounded-full  group-hover:opacity-80 transition duration-800 animate-pulse" />
               <Image src="/icons/luxecommerce.png" alt="Logo" width={34} height={34} className="relative  " />
             </div>
             <span className="flex items-center tracking-tight ">
@@ -564,8 +564,8 @@ export function SiteHeader() {
                           <Image src="/icons/dashboard2.png" alt="Admin" width={25} height={25} className="object-contain" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-primary">Trang Quản trị</span>
-                          <span className="text-[10px] text-primary/70">Dành riêng cho Admin</span>
+                          <span className="font-semibold text-sm text-blue-500 dark:text-blue-400">Trang Quản trị</span>
+                          <span className="text-[10px] text-blue-500/70 dark:text-blue-400/70">Dành riêng cho Admin</span>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -581,8 +581,8 @@ export function SiteHeader() {
                           <Image src="/icons/dashboard2.png" alt="Staff" width={25} height={25} className="object-contain" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-amber-600 dark:text-amber-400">Bảng điều hành</span>
-                          <span className="text-[10px] text-amber-600/70 dark:text-amber-400/70">Khu vực dành cho Nhân viên</span>
+                          <span className="font-semibold text-sm text-blue-600 dark:text-blue-400">Bảng điều hành</span>
+                          <span className="text-[10px] text-blue-600/70 dark:text-blue-400/70">Khu vực dành cho Nhân viên</span>
                         </div>
                       </Link>
                     </DropdownMenuItem>

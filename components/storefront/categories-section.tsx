@@ -62,7 +62,7 @@ export async function CategoriesSection() {
                         unoptimized
                         src={catProducts[1].image_url} 
                         alt={catProducts[1].name}
-                        className="absolute size-28 object-cover rounded-xl shadow-md -rotate-12 -translate-x-4 opacity-70 group-hover:-rotate-16 group-hover:-translate-x-6 transition-all duration-500 border border-background" 
+                        className="absolute size-28 object-contain p-1.5 bg-secondary/30 rounded-xl shadow-md -rotate-12 -translate-x-4 opacity-70 group-hover:-rotate-16 group-hover:-translate-x-6 transition-all duration-500 border border-background" 
                       />
                       {/* Ảnh trước chính giữa */}
                       <Image 
@@ -71,7 +71,7 @@ export async function CategoriesSection() {
                         unoptimized
                         src={catProducts[0].image_url} 
                         alt={catProducts[0].name}
-                        className="absolute size-32 object-cover rounded-xl shadow-lg rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 z-10 border-2 border-background" 
+                        className="absolute size-32 object-contain p-2 bg-secondary/30 rounded-xl shadow-lg rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 z-10 border-2 border-background" 
                       />
                     </div>
                   ) : catProducts.length === 1 ? (
@@ -81,7 +81,7 @@ export async function CategoriesSection() {
                       unoptimized
                       src={catProducts[0].image_url} 
                       alt={catProducts[0].name}
-                      className="size-36 object-cover rounded-xl shadow-md group-hover:scale-110 transition-transform duration-500" 
+                      className="size-36 object-contain p-2 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-500" 
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-muted-foreground/60">

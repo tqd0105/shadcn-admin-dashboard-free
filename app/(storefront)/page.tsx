@@ -11,8 +11,8 @@ export default function StorefrontHomePage() {
     <>
       <HeroBanner />
       <CategoriesSection />
-      <NewArrivals />
       <FlashSale />
+      <NewArrivals />
     </>
   );
 }

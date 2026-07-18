@@ -298,6 +298,73 @@ When logging in as `admin` or `staff` through either the popup login modal (`Aut
 - Guaranteed consistency across both popup modal (`AuthModal`) and full-page (`/login`) entry points.
 - Maintained strict `0 errors, 0 warnings` across both `pnpm lint` and `pnpm build`.
 
+## 2026-07-18: Product Asset Display Standardization (`object-contain` within `aspect-square`)
+
+### Context
+When displaying products with drastically different aspect ratios (e.g., horizontal/wide `16:9` laptops vs. vertical/tall `9:16` smartphones), the existing `object-cover` styling cropped the outer edges of widescreen laptops and top/bottom edges of smartphones to fill the `aspect-square` container.
+
+### Decision
+1. **Container Padding + `object-contain` Scaling**: Replaced `object-cover` across all primary product display components (`ProductCard` in `product-card.tsx`, `ProductGallery` in `product-gallery.tsx`, and `CategoriesSection` in `categories-section.tsx`) with `object-contain` inside `aspect-square` containers with subtle inner padding (`p-4` or `p-6`) and soft tinted backgrounds (`bg-secondary/30` or `bg-secondary/20`).
+2. **Interactive Micro-Animations**: Preserved and enhanced gentle zoom-in hover animations (`transition-transform duration-300 group-hover:scale-105`) while ensuring that the entire uncropped product image remains visible at all times.
+
+### Consequences
+- Zero cropping or edge truncation regardless of raw image dimensions or aspect ratios (from vertical phones to wide laptops and square accessories).
+- Consistent, uniform `aspect-square` grid alignment across `/products`, `/product/[id]`, and homepage category sections.
+- Verified clean compilation with `0 errors, 0 warnings` across `pnpm lint` and `pnpm build`.
+
+## 2026-07-18: Comprehensive Product Detail Discount Banner & Savings Breakdown
+
+### Context
+On the Product Detail page (`/product/[id]`), when a product had an active promotional discount (`discount_percent > 0`), the UI only rendered the strikethrough original price next to the sale price, lacking any prominent discount percentage badge or detailed savings breakdown.
+
+### Decision
+1. **Gallery Badge Overlay**: Updated `ProductGallery` (`components/storefront/product-gallery.tsx`) to accept `discountPercent` and render an eye-catching red `-X%` `Badge` overlay on the top-left corner of the main product image.
+2. **Dedicated Discount & Savings Container**: Enhanced `ProductActions` (`components/storefront/product-actions.tsx`) with a rich-aesthetic promotional box featuring:
+   - High-contrast red/amber `GIẢM NGAY X%` badge with pulse icon.
+   - Explicit direct savings calculation (`finalOriginalPrice - finalPrice`) in Vietnamese currency format (`Tiết kiệm trực tiếp: X đ`).
+   - Promotional perks and buyer guarantees (`Miễn phí vận chuyển từ 500k`, `Bảo hành chính hãng 100%`).
+
+### Consequences
+- Maximized conversion appeal and price transparency on the Product Detail page whenever a discount is present.
+- Maintained strict 0 errors/warnings across both `pnpm lint` and `pnpm build`.
+
+## 2026-07-18: Mobile and Tablet (`iPad Mini`) Responsive Optimization for Product Detail Discount Box
+
+### Context
+On narrow screens and intermediate tablet viewports like iPad Mini portrait (`md` breakpoint where the right product detail column is ~340px wide), the newly added discount box suffered from two horizontal overflow issues:
+1. The sale price (`60.742.500 đ`) and strikethrough original price (`80.990.000 đ`) sat inside a non-wrapping container (`flex items-baseline space-x-3`), forcing the original price to overflow past the right border (`border-red-500`).
+2. The bottom row (`Tiết kiệm: X đ` and `Ưu đãi áp dụng có hạn` pill) used `sm:flex-row justify-between`, causing the pill text to squeeze into multiple lines inside its rounded border on 340px tablet columns.
+
+### Decision
+1. **Fluid Responsive Typography and Flex Wrapping (`product-actions.tsx`)**:
+   - Replaced fixed price wrapping with `flex flex-wrap items-baseline gap-2 sm:gap-3`, allowing the original price to cleanly wrap beneath the sale price on narrow containers without overflowing.
+   - Scaled typography dynamically across breakpoints (`text-2xl sm:text-3xl xl:text-4xl` for sale price and `text-base sm:text-lg xl:text-xl` for original price).
+2. **Intelligent Breakpoint Stacking (`xl:flex-row` vs `sm:flex-row`)**:
+   - Upgraded both top and bottom rows to `flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 sm:gap-3`. On Mobile and iPad Mini columns, elements stack neatly vertically, while expanding to side-by-side layout on Desktop (`xl`).
+   - Added `shrink-0` to badges and buttons to guarantee crisp 1-line text rendering without pill squishing.
+
+### Consequences
+- Zero horizontal overflow or squished text across Mobile (`320px+`), Tablet/iPad Mini (`768px`), and Desktop (`1440px+`).
+- Verified 100% clean compilation (`0 errors, 0 warnings`) with `pnpm lint` and `pnpm build`.
+
+## 2026-07-18: Luxury Shimmering VIP Discount Banner (`Card Ưu Đãi Hoàng Gia`)
+
+### Context
+To elevate visual excellence and create an ultra-premium, sparkling aesthetic (`lung linh, óng ánh, sang trọng, bắt mắt`), the Product Detail discount container was redesigned from a basic bordered box into a high-end glowing metallic glassmorphism display, matching the visual sophistication of `site-header.tsx`.
+
+### Decision
+1. **Dynamic Shimmer Light Reflection (`animate-shimmer-sweep`)**: Added a 20-degree skewed light beam reflection animation to `app/globals.css` that continuously sweeps across the discount card (`animate-shimmer-sweep`), giving it a radiant, jewel-like sheen.
+2. **Multilayered Glassmorphic Glow Frame (`product-actions.tsx`)**:
+   - Built a dual-layer container featuring a razor-sharp `bg-gradient-to-r from-red-500 via-amber-400 to-rose-600` outer border wrapper with animated ambient background orbs (`blur-2xl animate-pulse`).
+   - Inner container uses `backdrop-blur-xl bg-gradient-to-br from-white/95 via-red-50/90 to-amber-50/80 dark:from-surface/95` to deliver a frosted VIP card feel.
+3. **Metallic Ruby/Gold Typography & Pill Badges**:
+   - Sale price rendered with `bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 bg-clip-text text-transparent` for shimmering metallic digits.
+   - Removed artificial `hidden sm:flex` visibility rules so all users across Mobile, Tablet, and Desktop enjoy the full shimmering badges (`GIẢM NGAY X%` and `Tiết kiệm trực tiếp`) in perfect responsive alignment.
+
+### Consequences
+- Achieved a breathtaking, state-of-the-art visual presentation (`lung linh, óng ánh`) that maximizes user engagement and perceived product value.
+- Confirmed 0 errors across `pnpm lint` and `pnpm build`.
+
 
 
 

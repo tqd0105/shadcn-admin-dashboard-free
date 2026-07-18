@@ -17,7 +17,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { IconLock } from "@tabler/icons-react";
+import { IconLock, IconUserX } from "@tabler/icons-react";
 import Image from "next/image";
 
 type AuthContextType = {
@@ -44,10 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [profile, setProfile] = useState<any>(null)
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [lockedAlertOpen, setLockedAlertOpen] = useState(false);
+    const [authAlert, setAuthAlert] = useState<'none' | 'locked' | 'deleted'>('none');
 
     const showLockedAlert = useCallback(() => {
-        setLockedAlertOpen(true);
+        setAuthAlert('locked');
     }, []);
 
     const logout = useCallback(async () => {
@@ -63,17 +63,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const fetchProfileAndRole = useCallback(async (userObj: User) => {
         const { data, error } = await getProfile(userObj.id);
         if (error) {
-            console.error(error);
+            if (error.code === 'PGRST116') {
+                if (typeof window !== "undefined") sessionStorage.clear();
+                await supabase.auth.signOut();
+                setUser(null); setProfile(null); setRole(null);
+                setAuthAlert('deleted');
+            } else {
+                console.error(error);
+            }
             return;
         }
         
         let currentProfile = data;
         if (currentProfile?.is_locked) {
+            if (typeof window !== "undefined") sessionStorage.clear();
             await supabase.auth.signOut();
             setUser(null);
             setProfile(null);
             setRole(null);
-            setLockedAlertOpen(true);
+            setAuthAlert('locked');
             return;
         }
 
@@ -214,23 +222,95 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => clearInterval(interval);
     }, [logout]);
 
+    // Hybrid Listener: Real-time + Visibility API + Polling (Chống trượt 100%)
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const checkLockStatus = async (forceDeleted = false) => {
+            if (forceDeleted) {
+                if (typeof window !== "undefined") sessionStorage.clear();
+                await supabase.auth.signOut();
+                setUser(null); setProfile(null); setRole(null);
+                setAuthAlert('deleted');
+                router.push("/");
+                return;
+            }
+
+            const { data, error } = await getProfile(user.id);
+            if (error && error.code === 'PGRST116') {
+                if (typeof window !== "undefined") sessionStorage.clear();
+                await supabase.auth.signOut();
+                setUser(null); setProfile(null); setRole(null);
+                setAuthAlert('deleted');
+                router.push("/");
+            } else if (data?.is_locked) {
+                if (typeof window !== "undefined") sessionStorage.clear();
+                await supabase.auth.signOut();
+                setUser(null);
+                setProfile(null);
+                setRole(null);
+                setAuthAlert('locked');
+                router.push("/");
+            } else if (data && data.is_locked === false && profile?.is_locked) {
+                setProfile((prev: any) => ({ ...prev, is_locked: false }));
+            }
+        };
+
+        // 1. Lắng nghe qua WebSocket (Real-time) - Hoạt động khi DB bật Replication
+        const profileSubscription = supabase.channel(`profile-lock-listener-${user.id}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+                (payload) => { 
+                    if (payload.eventType === 'DELETE') checkLockStatus(true);
+                    else checkLockStatus(); 
+                }
+            ).subscribe();
+
+        // 2. Lắng nghe khi User chuyển qua lại giữa các Tab (Visibility API & Focus)
+        // Khi user chuyển tab về lại trang web, ngay lập tức kiểm tra (tạo cảm giác đá văng tức thì)
+        const onFocusOrVisible = () => {
+            if (document.visibilityState === 'visible') {
+                checkLockStatus();
+            }
+        };
+        window.addEventListener("visibilitychange", onFocusOrVisible);
+        window.addEventListener("focus", onFocusOrVisible);
+
+        // 3. Fallback Polling: Tự động kiểm tra chìm mỗi 30 giây để đảm bảo 100% không bỏ lọt
+        const intervalId = setInterval(checkLockStatus, 30000);
+
+        return () => {
+            supabase.removeChannel(profileSubscription);
+            window.removeEventListener("visibilitychange", onFocusOrVisible);
+            window.removeEventListener("focus", onFocusOrVisible);
+            clearInterval(intervalId);
+        };
+    }, [user?.id, router, profile?.is_locked]);
+
     return (
         <AuthContext.Provider value={{ user, profile, role, loading, logout, showLockedAlert }}>
             {children}
-            <AlertDialog open={lockedAlertOpen} onOpenChange={setLockedAlertOpen}>
+            <AlertDialog open={authAlert !== 'none'} onOpenChange={(open) => !open && setAuthAlert('none')}>
                 <AlertDialogContent className="sm:max-w-md z-[9999]">
                     <AlertDialogHeader>
                         <div className="flex items-center gap-2.5 text-red-600 dark:text-red-400">
                             <div className="p-2 rounded-full bg-red-500/10 shrink-0">
-                                <Image src="/icons/lock.png" alt="lock" width={24} height={24} />
+                                {authAlert === 'deleted' ? (
+                                    <IconUserX className="w-6 h-6 text-red-600" />
+                                ) : (
+                                    <Image src="/icons/lock.png" alt="lock" width={24} height={24} />
+                                )}
                             </div>
                             <AlertDialogTitle className="text-xl font-bold">
-                                Tài khoản của bạn đã bị khóa
+                                {authAlert === 'deleted' ? "Tài khoản không tồn tại" : "Tài khoản của bạn đã bị khóa"}
                             </AlertDialogTitle>
                         </div>
                         <AlertDialogDescription className="space-y-3  text-foreground/90 text-sm">
                             <p>
-                                Hệ thống phát hiện tài khoản của bạn hiện đang bị <strong>tạm khóa</strong> do vi phạm điều khoản dịch vụ hoặc yêu cầu bảo mật từ ban quản trị.
+                                {authAlert === 'deleted' 
+                                    ? "Hệ thống phát hiện tài khoản của bạn đã bị xóa. Vui lòng liên hệ ban quản trị nếu đây là sự nhầm lẫn."
+                                    : "Hệ thống phát hiện tài khoản của bạn hiện đang bị tạm khóa do vi phạm điều khoản dịch vụ hoặc yêu cầu bảo mật từ ban quản trị."}
                             </p>
                             <div className="bg-red-50 dark:bg-red-950/40 p-3.5 rounded-lg border border-red-200 dark:border-red-900/60 text-xs text-red-700 dark:text-red-300 leading-relaxed">
                                 <strong>Vui lòng liên hệ bộ phận chăm sóc khách hàng:</strong>
@@ -245,7 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         <AlertDialogAction
                             className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
                             onClick={() => {
-                                setLockedAlertOpen(false);
+                                setAuthAlert('none');
                                 router.push("/");
                             }}
                         >
