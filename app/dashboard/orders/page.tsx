@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
+import { useAuth } from "@/components/providers/auth-provider";
 import { getOrders, updateOrderStatus, getOrderById, deleteOrderAdmin } from "@/lib/services/order.service";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -41,6 +42,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { BellRing, ExternalLink } from "lucide-react";
 import {
   IconSearch,
   IconLoader2,
@@ -65,6 +75,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 };
 
 function OrdersContent() {
+  const { role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -104,6 +115,27 @@ function OrdersContent() {
   // Live Glowing Pool cho các đơn mới nổ trong phiên làm việc (bền vững qua F5)
   const [liveOrderIds, setLiveOrderIds] = useState<Set<string>>(getUnreadFromStorage);
 
+  const [activeTab, setActiveTab] = useState("orders-list");
+  const [orderAlerts, setOrderAlerts] = useState<any[]>([]);
+  const [loadingOrderAlerts, setLoadingOrderAlerts] = useState(false);
+  const [orderAlertSearch, setOrderAlertSearch] = useState("");
+
+  const fetchOrderAlerts = useCallback(async () => {
+    setLoadingOrderAlerts(true);
+    const { data } = await getOrders("", 1, 50);
+    if (data) setOrderAlerts(data);
+    setLoadingOrderAlerts(false);
+  }, []);
+
+  const filteredOrderAlerts = orderAlerts.filter((o) => {
+    if (!orderAlertSearch.trim()) return true;
+    const q = orderAlertSearch.toLowerCase();
+    const shortId = o.id ? o.id.split("-")[0].toLowerCase() : "";
+    const name = (o.profiles?.full_name || o.addresses?.full_name || o.profiles?.email?.split("@")[0] || "").toLowerCase();
+    const phone = (o.addresses?.phone || o.profiles?.phone || "").toLowerCase();
+    return shortId.includes(q) || name.includes(q) || phone.includes(q);
+  });
+
   const loadOrders = useCallback(async () => {
     setTimeout(() => setLoading(true), 0);
     const { data, total, totalPages, error } = await getOrders(
@@ -141,7 +173,8 @@ function OrdersContent() {
       setLiveOrderIds(new Set());
     }
     setLoading(false);
-  }, [currentSearch, currentPage, currentStatus, currentSort, currentDate]);
+    fetchOrderAlerts();
+  }, [currentSearch, currentPage, currentStatus, currentSort, currentDate, fetchOrderAlerts]);
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -297,7 +330,26 @@ function OrdersContent() {
         <p className="text-muted-foreground">Theo dõi và cập nhật trạng thái đơn hàng.</p>
       </div>
 
-      {/* Bộ lọc Nhanh dạng Thẻ Trạng Thái (Status Quick Tabs) */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden h-auto p-1 gap-1 justify-start sm:grid sm:grid-cols-2 sm:max-w-md">
+          <TabsTrigger value="orders-list" className="gap-2 shrink-0 px-4 py-2.5 text-xs sm:text-sm font-bold flex-1 cursor-pointer">
+            <IconReceipt className="size-4 shrink-0" />
+            <span>Danh sách Đơn hàng</span>
+          </TabsTrigger>
+          <TabsTrigger value="order-logs" onClick={fetchOrderAlerts} className="gap-2 shrink-0 px-4 py-2.5 text-xs sm:text-sm font-bold flex-1 relative text-emerald-600 data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all cursor-pointer">
+            <BellRing className="size-4 shrink-0" />
+            <span>Nhật ký</span>
+            {liveOrderIds.size > 0 && (
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="orders-list" className="space-y-6">
+          {/* Bộ lọc Nhanh dạng Thẻ Trạng Thái (Status Quick Tabs) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b">
         <button
           onClick={() => updateFilter("status", "all")}
@@ -529,9 +581,11 @@ function OrdersContent() {
                       <Button variant="ghost" size="icon" onClick={() => handleViewDetails(order.id)} title="Xem chi tiết">
                         <IconEye className="h-4 w-4 text-blue-600" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(order.id)} title="Xóa đơn hàng">
-                        <IconTrash className="h-4 w-4 text-red-600" />
-                      </Button>
+                      {role === "admin" && (
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(order.id)} title="Xóa đơn hàng">
+                          <IconTrash className="h-4 w-4 text-red-600" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -574,6 +628,110 @@ function OrdersContent() {
           </Button>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="order-logs" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-emerald-600 text-lg sm:text-xl">
+                  <BellRing className="size-5 shrink-0" /> Nhật Ký Đơn Hàng & Cảnh Báo Realtime
+                </CardTitle>
+                <CardDescription>
+                  Toàn bộ lịch sử các thông báo đơn hàng mới được đẩy Realtime tới Admin. Bạn có thể xem chi tiết hoặc nhảy ngay tới đơn hàng trong bảng.
+                </CardDescription>
+              </div>
+              <div className="relative w-full sm:w-72 shrink-0">
+                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Tìm mã đơn, tên khách, SĐT..."
+                  value={orderAlertSearch}
+                  onChange={(e) => setOrderAlertSearch(e.target.value)}
+                  className="pl-9 bg-background h-9 text-xs sm:text-sm"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingOrderAlerts ? (
+                <div className="flex justify-center py-8">
+                  <IconLoader2 className="size-6 animate-spin text-primary" />
+                </div>
+              ) : filteredOrderAlerts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  {orderAlertSearch ? "Không tìm thấy đơn hàng nào khớp từ khóa." : "Chưa có đơn hàng nào được ghi nhận."}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredOrderAlerts.map((o) => {
+                    const shortId = o.id ? o.id.split("-")[0].toUpperCase() : "ORD";
+                    const isCancelled = o.status === "cancelled";
+                    const isLiveNew = liveOrderIds.has(o.id);
+                    return (
+                      <div key={o.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-xl border transition-all shadow-sm ${
+                        isLiveNew ? "bg-emerald-500/15 dark:bg-emerald-500/20 border-emerald-500" : "bg-card hover:border-emerald-500/50"
+                      }`}>
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                          <div className={`p-2.5 rounded-xl shrink-0 ${isCancelled ? "bg-red-600 text-white dark:bg-red-500 dark:text-white" : "bg-emerald-500 text-white dark:bg-emerald-400 dark:text-black"}`}>
+                            <BellRing className="size-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {isLiveNew && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500 text-white animate-pulse shadow-sm shrink-0">
+                                  MỚI
+                                </span>
+                              )}
+                              <span className="font-bold text-sm">#{shortId}</span>
+                              <Badge variant={isCancelled ? "destructive" : "default"} className="text-[10px] h-4">
+                                {isCancelled ? "Đã hủy đơn" : STATUS_MAP[o.status]?.label || "Đơn mới nhận"}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                              Khách hàng: <span className="font-medium text-foreground">{o.profiles?.full_name || o.addresses?.full_name || o.profiles?.email?.split("@")[0] || "Khách mua"}</span> 
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                              Số điện thoại: <span className="font-medium text-foreground">{o.addresses?.phone || o.profiles?.phone || "Chưa cập nhật SĐT"}</span> 
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/80 mt-1 sm:mt-0.5">
+                              {o.created_at ? format(new Date(o.created_at), "dd/MM/yyyy HH:mm:ss") : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                          <span className="font-bold text-base text-emerald-600 dark:text-emerald-400">
+                            +{Number(o.total_amount || 0).toLocaleString("vi-VN")} đ
+                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewDetails(o.id)}
+                              className="gap-1.5 text-xs h-8 shrink-0 cursor-pointer"
+                            >
+                              <IconEye className="size-3.5" /> Xem chi tiết
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => {
+                                setActiveTab("orders-list");
+                                updateFilter("search", o.id.split("-")[0]);
+                              }}
+                              className="gap-1.5 text-xs h-8 shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                            >
+                              Mở trong bảng
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen} >
         <DialogContent className="md:min-w-3xl  max-h-[90vh] overflow-y-auto p-4 md:p-6">
@@ -725,33 +883,35 @@ function OrdersContent() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Bạn có chắc chắn muốn xóa đơn hàng này?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hành động này sẽ xóa vĩnh viễn đơn hàng #{deleteId?.split("-")[0].toUpperCase()} cùng tất cả danh sách sản phẩm bên trong khỏi cơ sở dữ liệu và không thể khôi phục.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteOrder}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white font-semibold"
-            >
-              {isDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {role === "admin" && (
+        <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bạn có chắc chắn muốn xóa đơn hàng này?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hành động này sẽ xóa vĩnh viễn đơn hàng #{deleteId?.split("-")[0].toUpperCase()} cùng tất cả danh sách sản phẩm bên trong khỏi cơ sở dữ liệu và không thể khôi phục.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteOrder}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white font-semibold"
+              >
+                {isDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
 
 export default function OrdersPage() {
   return (
-    <RoleGuard allowedRoles={["admin"]}>
+    <RoleGuard allowedRoles={["admin", "staff"]}>
       <Suspense fallback={<div>Loading orders...</div>}>
         <OrdersContent />
       </Suspense>

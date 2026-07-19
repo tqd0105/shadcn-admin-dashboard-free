@@ -33,7 +33,7 @@ export async function CategoriesSection() {
           </div>
           <Link 
             href="/products" 
-            className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground bg-secondary/80 hover:bg-primary hover:text-primary-foreground px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm shrink-0"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground bg-card/80 backdrop-blur-md border border-border/50 hover:bg-primary hover:text-primary-foreground hover:border-primary px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm shrink-0"
           >
             Tất cả danh mục <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -49,10 +49,10 @@ export async function CategoriesSection() {
               <Link 
                 key={category.id} 
                 href={`/products?categories=${category.id}`}
-                className="group relative flex flex-col justify-between p-5 bg-card/60 dark:bg-card/30 hover:bg-card rounded-3xl border border-border/70 hover:border-primary/40 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+                className="group relative flex flex-col justify-between p-5 bg-card/80 backdrop-blur-xl hover:bg-card/90 rounded-[32px] border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
               >
                 {/* Khu vực Hình ảnh đại diện động (Product Collage Preview) */}
-                <div className="relative h-44 w-full rounded-2xl bg-muted/40 mb-5 flex items-center justify-center overflow-hidden p-3 border border-border/30 group-hover:border-primary/20 transition-colors">
+                <div className="relative h-44 w-full rounded-[24px] bg-muted/20 mb-5 flex items-center justify-center overflow-hidden p-3 border border-border/50 group-hover:border-primary/30 transition-colors">
                   {catProducts.length >= 2 ? (
                     <div className="relative size-full flex items-center justify-center">
                       {/* Ảnh sau lệch trái */}
@@ -62,7 +62,7 @@ export async function CategoriesSection() {
                         unoptimized
                         src={catProducts[1].image_url} 
                         alt={catProducts[1].name}
-                        className="absolute size-28 object-cover rounded-xl shadow-md -rotate-12 -translate-x-4 opacity-70 group-hover:-rotate-16 group-hover:-translate-x-6 transition-all duration-500 border border-background" 
+                        className="absolute size-28 object-contain p-1.5 bg-secondary/30 rounded-xl shadow-md -rotate-12 -translate-x-4 opacity-70 group-hover:-rotate-16 group-hover:-translate-x-6 transition-all duration-500 border border-background" 
                       />
                       {/* Ảnh trước chính giữa */}
                       <Image 
@@ -71,7 +71,7 @@ export async function CategoriesSection() {
                         unoptimized
                         src={catProducts[0].image_url} 
                         alt={catProducts[0].name}
-                        className="absolute size-32 object-cover rounded-xl shadow-lg rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 z-10 border-2 border-background" 
+                        className="absolute size-32 object-contain p-2 bg-secondary/30 rounded-xl shadow-lg rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 z-10 border-2 border-background" 
                       />
                     </div>
                   ) : catProducts.length === 1 ? (
@@ -81,7 +81,7 @@ export async function CategoriesSection() {
                       unoptimized
                       src={catProducts[0].image_url} 
                       alt={catProducts[0].name}
-                      className="size-36 object-cover rounded-xl shadow-md group-hover:scale-110 transition-transform duration-500" 
+                      className="size-36 object-contain p-2 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-500" 
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-muted-foreground/60">

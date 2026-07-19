@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import RoleGuard from "@/components/guards/role-guard";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   PromoBanner,
   getPromoBannersAdmin,
@@ -15,6 +16,7 @@ import {
 import { uploadImage } from "@/lib/services/storage.service";
 import { getCategories, createCategory } from "@/lib/services/category.service";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,6 +95,7 @@ interface SortableRowProps {
   handleOpenEdit: (banner: PromoBanner) => void;
   setBannerToDelete: (id: string) => void;
   setIsDeleteDialogOpen: (open: boolean) => void;
+  role: string | null;
 }
 
 function SortableBannerRow({
@@ -101,6 +104,7 @@ function SortableBannerRow({
   handleOpenEdit,
   setBannerToDelete,
   setIsDeleteDialogOpen,
+  role,
 }: SortableRowProps) {
   const {
     attributes,
@@ -149,7 +153,7 @@ function SortableBannerRow({
       <TableCell className="text-center font-medium">
         {banner.order_index}
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
         <Switch
           checked={banner.is_active}
           onCheckedChange={(checked) => handleToggleActive(banner, checked)}
@@ -166,18 +170,20 @@ function SortableBannerRow({
             <IconEdit className="w-4 h-4" />
             <span className="sr-only">Sửa</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setBannerToDelete(banner.id);
-              setIsDeleteDialogOpen(true);
-            }}
-            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <IconTrash className="w-4 h-4" />
-            <span className="sr-only">Xóa</span>
-          </Button>
+          {role === "admin" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setBannerToDelete(banner.id);
+                setIsDeleteDialogOpen(true);
+              }}
+              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <IconTrash className="w-4 h-4" />
+              <span className="sr-only">Xóa</span>
+            </Button>
+          )}
         </div>
       </TableCell>
     </TableRow>
@@ -185,6 +191,7 @@ function SortableBannerRow({
 }
 
 function PromoBannersPageContent() {
+  const { role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -344,6 +351,8 @@ function PromoBannersPageContent() {
   const handleOpenCreate = () => {
     setDialogMode("create");
     setSelectedBanner(null);
+    const maxOrder = banners.length > 0 ? Math.max(...banners.map(b => Number(b.order_index) || 0)) : 0;
+    const nextOrder = maxOrder + 1;
     setFormData({
       title: "",
       subtitle: "",
@@ -352,7 +361,7 @@ function PromoBannersPageContent() {
       link_url: "",
       badge_text: "",
       badge_color: "primary",
-      order_index: 0,
+      order_index: nextOrder,
       is_active: true,
     });
     setFormError("");
@@ -406,9 +415,13 @@ function PromoBannersPageContent() {
   };
 
   const handleToggleActive = async (banner: PromoBanner, checked: boolean) => {
+    setBanners(prev => prev.map(b => b.id === banner.id ? { ...b, is_active: checked } : b));
     const { error } = await updatePromoBanner(banner.id, { is_active: checked });
-    if (!error) {
-      setBanners(banners.map(b => b.id === banner.id ? { ...b, is_active: checked } : b));
+    if (error) {
+      setBanners(prev => prev.map(b => b.id === banner.id ? { ...b, is_active: !checked } : b));
+      toast.error(error.message || "Không thể cập nhật trạng thái banner");
+    } else {
+      toast.success(checked ? "Đã bật hiển thị banner" : "Đã tắt hiển thị banner");
       router.refresh();
     }
   };
@@ -428,19 +441,30 @@ function PromoBannersPageContent() {
 
     setIsSubmitting(true);
 
+    let finalOrderIndex = Number(formData.order_index) || 0;
+    const maxOrder = banners.length > 0 ? Math.max(...banners.map(b => Number(b.order_index) || 0)) : 0;
+
     if (dialogMode === "create") {
-      const { error } = await createPromoBanner(formData);
+      if (finalOrderIndex <= 0 || banners.some(b => b.order_index === finalOrderIndex)) {
+        finalOrderIndex = maxOrder + 1;
+      }
+      const { error } = await createPromoBanner({ ...formData, order_index: finalOrderIndex });
       if (error) {
         setFormError(error.message || "Lỗi khi tạo banner");
       } else {
+        toast.success("Đã tạo banner mới thành công");
         setIsDialogOpen(false);
         setRefreshTrigger((prev) => prev + 1);
       }
     } else if (dialogMode === "edit" && selectedBanner) {
-      const { error } = await updatePromoBanner(selectedBanner.id, formData);
+      if (banners.some(b => b.id !== selectedBanner.id && b.order_index === finalOrderIndex)) {
+        finalOrderIndex = maxOrder + 1;
+      }
+      const { error } = await updatePromoBanner(selectedBanner.id, { ...formData, order_index: finalOrderIndex });
       if (error) {
         setFormError(error.message || "Lỗi khi cập nhật banner");
       } else {
+        toast.success("Đã cập nhật banner thành công");
         setIsDialogOpen(false);
         setRefreshTrigger((prev) => prev + 1);
       }
@@ -450,13 +474,29 @@ function PromoBannersPageContent() {
   };
 
   const confirmDelete = async () => {
-    if (!bannerToDelete) return;
+    if (!bannerToDelete || role !== "admin") return;
     setIsSubmitting(true);
     const { error } = await deletePromoBanner(bannerToDelete);
     setIsSubmitting(false);
     
     if (!error) {
       setIsDeleteDialogOpen(false);
+      
+      // Cập nhật lại số thứ tự (order_index) tuần tự cho các banner còn lại sau khi xóa
+      const remaining = banners
+        .filter(b => b.id !== bannerToDelete)
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((b, idx) => ({ ...b, order_index: idx }));
+      
+      if (remaining.length > 0) {
+        try {
+          await updatePromoBannerOrders(remaining.map(b => ({ id: b.id, order_index: b.order_index })));
+        } catch (err) {
+          console.error("Error re-indexing remaining banners:", err);
+        }
+      }
+
+      toast.success("Đã xóa banner và cập nhật lại số thứ tự");
       setBannerToDelete(null);
       // Fetch data again
       if (banners.length === 1 && page > 1) {
@@ -466,7 +506,7 @@ function PromoBannersPageContent() {
       }
     } else {
       console.error("Delete failed:", error);
-      alert("Xóa thất bại!");
+      toast.error(error.message || "Xóa thất bại!");
     }
   };
 
@@ -580,6 +620,7 @@ function PromoBannersPageContent() {
                         handleOpenEdit={handleOpenEdit}
                         setBannerToDelete={setBannerToDelete}
                         setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                        role={role}
                       />
                     ))}
                   </SortableContext>
@@ -878,30 +919,32 @@ function PromoBannersPageContent() {
       </Dialog>
 
       {/* Delete Alert Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa Banner?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hành động này không thể hoàn tác. Banner sẽ bị xóa vĩnh viễn khỏi hệ thống.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                confirmDelete();
-              }}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Xác nhận xóa
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {role === "admin" && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Xác nhận xóa Banner?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hành động này không thể hoàn tác. Banner sẽ bị xóa vĩnh viễn khỏi hệ thống.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSubmitting}>Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDelete();
+                }}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Xác nhận xóa
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       {/* Quick Create Category Dialog */}
       <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
         <DialogContent className="sm:max-w-[425px]" style={{ zIndex: 10000 }}>
@@ -948,7 +991,7 @@ function PromoBannersPageContent() {
 
 export default function PromoBannersPage() {
   return (
-    <RoleGuard allowedRoles={["admin"]}>
+    <RoleGuard allowedRoles={["admin", "staff"]}>
       <Suspense fallback={
         <div className="flex items-center justify-center h-[60vh]">
           <IconLoader2 className="w-8 h-8 animate-spin text-primary" />

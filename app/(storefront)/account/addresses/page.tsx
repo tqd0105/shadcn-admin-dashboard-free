@@ -5,6 +5,7 @@ import { getAddresses, addAddress, updateAddress, deleteAddress } from "@/lib/se
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { IconLoader2, IconPlus, IconTrash, IconEdit, IconMapPinFilled } from "@tabler/icons-react";
+import { LuxeLoading } from "@/components/storefront/luxe-loading";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export default function AddressesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -46,11 +47,11 @@ export default function AddressesPage() {
   }, []);
 
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchAddresses();
     }
-  }, [user, authLoading, fetchAddresses]);
+  }, [user, fetchAddresses]);
 
   const resetForm = () => {
     setFormData({
@@ -127,57 +128,61 @@ export default function AddressesPage() {
     }
   };
 
-  if (authLoading || loading) return <div className="py-10 text-center"><IconLoader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></div>;
+  if (loading) return <LuxeLoading label="Đang tải Sổ địa chỉ..." />;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Sổ địa chỉ</h1>
+    <div className="max-w-5xl mx-auto space-y-8 pb-10 mt-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Sổ địa chỉ</h1>
+          <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">Quản lý địa chỉ giao hàng và thông tin liên hệ của bạn.</p>
+        </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button onClick={handleOpenAdd}>
-              <IconPlus className="w-4 h-4 mr-2" /> Thêm địa chỉ mới
+            <Button onClick={handleOpenAdd} className="rounded-full px-6 shadow-md shadow-primary/20 hover:shadow-lg transition-all">
+              <IconPlus className="size-4 mr-2" /> Thêm Địa Chỉ Mới
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{formData.id ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</DialogTitle>
+          <DialogContent className="sm:max-w-[500px] p-0 rounded-[24px] overflow-hidden border-border/50">
+            <DialogHeader className="px-6 pt-6 pb-4 bg-muted/30 border-b border-border/50">
+              <DialogTitle className="text-xl font-bold">{formData.id ? "Cập Nhật Địa Chỉ" : "Thêm Địa Chỉ Mới"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Họ và tên</Label>
-                  <Input id="full_name" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} required />
+            <form onSubmit={handleSubmit} className="space-y-5 px-6 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-2.5">
+                  <Label htmlFor="full_name" className="text-[13px] font-semibold text-foreground/80">Họ và tên</Label>
+                  <Input id="full_name" placeholder="Nguyễn Văn A" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} required className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Số điện thoại</Label>
-                  <Input id="phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
+                <div className="space-y-2.5">
+                  <Label htmlFor="phone" className="text-[13px] font-semibold text-foreground/80">Số điện thoại</Label>
+                  <Input id="phone" placeholder="0912345678" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">Tỉnh / Thành phố</Label>
-                <Input id="city" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} required />
+              <div className="space-y-2.5">
+                <Label htmlFor="city" className="text-[13px] font-semibold text-foreground/80">Tỉnh / Thành phố</Label>
+                <Input id="city" placeholder="Hà Nội" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} required className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="street">Địa chỉ cụ thể</Label>
-                <Input id="street" value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})} required />
+              <div className="space-y-2.5">
+                <Label htmlFor="street" className="text-[13px] font-semibold text-foreground/80">Địa chỉ cụ thể</Label>
+                <Input id="street" placeholder="Số nhà, ngõ, đường..." value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})} required className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all" />
               </div>
-              <div className="flex items-center space-x-2 pt-2">
+              <div className="flex items-center space-x-3 pt-2 pb-2">
                 <Checkbox 
                   id="is_default" 
                   checked={formData.is_default} 
                   onCheckedChange={(c) => setFormData({...formData, is_default: !!c})}
+                  className="rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
-                <Label htmlFor="is_default" className="cursor-pointer">Đặt làm địa chỉ mặc định</Label>
+                <Label htmlFor="is_default" className="cursor-pointer font-medium text-sm select-none">Đặt làm địa chỉ mặc định</Label>
               </div>
-              <DialogFooter className="pt-4">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <IconLoader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  {formData.id ? "Cập nhật" : "Lưu địa chỉ"}
+              <DialogFooter className="px-6 py-4 bg-muted/20 border-t border-border/50 -mx-6 -mb-4 sm:justify-end">
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl px-8 shadow-sm">
+                  {isSubmitting ? <IconLoader2 className="size-4 mr-2 animate-spin" /> : null}
+                  {formData.id ? "Lưu Thay Đổi" : "Thêm Địa Chỉ"}
                 </Button>
               </DialogFooter>
             </form>
@@ -186,35 +191,51 @@ export default function AddressesPage() {
       </div>
 
       {addresses.length === 0 ? (
-        <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed">
-          <IconMapPinFilled className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <h3 className="font-semibold text-gray-600">Bạn chưa lưu địa chỉ nào</h3>
-          <p className="text-sm text-gray-400 mt-1">Hãy thêm địa chỉ để thanh toán nhanh hơn nhé.</p>
+        <div className="text-center py-16 bg-card/60 backdrop-blur-xl rounded-[24px] border border-border/50 shadow-sm flex flex-col items-center justify-center">
+          <div className="size-20 bg-primary/10 rounded-full flex items-center justify-center mb-5 ring-8 ring-primary/5">
+            <IconMapPinFilled className="size-10 text-primary opacity-80" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground">Chưa Có Địa Chỉ Nào</h3>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">Bạn hãy thêm địa chỉ giao hàng để chúng tôi có thể giao sản phẩm đến tận tay bạn một cách nhanh nhất nhé.</p>
+          <Button onClick={handleOpenAdd} className="mt-6 rounded-full px-8 shadow-md shadow-primary/20">
+            <IconPlus className="size-4 mr-2" /> Thêm Ngay
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`border rounded-xl p-5 relative ${addr.is_default ? 'border-primary bg-primary/5' : ''}`}>
+            <div key={addr.id} className={`group flex flex-col p-6 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${addr.is_default ? 'bg-primary/5 border-primary/30 shadow-md shadow-primary/5' : 'bg-card/60 backdrop-blur-xl border-border/50 shadow-sm hover:shadow-md hover:border-border'}`}>
+              
               {addr.is_default && (
-                <span className="absolute top-0 left-0 text-white bg-primary dark:bg-white dark:text-black text-[10px] font-bold px-2 py-1 rounded-br-lg rounded-tl-xl">
-                  MẶC ĐỊNH 
-                </span>
+                <div className="absolute top-4 right-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold tracking-wide uppercase rounded-full bg-primary text-primary-foreground shadow-sm">
+                    <IconMapPinFilled className="size-3" />
+                    Mặc định
+                  </span>
+                </div>
               )}
-              <div className="flex justify-between ">
-                <div>
-                  <h3 className="font-semibold text-lg">{addr.full_name}</h3>
-                  <p className="text-muted-foreground mt-1 mb-2">{addr.phone}</p>
-                  <p className="text-sm">{addr.street}</p>
-                  <p className="text-sm">{addr.city}</p>
+              
+              <div className="flex-1 pr-24">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="font-bold text-lg text-foreground">{addr.full_name}</h3>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Button variant="outline" size="icon" onClick={() => handleOpenEdit(addr)}>
-                    <IconEdit className="w-4 h-4 text-gray-600" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="hover:bg-red-50 hover:text-red-600 hover:border-red-200" onClick={() => setDeleteModalId(addr.id)}>
-                    <IconTrash className="w-4 h-4" />
-                  </Button>
+                <div className="flex items-center gap-2 text-muted-foreground mb-4 text-sm font-medium">
+                  <span>{addr.phone}</span>
                 </div>
+                
+                <div className="space-y-1.5 text-[14px] text-foreground/80 leading-relaxed">
+                  <p>{addr.street}</p>
+                  <p>{addr.city}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-6 pt-5 border-t border-border/40">
+                <Button variant="outline" size="sm" className="rounded-xl flex-1 border-border/60 hover:bg-muted/50" onClick={() => handleOpenEdit(addr)}>
+                  <IconEdit className="size-4 mr-2 text-foreground/70" /> Sửa
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-xl flex-1 border-border/60 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:border-red-900" onClick={() => setDeleteModalId(addr.id)}>
+                  <IconTrash className="size-4 mr-2" /> Xóa
+                </Button>
               </div>
             </div>
           ))}
@@ -223,19 +244,20 @@ export default function AddressesPage() {
 
       {/* Modal Xác nhận xóa địa chỉ */}
       <Dialog open={!!deleteModalId} onOpenChange={(open) => { if (!open) setDeleteModalId(null); }}>
-        <DialogContent className="max-w-sm text-center p-6 space-y-4">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-destructive flex items-center justify-center gap-2">
-              <IconTrash className="w-6 h-6" /> Xác nhận xóa địa chỉ?
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Địa chỉ này sẽ bị xóa vĩnh viễn khỏi sổ địa chỉ của bạn. Hành động này không thể khôi phục lại.
-          </p>
-          <DialogFooter className="flex gap-2 sm:justify-center pt-2">
-            <Button variant="outline" className="flex-1" onClick={() => setDeleteModalId(null)}>Hủy bỏ</Button>
-            <Button variant="destructive" className="flex-1 font-bold shadow-md shadow-destructive/20" disabled={deleting} onClick={confirmDelete}>
-              {deleting ? <IconLoader2 className="w-4 h-4 animate-spin mr-1" /> : null} Xóa ngay
+        <DialogContent className="sm:max-w-md p-0 rounded-[24px] overflow-hidden border-border/50 text-center">
+          <div className="pt-8 pb-6 px-6">
+            <div className="size-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 ring-8 ring-red-50 dark:ring-red-950/50">
+              <IconTrash className="size-8" />
+            </div>
+            <DialogTitle className="text-xl font-bold mb-2">Xác Nhận Xóa Địa Chỉ?</DialogTitle>
+            <p className="text-[14.5px] text-muted-foreground leading-relaxed">
+              Địa chỉ này sẽ bị xóa vĩnh viễn khỏi sổ địa chỉ của bạn. Hành động này không thể hoàn tác.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 px-6 py-4 bg-muted/30 border-t border-border/50 sm:justify-center">
+            <Button variant="outline" className="sm:flex-1 rounded-xl h-11" onClick={() => setDeleteModalId(null)}>Hủy Bỏ</Button>
+            <Button variant="destructive" className="sm:flex-1 rounded-xl h-11 font-bold shadow-md shadow-destructive/20" disabled={deleting} onClick={confirmDelete}>
+              {deleting ? <IconLoader2 className="size-5 animate-spin mr-2" /> : null} Xóa Ngay
             </Button>
           </DialogFooter>
         </DialogContent>

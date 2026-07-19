@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import RoleGuard from "@/components/guards/role-guard";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   getProduct,
   deleteProduct,
@@ -79,6 +81,7 @@ type Product = {
 
 
 function ProductsPageContent() {
+  const { role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -210,10 +213,12 @@ function ProductsPageContent() {
             Manage your product catalog
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <IconPlus className="size-4" />
-          Add Product
-        </Button>
+        {role === "admin" && (
+          <Button onClick={openCreate} className="gap-2">
+            <IconPlus className="size-4" />
+            Add Product
+          </Button>
+        )}
       </div>
 
       {/* Search & Stats */}
@@ -252,7 +257,7 @@ function ProductsPageContent() {
                 ? "Try a different search term"
                 : "Get started by adding your first product"}
             </p>
-            {!search && (
+            {!search && role === "admin" && (
               <Button
                 onClick={openCreate}
                 variant="outline"
@@ -287,25 +292,29 @@ function ProductsPageContent() {
                   </div>
                 )}
                 {/* Hover overlay with actions */}
-                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-9 gap-1.5 shadow-md"
-                    onClick={() => openEdit(product)}
-                  >
-                    <IconEdit className="size-3.5" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="h-9 gap-1.5 shadow-md"
-                    onClick={() => setDeleteTarget(product)}
-                  >
-                    <IconTrash className="size-3.5" />
-                  </Button>
-                </div>
+                {(role === "admin" || role === "staff") && (
+                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-9 gap-1.5 shadow-md"
+                      onClick={() => openEdit(product)}
+                    >
+                      <IconEdit className="size-3.5" />
+                      {role === "staff" ? "Cập nhật" : "Edit"}
+                    </Button>
+                    {role === "admin" && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-9 gap-1.5 shadow-md"
+                        onClick={() => setDeleteTarget(product)}
+                      >
+                        <IconTrash className="size-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <CardHeader className="pb-2">
@@ -362,56 +371,62 @@ function ProductsPageContent() {
         </div>
       )}
 
-      <ProductForm 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        product={editingProduct} 
-        onSuccess={fetchProducts} 
-      />
+      {(role === "admin" || role === "staff") && (
+        <ProductForm 
+          open={dialogOpen} 
+          onOpenChange={setDialogOpen} 
+          product={editingProduct} 
+          onSuccess={fetchProducts} 
+        />
+      )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product
-              &quot;{deleteTarget?.name}&quot; and remove all of its data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete();
-              }}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? (
-                <>
-                  <IconLoader2 className="mr-2 size-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {role === "admin" && (
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the product
+                &quot;{deleteTarget?.name}&quot; and remove all of its data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelete();
+                }}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? (
+                  <>
+                    <IconLoader2 className="mr-2 size-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center py-20">
-        <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
-      </div>
-    }>
-      <ProductsPageContent />
-    </Suspense>
+    <RoleGuard allowedRoles={["admin", "staff"]}>
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-20">
+          <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
+        </div>
+      }>
+        <ProductsPageContent />
+      </Suspense>
+    </RoleGuard>
   );
 }

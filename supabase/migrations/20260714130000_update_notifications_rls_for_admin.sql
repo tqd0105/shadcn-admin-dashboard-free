@@ -6,6 +6,7 @@
 -- ==============================================================================
 
 -- 1. Thêm Policy cho phép Admin xem toàn bộ bảng notifications
+DROP POLICY IF EXISTS "Admins can view all notifications" ON public.notifications;
 create policy "Admins can view all notifications"
 on public.notifications
 for select

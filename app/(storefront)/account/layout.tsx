@@ -13,10 +13,11 @@ import {
   Settings, 
   LogOut 
 } from "lucide-react";
-import { IconLoader2 } from "@tabler/icons-react";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, logout } = useAuth();
+  const { user, profile, loading, logout } = useAuth();
+  
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const router = useRouter();
   const pathname = usePathname();
 
@@ -26,12 +27,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     }
   }, [user, loading, router]);
 
-  if (loading || !user) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <IconLoader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+  if (!user) {
+    return null;
   }
 
   const menuItems = [
@@ -46,14 +43,23 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     <div className="container mx-auto px-4 py-10 max-w-7xl min-h-[calc(100vh-200px)] animate-fade-in">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
-        <aside className="w-full md:w-64 shrink-0">
-          <div className=" rounded-xl shadow-sm border p-4 sticky top-24">
-            <div className="mb-6 px-4">
-              <h2 className="text-xl font-bold">Tài khoản</h2>
-              <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+        <aside className="w-full md:w-72 shrink-0">
+          <div className="bg-card/60 backdrop-blur-xl rounded-[24px] shadow-sm border border-border/50 p-5 sticky top-24">
+            <div className="mb-8 flex items-center gap-4 px-2">
+              <div className="size-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-primary-foreground text-xl font-bold shadow-md ring-4 ring-primary/10 shrink-0 overflow-hidden">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user.email?.charAt(0).toUpperCase() || "U"
+                )}
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <h2 className="text-lg font-bold truncate">Tài khoản</h2>
+                <p className="text-[13px] text-muted-foreground truncate">{user.email}</p>
+              </div>
             </div>
             
-            <nav className="flex flex-col space-y-1">
+            <nav className="flex flex-col space-y-1.5">
               {menuItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -61,25 +67,27 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+                      "flex items-center px-4 py-3 text-[14.5px] font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-primary/10 text-primary font-bold shadow-sm ring-1 ring-primary/20"
+                        : "text-foreground/70 hover:bg-muted/50 hover:text-foreground"
                     )}
                   >
-                    <item.icon className={cn("mr-3 w-5 h-5", isActive ? "text-primary" : "text-gray-500")} />
+                    <item.icon className={cn("mr-3 size-5 transition-colors", isActive ? "text-primary" : "text-muted-foreground")} />
                     {item.name}
                   </Link>
                 );
               })}
               
-              <hr className="my-2" />
+              <div className="py-2">
+                <div className="h-px w-full bg-border/50" />
+              </div>
               
               <button
                 onClick={() => logout()}
-                className="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                className="flex items-center px-4 py-3 text-[14.5px] font-medium rounded-xl text-red-600/80 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-500 transition-colors w-full text-left"
               >
-                <LogOut className="mr-3 w-5 h-5 text-red-500" />
+                <LogOut className="mr-3 size-5 text-red-500/70" />
                 Đăng xuất
               </button>
             </nav>
@@ -88,7 +96,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">
-          <div className=" rounded-xl shadow-sm border p-4 md:p-6 min-h-[400px]">
+          <div className="min-h-[400px]">
             {children}
           </div>
         </main>

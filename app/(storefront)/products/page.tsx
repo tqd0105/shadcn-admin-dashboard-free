@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/storefront/product-card";
 import { ProductsFilter } from "@/components/storefront/products-filter";
 import { ProductsSort } from "@/components/storefront/products-sort";
 import { ProductsPagination } from "@/components/storefront/products-pagination";
+import { IconSearch } from "@tabler/icons-react";
 
 export const metadata = {
   title: "Products | LuxeCommerce",
@@ -87,9 +88,13 @@ export default async function ProductsPage({
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center flex flex-col items-center justify-center border rounded-xl border-dashed">
-            <h3 className="text-xl font-bold mb-2">No products found</h3>
-            <p className="text-muted-foreground">Try adjusting your filters to find what you&apos;re looking for.</p>
+          <div className="py-24 text-center flex flex-col items-center justify-center border border-border/50 bg-card/80 backdrop-blur-xl rounded-[32px] shadow-sm relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+            <div className="w-24 h-24 bg-primary/10 text-primary rounded-[24px] flex items-center justify-center mx-auto shadow-inner relative z-10 mb-6">
+              <IconSearch className="w-12 h-12 stroke-[2]" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Không tìm thấy sản phẩm</h3>
+            <p className="text-muted-foreground text-sm max-w-sm">Rất tiếc, chúng tôi không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại. Vui lòng thử lại với các tiêu chí khác.</p>
           </div>
         )}
 

@@ -149,31 +149,35 @@ export async function placeOrder(checkoutData: CheckoutData) {
     window.dispatchEvent(new CustomEvent("cart-updated"));
   }
 
-  // 6. Phát tín hiệu Realtime tức thời cho Admin Dashboard (Qua cả WebSocket và BroadcastChannel)
-  try {
-    if (typeof window !== "undefined" && window.BroadcastChannel) {
-      new BroadcastChannel("admin_orders_channel").postMessage({ type: "NEW_ORDER", order });
-    }
-    const channel = supabase.channel("global-admin-orders-notifier");
-    await new Promise<void>((resolve) => {
-      const timer = setTimeout(() => {
-        supabase.removeChannel(channel);
-        resolve();
-      }, 500);
-      channel.subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.send({
-            type: "broadcast",
-            event: "NEW_ORDER",
-            payload: order
-          });
-          clearTimeout(timer);
+  // 6. Phát tín hiệu Realtime tức thời cho Admin Dashboard (Chỉ phát ngay với COD; Nếu là Banking thì hoãn chờ thanh toán thành công mới báo Admin)
+  if (checkoutData.paymentMethod !== "banking" && !checkoutData.paymentMethod?.includes("VietQR")) {
+    try {
+      if (typeof window !== "undefined" && window.BroadcastChannel) {
+        new BroadcastChannel("admin_orders_channel").postMessage({ type: "NEW_ORDER", order });
+      }
+      const channel = supabase.channel("global-admin-orders-notifier");
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
           supabase.removeChannel(channel);
           resolve();
-        }
+        }, 500);
+        channel.subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await channel.send({
+              type: "broadcast",
+              event: "NEW_ORDER",
+              payload: order
+            });
+            clearTimeout(timer);
+            supabase.removeChannel(channel);
+            resolve();
+          }
+        });
       });
-    });
-  } catch (err) {}
+    } catch (err) {}
+  } else {
+    console.log("⏸️ [Checkout Service] Đơn hàng thanh toán qua VietQR (banking), tạm hoãn báo động âm thanh cho Admin cho đến khi thanh toán thành công!");
+  }
 
   // 7. Gửi email xác nhận đơn hàng (Chỉ gửi ngay với COD; Nếu là Banking thì hoãn chờ thanh toán thành công mới gửi)
   if (checkoutData.paymentMethod !== "banking") {

@@ -8,6 +8,8 @@ import { GithubIcon } from "lucide-react";
 import Link from "next/link";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { authService } from "@/lib/services/auth.service";
+import { getProfile } from "@/lib/services/profile.service";
+import { getRole } from "@/lib/services/role.service";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -18,12 +20,22 @@ export default function LoginPageV1() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await authService.login(email, password);
+    const { data: authData, error } = await authService.login(email, password);
     if (error) {
       alert(error.message);
       return;
     }
-    router.push("/dashboard");
+    if (authData?.user) {
+      const { data: profileData } = await getProfile(authData.user.id);
+      if (profileData?.role_id) {
+        const { data: roleData } = await getRole(profileData.role_id);
+        if (roleData?.name === "admin" || roleData?.name === "staff") {
+          router.push("/dashboard");
+          return;
+        }
+      }
+    }
+    router.push("/");
   };
 
   return (

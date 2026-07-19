@@ -9,15 +9,24 @@ export async function NewArrivals() {
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="py-16 bg-secondary/10">
-      <div className="max-w-7xl mx-auto px-4 md:px-10">
-        <div className="flex justify-between items-end mb-10 border-b pb-4 border-outline-variant/30">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Sản phẩm Mới nhất</h2>
-            <p className="text-muted-foreground mt-2 text-sm md:text-base">Cập nhật ngay những xu hướng và sản phẩm công nghệ mới nhất</p>
+    <section className="py-24 bg-background relative overflow-hidden">
+      {/* Subtle Blue/Primary Glow */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-10 relative z-10">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 pb-6 relative">
+          {/* Gradient separator line */}
+          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-border/80 via-border/20 to-transparent" />
+          
+          <div className="mb-4 sm:mb-0">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">Sản phẩm Mới nhất</h2>
+            <p className="text-muted-foreground mt-2 font-medium text-sm md:text-base">Cập nhật ngay những xu hướng và sản phẩm mới nhất</p>
           </div>
-          <Link href="/products" className="text-sm text-primary font-medium flex items-center hover:underline whitespace-nowrap mb-1">
-            Xem tất cả <ArrowRight className="ml-1 w-4 h-4" />
+          <Link 
+            href="/products" 
+            className="group flex items-center gap-2 text-sm font-semibold text-foreground bg-card/60 backdrop-blur-md border border-border/50 hover:bg-primary hover:text-primary-foreground hover:border-primary px-5 py-2.5 rounded-[16px] transition-all duration-300 shadow-sm shrink-0 mb-1"
+          >
+            Xem tất cả <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
         

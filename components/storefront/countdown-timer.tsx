@@ -73,21 +73,21 @@ export function CountdownTimer() {
   return (
     <div className="flex gap-4">
       <div className="flex flex-col items-center">
-        <div className="w-14 h-14 bg-gray-100 text-red-700 rounded-lg flex items-center justify-center text-2xl font-bold shadow-md mb-1">
+        <div className="w-14 h-14 bg-gradient-to-b from-red-500 to-yellow-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-md mb-1">
           {formatNum(timeLeft.hours)}
         </div>
         <span className="text-xs font-semibold text-muted-foreground">Giờ</span>
       </div>
       <div className="text-2xl font-bold text-muted-foreground mt-2">:</div>
       <div className="flex flex-col items-center">
-        <div className="w-14 h-14 bg-gray-100 text-red-700 rounded-lg flex items-center justify-center text-2xl font-bold shadow-md mb-1">
+        <div className="w-14 h-14 bg-gradient-to-t from-red-500 to-yellow-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-md mb-1">
           {formatNum(timeLeft.minutes)}
         </div>
         <span className="text-xs font-semibold text-muted-foreground">Phút</span>
       </div>
       <div className="text-2xl font-bold text-muted-foreground mt-2">:</div>
       <div className="flex flex-col items-center">
-        <div className="w-14 h-14 bg-gray-100 text-red-700 rounded-lg flex items-center justify-center text-2xl font-bold shadow-md mb-1">
+        <div className="w-14 h-14 bg-gradient-to-b from-red-500 to-yellow-500 text-white rounded-lg flex items-center justify-center text-2xl font-bold shadow-md mb-1">
           {formatNum(timeLeft.seconds)}
         </div>
         <span className="text-xs font-semibold text-muted-foreground">Giây</span>

@@ -238,6 +238,14 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       const targetOrder = currentOrder || orderRef.current;
       if (targetOrder) {
         triggerSuccessEmail(targetOrder, payData);
+        if (typeof window !== "undefined" && window.BroadcastChannel) {
+          try {
+            new BroadcastChannel("admin_orders_channel").postMessage({
+              type: "NEW_ORDER",
+              order: { ...targetOrder, status: "paid" }
+            });
+          } catch {}
+        }
       }
       return;
     }
@@ -446,7 +454,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
   }
 
   return (
-    <div className="container max-w-4xl py-10 px-4 md:px-6 mx-auto">
+    <div className="container max-w-5xl py-8 px-4 md:px-6 mx-auto animate-in fade-in-50 duration-500">
       {status === "SUCCESS" && <CanvasConfetti />}
 
       {/* Nút quay lại bước trước & Hủy thanh toán */}
@@ -480,98 +488,139 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
         )}
       </div>
 
+      {/* STATUS HERO BANNER: Trạng thái & Thời gian đếm ngược rõ ràng, trực quan */}
+      {status === "PENDING" && (
+        <div className="mb-6 p-5 sm:p-6 rounded-[32px] bg-card/60 backdrop-blur-xl border border-amber-500/30 shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-primary/5 to-green-500/5 pointer-events-none" />
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-center gap-4 text-center sm:text-left z-10">
+            <div className="relative flex items-center justify-center shrink-0">
+              <span className="absolute size-14 rounded-full bg-green-500/50 animate-ping -z-100" />
+              <div className="size-16 rounded-[20px] bg-background text-white flex items-center justify-center shadow-inner">
+                <Image src="/icons/card.png" alt="Logo" width={44} height={44} />
+              </div>
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <h2 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 tracking-tight">
+                  Đang chờ thanh toán...
+                </h2>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
+                Quét mã QR bên dưới hoặc chuyển khoản theo đúng thông tin. Màn hình sẽ thông báo <strong className="text-green-500 font-bold">Thành công</strong> sau khi nhận được tiền!
+              </p>
+            </div>
+          </div>
+
+          {/* ĐỒNG HỒ ĐẾM NGƯỢC RÕ RÀNG VÀ NỔI BẬT */}
+          <div className="flex flex-col items-center w-full sm:w-fit sm:items-end shrink-0 bg-background/80 backdrop-blur-md px-5 py-3 rounded-[20px] border border-border/50 shadow-sm z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Thời gian giữ đơn</span>
+            <div className="flex items-center justify-center gap-2 mt-0.5 font-mono font-black text-3xl text-amber-600 dark:text-amber-400 tracking-tight drop-shadow-sm">
+              <Image src="/icons/time.png" alt="Logo" width={25} height={25} />
+              <div className="w-[3em] text-center">{formatTime(timeLeft)}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-        {/* CỘT TRÁI: THÔNG TIN CHUYỂN KHOẢN & QR */}
-        <div className="md:col-span-7 bg-card border rounded-3xl p-6 md:p-8 shadow-xl shadow-black/5 relative overflow-hidden">
-          <div className="flex items-center justify-between border-b pb-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+        {/* CỘT TRÁI: MÃ QR RỘNG HƠN & HƯỚNG DẪN TRỰC QUAN */}
+        <div className="md:col-span-7 bg-card/80 backdrop-blur-xl border border-border/50 rounded-[32px] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col items-center">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
+          <div className="w-full flex items-center justify-between border-b border-border/50 pb-4 mb-6 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[16px] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
                 <IconQrcode className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Cổng Thanh Toán VietQR</h1>
-                <p className="text-xs text-muted-foreground">Quét mã bằng ứng dụng Ngân hàng</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Quét Mã VietQR Tự Động</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">Hỗ trợ tất cả ứng dụng Ngân hàng & MoMo</p>
               </div>
             </div>
-            {status === "PENDING" && (
-              <div className="flex items-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-500/20 animate-pulse">
-                <IconClock className="w-4 h-4" />
-                <span>{formatTime(timeLeft)}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-sm">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Napas 24/7</span>
+            </div>
           </div>
 
           {status === "SUCCESS" ? (
             /* TRẠNG THÁI THÀNH CÔNG */
-            <div className="py-12 text-center space-y-6 animate-in fade-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto ring-8 ring-green-500/5 shadow-inner">
-                <IconCheck className="w-10 h-10 stroke-[3]" />
+            <div className="py-16 text-center space-y-6 animate-in fade-in zoom-in duration-500 relative overflow-hidden bg-green-500/5 rounded-3xl border border-green-500/20 w-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+              <div className="w-24 h-24 bg-green-500/10 text-green-600 dark:text-green-400 rounded-[24px] flex items-center justify-center mx-auto shadow-inner relative z-10">
+                <IconCheck className="w-12 h-12 stroke-[3]" />
               </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
+              <div className="space-y-3 relative z-10 px-4">
+                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400 flex items-center justify-center gap-2">
                   <span>Thanh toán thành công!</span>
                 </h2>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                <p className="text-base text-muted-foreground max-w-md mx-auto">
                   Hệ thống đã xác thực giao dịch tự động thành công. Đơn hàng <strong className="text-foreground">#{order?.id.split("-")[0].toUpperCase()}</strong> của bạn đã được xác nhận và đang chuyển sang bộ phận đóng gói!
                 </p>
               </div>
-              <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="lg" className="font-bold shadow-lg shadow-primary/25 rounded-xl">
+              <div className="pt-6 flex flex-col sm:flex-row gap-4 justify-center relative z-10 px-4">
+                <Button asChild size="lg" className="rounded-xl font-bold shadow-lg shadow-green-500/20 bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300 w-full sm:w-auto">
                   <Link href="/account/orders">Xem chi tiết đơn hàng</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-xl font-semibold">
+                <Button asChild variant="outline" size="lg" className="rounded-xl font-bold hover:scale-105 transition-transform duration-300 w-full sm:w-auto">
                   <Link href="/">Tiếp tục mua sắm</Link>
                 </Button>
               </div>
             </div>
           ) : status === "EXPIRED" ? (
             /* TRẠNG THÁI HẾT HẠN */
-            <div className="py-12 text-center space-y-6 animate-in fade-in duration-300">
-              <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto">
-                <IconAlertCircle className="w-8 h-8" />
+            <div className="py-16 text-center space-y-6 animate-in fade-in duration-300 relative overflow-hidden bg-destructive/5 rounded-3xl border border-destructive/20 w-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-destructive/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+              <div className="w-24 h-24 bg-destructive/10 text-destructive rounded-[24px] flex items-center justify-center mx-auto shadow-inner relative z-10">
+                <IconAlertCircle className="w-12 h-12 stroke-[2]" />
               </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-destructive">Mã thanh toán đã hết hạn</h2>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              <div className="space-y-3 relative z-10 px-4">
+                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-destructive to-destructive/70">Mã thanh toán đã hết hạn</h2>
+                <p className="text-base text-muted-foreground max-w-sm mx-auto">
                   Phiên làm việc 10 phút đã kết thúc để đảm bảo an toàn giao dịch. Bạn vui lòng tạo mã mới để tiếp tục.
                 </p>
               </div>
-              <Button onClick={handleRegenerateQR} size="lg" disabled={refreshing} className="rounded-xl font-bold shadow-md">
-                {refreshing ? <IconLoader2 className="w-5 h-5 mr-2 animate-spin" /> : <IconRefresh className="w-5 h-5 mr-2" />}
-                Tạo lại mã thanh toán mới
-              </Button>
+              <div className="pt-4 relative z-10 px-4">
+                <Button onClick={handleRegenerateQR} size="lg" disabled={refreshing} className="rounded-xl font-bold shadow-lg shadow-destructive/20 bg-destructive hover:bg-destructive/90 hover:scale-105 transition-all duration-300 w-full sm:w-auto">
+                  {refreshing ? <IconLoader2 className="w-5 h-5 mr-2 animate-spin" /> : <IconRefresh className="w-5 h-5 mr-2" />}
+                  Tạo lại mã thanh toán mới
+                </Button>
+              </div>
             </div>
           ) : (
-            /* TRẠNG THÁI ĐANG CHỜ THANH TOÁN (PENDING) */
-            <div className="space-y-6">
-              {/* Ảnh QR Code */}
-              <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-primary/20 flex flex-col items-center justify-center shadow-inner relative group">
+            <div className="w-full flex flex-col items-center space-y-6 relative z-10">
+              {/* Ảnh QR Code RỘNG HƠN & RÕ RÀNG HƠN */}
+              <div className="w-full bg-white p-4 sm:p-6 rounded-[24px] border border-border/50 flex flex-col items-center justify-center shadow-sm relative group max-w-md mx-auto">
                 {payment && (
                   <Image
-                    width={256}
-                    height={256}
+                    width={380}
+                    height={380}
                     unoptimized
                     src={getVietQRUrl({ amount: payment.amount, paymentCode: payment.payment_code, addInfo: getCustomTransferNote() })}
                     alt="VietQR Chuyển khoản"
-                    className="w-80 h-80 object-contain transition-transform group-hover:scale-105 duration-300"
+                    className="w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] object-contain transition-transform group-hover:scale-[1.02] duration-300"
                   />
                 )}
-                {/* <div className="mt-4 text-center">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ngân hàng thụ hưởng</p>
-                  <p className="text-base font-bold text-primary flex items-center justify-center gap-1.5 mt-0.5">
-                    <IconBuildingBank className="w-5 h-5" /> VPBank
-                  </p>
-                </div> */}
               </div>
 
-              {/* Hướng dẫn quét */}
-              <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4 text-xs text-primary/90 space-y-1.5">
-                <p className="font-bold flex items-center gap-1.5">
-                  <IconSparkles className="w-4 h-4 text-amber-500" /> Hướng dẫn chuyển khoản nhanh 100% tự động:
-                </p>
-                <p>1. Mở App ngân hàng bất kỳ hoặc MoMo, chọn <strong>Quét mã QR</strong>.</p>
-                <p>2. Kiểm tra đúng số tiền và <strong>Nội dung chuyển khoản (Mã LX...)</strong> đã điền sẵn.</p>
-                <p>3. Xác nhận chuyển tiền &rarr; Hệ thống sẽ phát tín hiệu âm thanh và thông báo thành công chỉ trong 1 phút!</p>
+              {/* Hướng dẫn 3 bước ngắn gọn, trực quan, không nhiều chữ */}
+              <div className="w-full grid grid-cols-3 gap-2 sm:gap-3 pt-2">
+                <div className="bg-muted/40 rounded-2xl p-3 text-center border">
+                  <div className="size-7 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center mx-auto mb-1.5">1</div>
+                  <p className="text-xs font-bold text-foreground">Quét mã QR</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Mở App Ngân hàng</p>
+                </div>
+                <div className="bg-muted/40 rounded-2xl p-3 text-center border">
+                  <div className="size-7 rounded-full bg-amber-500/10 text-amber-600 font-black text-xs flex items-center justify-center mx-auto mb-1.5">2</div>
+                  <p className="text-xs font-bold text-foreground">Kiểm tra thông tin</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Số tiền & Nội dung</p>
+                </div>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 text-center">
+                  <div className="size-7 rounded-full bg-emerald-500/20 text-emerald-600 font-black text-xs flex items-center justify-center mx-auto mb-1.5">3</div>
+                  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Tự động duyệt</p>
+                  <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">Xong trong 30s</p>
+                </div>
               </div>
             </div>
           )}
@@ -579,10 +628,11 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
         {/* CỘT PHẢI: CHI TIẾT TÀI KHOẢN & ĐƠN HÀNG */}
         <div className="md:col-span-5 space-y-6">
-          <div className="bg-card border rounded-3xl p-6 shadow-lg shadow-black/5 space-y-5">
-            <p className="text-md text-muted-foreground border-b font-semibold pb-3 text-foreground flex items-center justify-between">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[32px] p-6 sm:p-8 shadow-sm space-y-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
+            <p className="text-md text-muted-foreground border-b border-border/50 font-semibold pb-3 text-foreground flex items-center justify-between relative z-10">
               <span>Ngân hàng thụ hưởng</span>
-              <span className="text-lg font-bold text-green-700">{bankConfig.bankId}</span>
+              <span className="text-lg font-extrabold text-green-700 dark:text-green-500 tracking-wide">{bankConfig.bankId}</span>
             </p>
 
             <div className="space-y-4 text-sm">
@@ -599,7 +649,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-background hover:bg-primary hover:text-primary-foreground transition-all"
+                  className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-background hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
                   onClick={() => handleCopy(bankConfig.accountNo, "Số tài khoản")}
                 >
                   <IconCopy className="w-3.5 h-3.5 mr-1" /> Copy
@@ -614,49 +664,64 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-background hover:bg-primary hover:text-primary-foreground transition-all"
+                  className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-background hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
                   onClick={() => handleCopy((payment?.amount || 0).toString(), "Số tiền")}
                 >
                   <IconCopy className="w-3.5 h-3.5 mr-1" /> Copy
                 </Button>
               </div>
 
-              <div className="flex justify-between items-center bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-2xl">
-                <div>
-                  <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 block">Nội dung chuyển khoản (Bắt buộc):</span>
-                  <span className="font-mono font-black text-lg md:text-xl text-amber-600 dark:text-amber-300 tracking-wider block mt-0.5">
+              {/* Nội dung chuyển khoản: Hiển thị trọn vẹn 100% trên 1 hàng (whitespace-nowrap), KHÔNG có thanh cuộn, KHÔNG bị cắt chữ */}
+              <div className="bg-amber-500/10 border-2 border-amber-500/30 p-4 sm:p-4.5 rounded-2xl space-y-2.5 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold  tracking-wider text-gray-800 dark:text-gray-300 flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                    Nội dung chuyển khoản (Bắt buộc):
+                  </span>
+                </div>
+
+                {/* Khung chứa mã: Kích thước text-sm sm:text-base tracking-tight giúp 25 ký tự nằm gọn trên đúng 1 hàng ngang mà KHÔNG cần thanh cuộn hay overflow */}
+                <div className="w-full bg-background dark:bg-card px-3 py-2.5 rounded-xl border border-amber-500/35 shadow-inner flex items-center justify-center">
+                  <span className="font-mono font-extrabold text-sm sm:text-base text-amber-600 dark:text-amber-400 tracking-tight  select-all">
                     {getCustomTransferNote() || "..."}
                   </span>
                 </div>
+
+                {/* Nút copy xuống hàng bên dưới với chiều ngang trọn vẹn w-full để dễ bấm trên mọi thiết bị */}
                 <Button
                   variant="default"
                   size="sm"
-                  className="h-9 px-3 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 transition-all shrink-0 ml-2"
+                  className="h-9 w-full rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                   onClick={() => handleCopy(getCustomTransferNote(), "Nội dung chuyển khoản")}
                 >
-                  <IconCopy className="w-4 h-4 mr-1.5" /> Copy
+                  <IconCopy className="w-4 h-4 shrink-0" />
+                  Sao chép 
                 </Button>
               </div>
             </div>
 
             <div className="border-t pt-4">
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                 <span>Mã đơn hàng:</span>
-                <span className="font-mono font-medium">#{order?.id.split("-")[0].toUpperCase()}</span>
+                <span className="font-mono font-bold text-foreground">#{order?.id.split("-")[0].toUpperCase()}</span>
               </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between text-xs text-muted-foreground items-center">
                 <span>Trạng thái thanh toán:</span>
-                <span className={`font-bold ${status === "SUCCESS" ? "text-green-600" : status === "EXPIRED" ? "text-destructive" : "text-amber-600"}`}>
-                  {status === "SUCCESS" ? "Đã thanh toán" : status === "EXPIRED" ? "Hết hạn" : "Đang chờ thanh toán..."}
+                <span className={`font-bold px-2 py-0.5 rounded-full ${status === "SUCCESS" ? "bg-green-500/10 text-green-600" : status === "EXPIRED" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600 animate-pulse"}`}>
+                  {status === "SUCCESS" ? "✓ Đã thanh toán" : status === "EXPIRED" ? "❌ Hết hạn" : "🕒 Đang chờ thanh toán..."}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-muted/40 rounded-2xl p-4 text-xs text-muted-foreground space-y-2 border">
-            <p className="font-semibold text-foreground">💡 Lưu ý quan trọng:</p>
-            <p>- Bạn vui lòng nhập **ĐÚNG** Nội dung chuyển khoản là <strong className="text-foreground">{getCustomTransferNote()}</strong> để hệ thống nhận diện tự động.</p>
-            <p>- Ngay sau khi ngân hàng {bankConfig.bankId} báo nhận tiền, màn hình này sẽ tự động thông báo kèm âm thanh và chuyển thành trạng thái thành công.!</p>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs space-y-1.5 flex items-start gap-3">
+            <span className="text-lg">⚠️</span>
+            <div className="space-y-1">
+              <p className="font-bold text-amber-800 dark:text-amber-300">Lưu ý quan trọng:</p>
+              <p className="text-amber-700 dark:text-amber-400 leading-relaxed">
+                Vui lòng nhập dúng<strong> Nội dung chuyển khoản</strong> là <strong className="font-mono bg-amber-500/20 px-1.5 py-0.5 rounded text-foreground">{getCustomTransferNote()}</strong> để hệ thống tự động xác nhận giao dịch trong 30 giây!
+              </p>
+            </div>
           </div>
 
           {status === "PENDING" && (

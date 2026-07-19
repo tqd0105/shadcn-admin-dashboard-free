@@ -11,12 +11,11 @@ Xây dựng một hệ thống E-commerce tích hợp hoàn chỉnh bao gồm: m
 - **UI Components:** shadcn/ui, @tabler/icons-react, lucide-react
 
 ## Cấu trúc thư mục hiện tại
-- `app/(storefront)/`: Chứa giao diện người dùng mua sắm (Trang chủ, Danh sách sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Thanh toán).
-- Quản lý sản phẩm & Phân loại (Categories & Products)
-- Giỏ hàng & Thanh toán (Cart & Checkout)
-- Quản lý mã giảm giá (Coupons)
-- Tài khoản khách hàng (Customer Account Portal: Settings, Orders, Addresses, Wishlist).
-- `app/dashboard/`: Chứa giao diện quản trị viên (Admin Dashboard).
+- `app/(storefront)/`: Chứa giao diện người dùng mua sắm (Trang chủ, Danh sách sản phẩm, Chi tiết sản phẩm, Giỏ hàng, Thanh toán, Portal Khách hàng /account).
+- `app/dashboard/`: Chứa giao diện quản trị viên (Admin Dashboard):
+  - `orders/`: Quản lý danh sách đơn hàng (Bảng Đơn Hàng) & Nhật ký / Cảnh báo Đơn hàng Realtime (`Order Logs & Alerts Feed`).
+  - `notifications/`: Trung tâm gửi thông báo đẩy (Soạn tin Broadcast/Cá nhân & Lịch sử gửi).
+  - `products/`, `categories/`, `promo-banners/`, `coupons/`, `roles/`, `users/`, `settings/`.
 - `app/(guest)/`: Chứa các trang xác thực (Login, Register).
 - `components/storefront/`: Các UI components chuyên dùng cho mặt tiền cửa hàng (Hero Banner, Product Card, Cart...).
 - `components/admin/`: Các UI components chuyên dùng cho Admin.
@@ -63,3 +62,4 @@ Xây dựng một hệ thống E-commerce tích hợp hoàn chỉnh bao gồm: m
 - Mọi route trong `/dashboard/*` đều được bảo vệ bởi `role-guard.tsx`. 
 - Nếu role != 'admin', người dùng bị đẩy ra ngoài.
 - Admin có thể đọc/ghi tất cả dữ liệu (thông qua RLS Admin Policy).
+- Quản trị viên theo dõi tiến trình đơn hàng & cảnh báo đơn mới Realtime ngay tại `/dashboard/orders` (gồm tab Danh sách Đơn hàng và tab Nhật ký & Cảnh báo).
