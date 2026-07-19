@@ -113,25 +113,26 @@ export default function CartPage() {
 
   if (role === "admin" || role === "staff") {
     return (
-      <div className="container mx-auto py-20 px-4 flex flex-col items-center justify-center min-h-[55vh]">
-        <div className="max-w-xl w-full  border-3 border-black p-6 rounded-2xl shadow-lg flex flex-col items-center text-center space-y-4">
-          <Image src="/icons/warning2.png" alt="Warning" width={64} height={64} />
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-            Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
-          </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {role === "admin"
-              ? "Tài khoản Quản trị viên (Admin) không được tạo giỏ hàng và mua sắm cá nhân để bảo đảm tính trung thực về doanh thu"
-              : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không thể tiến hành thanh toán giỏ hàng cá nhân."}
-          </p>
-          <div className="pt-2 flex flex-col sm:flex-row gap-3 w-full justify-center">
-            <Button asChild className="w-full sm:w-auto font-medium">
-              <Link href="/dashboard">Về Dashboard </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full sm:w-auto">
-              <Link href="/">Về Trang Chủ</Link>
-            </Button>
-          </div>
+      <div className="flex flex-col items-center justify-center py-20 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+        <div className="h-24 w-24 bg-red-500/10 rounded-[24px] flex items-center justify-center mb-4 shadow-inner">
+          <Image src="/icons/warning2.png" alt="Warning" width={56} height={56} className="object-contain drop-shadow-sm" />
+        </div>
+        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 relative z-10 text-center mb-3">
+          Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
+        </h2>
+        <p className="text-muted-foreground text-[15px] relative z-10 text-center max-w-lg leading-relaxed mb-6">
+          {role === "admin"
+            ? "Tài khoản Quản trị viên (Admin) không được tạo giỏ hàng và mua sắm cá nhân để bảo đảm tính trung thực về doanh thu."
+            : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không thể tiến hành thanh toán giỏ hàng cá nhân."}
+        </p>
+        <div className="pt-2 flex flex-col sm:flex-row gap-4 w-full justify-center relative z-10">
+          <Button asChild className="w-full sm:w-auto font-bold rounded-full px-8 shadow-md shadow-primary/20 h-11 transition-all hover:scale-105">
+            <Link href="/dashboard">Về Dashboard</Link>
+          </Button>
+          <Button variant="outline" asChild className="w-full sm:w-auto rounded-full px-8 font-bold hover:bg-muted/50 h-11 transition-all border-border/50 hover:border-foreground/20">
+            <Link href="/">Về Trang Chủ</Link>
+          </Button>
         </div>
       </div>
     );
@@ -139,10 +140,10 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 space-y-6 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center py-24 space-y-4 px-4 bg-card/50 backdrop-blur-xl border-2 border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
-        <div className="h-24 w-24 bg-primary/10 rounded-[24px] flex items-center justify-center mb-2 shadow-inner">
-          <IconShoppingCart className="h-12 w-12 text-primary/80" />
+        <div className="h-25 w-25 bg-primary/10 rounded-[25px] flex items-center justify-center mb-2 shadow-inner">
+          <Image src="/icons/cart1.png" alt="Empty Cart" width={64} height={64} />
         </div>
         <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 relative z-10">Giỏ hàng trống</h2>
         <p className="text-muted-foreground text-base relative z-10 text-center">Chưa có sản phẩm nào trong giỏ hàng của bạn.<br/>Hãy lấp đầy nó nhé!</p>
@@ -158,7 +159,7 @@ export default function CartPage() {
       <h1 className="text-3xl font-bold mb-8">Giỏ hàng của bạn</h1>
 
       <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-4">
+        <div className="md:col-span-2 space-y-4 mx-2">
           <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[24px] shadow-sm overflow-hidden">
             <Table>
               <TableHeader>
@@ -292,7 +293,7 @@ export default function CartPage() {
           </div>
         </div>
 
-        <div className="md:col-span-1">
+        <div className="md:col-span-1 mx-2">
           <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[24px] p-6 sm:p-8 shadow-xl sticky top-28 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
             <h2 className="text-xl font-bold mb-6">Tóm tắt đơn hàng</h2>

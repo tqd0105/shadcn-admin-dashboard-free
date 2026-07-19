@@ -38,8 +38,8 @@ import { toast } from "sonner";
 function OrderTimeline({ status }: { status: string }) {
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-2 py-2 px-4 sm:px-6 bg-rose-500/10 border-b border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+      <div className="flex items-center gap-2 py-2 px-4 sm:px-6 bg-rose-500 border-b-2 border-white text-white dark:text-rose-400 text-xs font-bold">
+        <Image src="/icons/cancel_order.png" alt="ic-cancel" width={30} height={30} />
         <span>Đơn hàng này đã bị hủy.</span>
       </div>
     );
@@ -435,25 +435,26 @@ export default function MyOrdersPage() {
 
   if (role === "admin" || role === "staff") {
     return (
-      <div className="container mx-auto py-20 px-4 flex flex-col items-center justify-center min-h-[55vh]">
-        <div className="max-w-lg w-full border-3 border-black p-6 rounded-2xl shadow-lg flex flex-col items-center text-center space-y-4">
-          <Image src="/icons/infor.png" alt="Info" width={64} height={64} />
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-            Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
-          </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {role === "admin"
-              ? "Tài khoản Quản trị viên (Admin) không có lịch sử đơn hàng cá nhân để đảm bảo tính trung thực về dữ liệu kinh doanh."
-              : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không sử dụng để đặt hàng mua sắm."}
-          </p>
-          <div className="pt-2 flex flex-col sm:flex-row gap-3 w-full justify-center">
-            <Button onClick={() => router.push("/dashboard/orders")} className="w-full sm:w-auto font-medium">
-              Quản lý Đơn hàng
-            </Button>
-            <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full sm:w-auto">
-              Về Dashboard
-            </Button>
-          </div>
+      <div className="flex flex-col items-center justify-center py-20 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+        <div className="h-24 w-24 bg-primary/10 rounded-[24px] flex items-center justify-center mb-4 shadow-inner">
+          <Image src="/icons/infor.png" alt="Info" width={56} height={56} className="object-contain drop-shadow-sm" />
+        </div>
+        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 relative z-10 text-center mb-3">
+          Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
+        </h2>
+        <p className="text-muted-foreground text-[15px] relative z-10 text-center max-w-lg leading-relaxed mb-6">
+          {role === "admin"
+            ? "Tài khoản Quản trị viên (Admin) không có lịch sử đơn hàng cá nhân để đảm bảo tính trung thực về dữ liệu kinh doanh."
+            : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không sử dụng để đặt hàng mua sắm."}
+        </p>
+        <div className="pt-2 flex flex-col sm:flex-row gap-4 w-full justify-center relative z-10">
+          <Button onClick={() => router.push("/dashboard/orders")} className="w-full sm:w-auto font-bold rounded-full px-8 shadow-md shadow-primary/20 h-11 transition-all hover:scale-105">
+            Quản lý Đơn hàng
+          </Button>
+          <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full sm:w-auto rounded-full px-8 font-bold hover:bg-muted/50 h-11 transition-all border-border/50 hover:border-foreground/20">
+            Về Dashboard
+          </Button>
         </div>
       </div>
     );
@@ -634,8 +635,8 @@ export default function MyOrdersPage() {
                     </CardDescription>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto p-3 sm:p-0 bg-background/50 sm:bg-transparent rounded-xl sm:rounded-none border sm:border-0 border-border/50">
-                    <div className="sm:text-right">
-                      <span className="text-[10px] text-muted-foreground sm:block font-bold uppercase tracking-widest mb-0.5">Tổng thanh toán</span>
+                    <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between w-full">
+                      <span className="text-[10px] text-muted-foreground sm:block font-bold uppercase tracking-widest mb-0.5">Tổng tiền</span>
                       <span className="font-extrabold text-lg sm:text-xl text-primary">{formatCurrency(order.total_amount)}</span>
                     </div>
                   </div>
@@ -665,8 +666,8 @@ export default function MyOrdersPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full border shadow-sm ${
+                    <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center justify-between sm:justify-end gap-2.5 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full border shadow-sm w-full sm:w-aut text-center ${
                         isBanking
                           ? (payStatus === 'MATCHED' ? 'bg-green-500/10 text-green-600 border-green-500/20' 
                             : payStatus === 'MANUAL' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
@@ -681,7 +682,7 @@ export default function MyOrdersPage() {
                         )}
                       </span>
                       {isBanking && (payStatus === 'PENDING' || payStatus === 'CREATED') && order.status === 'pending' && (
-                        <Button asChild size="sm" className="h-8 px-4 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md rounded-full">
+                        <Button asChild size="sm" className="h-8 px-4 text-xs font-bold w-full sm:w-auto text-center bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md rounded-full">
                           <Link href={`/checkout/payment/${order.id}`}>
                             Thanh toán QR
                           </Link>
@@ -723,9 +724,9 @@ export default function MyOrdersPage() {
                                   Phân loại: <span className="font-semibold text-foreground/80 bg-background px-2 py-0.5 rounded-md border shadow-sm ml-1">{item.product_variants.name}</span>
                                 </p>
                               )}
-                              <div className="flex items-center gap-3 text-xs">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
                                 <span className="text-muted-foreground font-medium">Số lượng: <strong className="text-foreground">x{item.quantity}</strong></span>
-                                <div className="w-1 h-1 rounded-full bg-border" />
+                                <div className="hidden sm:block w-1 h-1 rounded-full bg-border" />
                                 <span className="font-extrabold text-sm text-primary">{formatCurrency(item.price)}</span>
                               </div>
                             </div>
@@ -791,7 +792,7 @@ export default function MyOrdersPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full sm:w-auto text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 h-10 px-6 rounded-full text-sm font-bold transition-colors"
+                        className="w-full sm:w-auto text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 h-10 px-6 rounded-full border border-red-500 shadow-sm text-sm font-bold transition-colors"
                         disabled={cancellingId === order.id}
                         onClick={() => confirmCancel(order.id)}
                       >

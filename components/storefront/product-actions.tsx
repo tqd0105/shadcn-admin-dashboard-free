@@ -309,7 +309,7 @@ export function ProductActions({ productId, productName, productImage, productSl
       </div>
 
       {/* Badges */}
-      <div className="flex justify-between  text-sm text-muted-foreground">
+      <div className="flex flex-col md:flex-row justify-between  text-sm text-muted-foreground">
         <div className="flex items-center"><span className="material-symbols-outlined text-[18px] mr-2">local_shipping</span> Giao hàng miễn phí toàn quốc</div>
         <div className="flex items-center"><span className="material-symbols-outlined text-[18px] mr-2">assignment_return</span> Đổi trả trong vòng 7 ngày</div>
       </div>

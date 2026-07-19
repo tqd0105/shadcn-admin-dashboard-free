@@ -237,7 +237,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
           <SheetTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2 h-10 px-4 rounded-full shadow-sm">
               <IconFilter className="h-4 w-4" />
-              Lọc & Sắp xếp
+              Bộ lọc
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[85vw] sm:max-w-md flex flex-col p-0">
