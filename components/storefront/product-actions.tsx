@@ -243,29 +243,29 @@ export function ProductActions({ productId, productName, productImage, productSl
 
       {/* Variants Selection */}
       {variants && variants.length > 0 && (
-        <div className="space-y-4 pt-4 border-t border-outline-variant/50">
+        <div className="space-y-4 pt-4 border-t border-border/50">
           <div>
-            <h3 className="text-sm font-semibold mb-2">Tùy chọn:</h3>
-            <div className="flex flex-wrap gap-2">
+            <h3 className="text-sm font-semibold mb-3 text-foreground">Tùy chọn:</h3>
+            <div className="flex flex-wrap gap-2.5">
               {variants.map((variant) => (
                 <button
                   key={variant.id}
                   onClick={() => setSelectedVariant(variant)}
                   className={cn(
-                    "px-4 py-2 border rounded-md transition-colors",
+                    "px-4 py-2 border rounded-[12px] transition-all duration-300 font-medium text-sm",
                     selectedVariant?.id === variant.id
-                      ? "border-primary bg-primary/5 text-primary font-medium"
-                      : "border-outline-variant hover:border-primary/50 text-on-surface-variant"
+                      ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                      : "border-border/60 bg-card/50 hover:bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {variant.name}
                   {variant.price_modifier > 0 && (
-                    <span className="text-xs ml-1 opacity-70">
+                    <span className="text-xs ml-1.5 opacity-70">
                       (+{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(variant.price_modifier)})
                     </span>
                   )}
                   {variant.price_modifier < 0 && (
-                    <span className="text-xs ml-1 opacity-70">
+                    <span className="text-xs ml-1.5 opacity-70">
                       ({new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(variant.price_modifier)})
                     </span>
                   )}
@@ -273,8 +273,9 @@ export function ProductActions({ productId, productName, productImage, productSl
               ))}
             </div>
             {selectedVariant && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Kho: {selectedVariant.stock_quantity > 0 ? `${selectedVariant.stock_quantity} sản phẩm` : <span className="text-red-500 font-medium">Hết hàng</span>}
+              <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" />
+                Kho: {selectedVariant.stock_quantity > 0 ? <strong className="text-foreground">{selectedVariant.stock_quantity} sản phẩm</strong> : <span className="text-destructive font-bold">Hết hàng</span>}
               </p>
             )}
           </div>
@@ -282,11 +283,11 @@ export function ProductActions({ productId, productName, productImage, productSl
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 ">
+      <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           onClick={handleAddToCart}
           disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="w-full flex justify-center items-center h-12 px-5 py-3 bg-primary text-primary-foreground font-semibold text-sm sm:text-base rounded-xl shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          className="w-full flex justify-center items-center h-14 px-5 py-3 bg-primary text-primary-foreground font-bold text-sm sm:text-base rounded-[16px] shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed whitespace-nowrap"
         >
           <span className="material-symbols-outlined text-[20px] mr-2">shopping_bag</span>
           <span>{isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}</span>
@@ -294,14 +295,14 @@ export function ProductActions({ productId, productName, productImage, productSl
         <button
           onClick={handleBuyNow}
           disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="flex-1 min-w-[130px] flex justify-center items-center h-12 px-5 py-3 bg-background border border-primary text-primary font-semibold text-sm sm:text-base rounded-xl hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
+          className="flex-1 min-w-[130px] flex justify-center items-center h-14 px-5 py-3 bg-card/80 backdrop-blur-md border-2 border-primary/20 text-primary font-bold text-sm sm:text-base rounded-[16px] hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
         >
           <span>{isAdding ? "Đang xử lý..." : "Mua ngay"}</span>
         </button>
         <button
           onClick={handleToggleWishlist}
           disabled={isTogglingHeart}
-          className="flex justify-center items-center h-12 w-12 bg-background border border-outline-variant text-muted-foreground rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
+          className="flex justify-center items-center h-14 w-14 bg-card/80 backdrop-blur-md border border-border/50 text-muted-foreground rounded-[16px] hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500 hover:border-red-200 transition-all duration-300 shrink-0"
         >
           <Heart className={cn("w-5 h-5 transition-colors shrink-0", isWishlisted && "fill-red-500 text-red-500")} />
         </button>

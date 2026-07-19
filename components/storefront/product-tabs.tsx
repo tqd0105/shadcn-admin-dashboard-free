@@ -37,14 +37,14 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   
   return (
-    <div className="mt-16 border border-outline-variant rounded-lg bg-surface-container-lowest overflow-hidden">
-      <div className="flex w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-b border-outline-variant bg-surface-container-low">
+    <div className="mt-16 bg-card/80 backdrop-blur-xl border border-border/50 rounded-[32px] overflow-hidden shadow-sm">
+      <div className="flex w-full p-2 gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-b border-border/50 bg-muted/20">
         <button
           className={cn(
-            "flex-1 shrink-0 py-3.5 sm:py-4 px-2 sm:px-4 text-xs sm:text-lg transition-colors text-center whitespace-nowrap",
+            "flex-1 shrink-0 py-3 sm:py-3.5 px-4 sm:px-6 text-sm sm:text-base transition-all duration-300 text-center whitespace-nowrap rounded-[20px]",
             activeTab === "desc"
-              ? "font-semibold text-primary border-b-2 border-primary bg-surface-container-lowest"
-              : "font-medium text-on-surface-variant border-b-2 border-transparent hover:text-primary"
+              ? "font-bold bg-primary text-primary-foreground shadow-md"
+              : "font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           onClick={() => setActiveTab("desc")}
         >
@@ -53,10 +53,10 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
         </button>
         <button
           className={cn(
-            "flex-1 shrink-0 py-3.5 sm:py-4 px-2 sm:px-4 text-xs sm:text-lg transition-colors text-center whitespace-nowrap",
+            "flex-1 shrink-0 py-3 sm:py-3.5 px-4 sm:px-6 text-sm sm:text-base transition-all duration-300 text-center whitespace-nowrap rounded-[20px]",
             activeTab === "specs"
-              ? "font-semibold text-primary border-b-2 border-primary bg-surface-container-lowest"
-              : "font-medium text-on-surface-variant border-b-2 border-transparent hover:text-primary"
+              ? "font-bold bg-primary text-primary-foreground shadow-md"
+              : "font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           onClick={() => setActiveTab("specs")}
         >
@@ -65,10 +65,10 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
         </button>
         <button
           className={cn(
-            "flex-1 shrink-0 py-3.5 sm:py-4 px-2 sm:px-4 text-xs sm:text-lg transition-colors text-center whitespace-nowrap",
+            "flex-1 shrink-0 py-3 sm:py-3.5 px-4 sm:px-6 text-sm sm:text-base transition-all duration-300 text-center whitespace-nowrap rounded-[20px]",
             activeTab === "reviews"
-              ? "font-semibold text-primary border-b-2 border-primary bg-surface-container-lowest"
-              : "font-medium text-on-surface-variant border-b-2 border-transparent hover:text-primary"
+              ? "font-bold bg-primary text-primary-foreground shadow-md"
+              : "font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
           onClick={() => setActiveTab("reviews")}
         >
@@ -76,7 +76,7 @@ export function ProductTabs({ productId, description, specs, reviews, productNam
         </button>
       </div>
 
-      <div className="p-8">
+      <div className="p-6 sm:p-8">
         {/* Description Tab */}
         {activeTab === "desc" && (
           <div className="space-y-6">

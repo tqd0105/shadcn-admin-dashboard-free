@@ -33,7 +33,7 @@ export async function CategoriesSection() {
           </div>
           <Link 
             href="/products" 
-            className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground bg-secondary/80 hover:bg-primary hover:text-primary-foreground px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm shrink-0"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground bg-card/80 backdrop-blur-md border border-border/50 hover:bg-primary hover:text-primary-foreground hover:border-primary px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm shrink-0"
           >
             Tất cả danh mục <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -49,10 +49,10 @@ export async function CategoriesSection() {
               <Link 
                 key={category.id} 
                 href={`/products?categories=${category.id}`}
-                className="group relative flex flex-col justify-between p-5 bg-card/60 dark:bg-card/30 hover:bg-card rounded-3xl border border-border/70 hover:border-primary/40 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+                className="group relative flex flex-col justify-between p-5 bg-card/80 backdrop-blur-xl hover:bg-card/90 rounded-[32px] border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
               >
                 {/* Khu vực Hình ảnh đại diện động (Product Collage Preview) */}
-                <div className="relative h-44 w-full rounded-2xl bg-muted/40 mb-5 flex items-center justify-center overflow-hidden p-3 border border-border/30 group-hover:border-primary/20 transition-colors">
+                <div className="relative h-44 w-full rounded-[24px] bg-muted/20 mb-5 flex items-center justify-center overflow-hidden p-3 border border-border/50 group-hover:border-primary/30 transition-colors">
                   {catProducts.length >= 2 ? (
                     <div className="relative size-full flex items-center justify-center">
                       {/* Ảnh sau lệch trái */}

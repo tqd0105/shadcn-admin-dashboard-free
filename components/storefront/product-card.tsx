@@ -31,34 +31,34 @@ export function ProductCard({ product }: ProductCardProps) {
     : originalPrice;
 
   return (
-    <div className="group border rounded-xl overflow-hidden bg-card transition-all duration-300 hover:shadow-lg relative flex flex-col h-full">
+    <div className="group border border-border/50 rounded-[24px] overflow-hidden bg-card/80 backdrop-blur-xl transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:bg-card relative flex flex-col h-full">
       {hasDiscount && (
-        <Badge className="absolute top-6 left-6 z-10 bg-red-600 hover:bg-red-700 text-black dark:text-white pointer-events-none">
+        <Badge className="absolute top-5 left-5 z-10 bg-red-600 hover:bg-red-700 text-white shadow-md border-none px-2.5 py-1 text-xs font-extrabold pointer-events-none">
           -{product.discount_percent}%
         </Badge>
       )}
-      <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary/30 mb-4 w-full block cursor-pointer">
+      <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary/10 m-3 rounded-[16px] block cursor-pointer">
         <Image
           fill
           unoptimized
           alt={product.name}
-          className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+          className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
           src={product.image_url || "/placeholder-image.jpg"}
         />
       </Link>
-      <div className="p-4 flex flex-col flex-grow">
-        <Link href={`/product/${product.id}`} className="flex justify-between items-center mb-2">
-          <div className="flex flex-col">
-            <h3 className="font-semibold text-xl text-foreground line-clamp-1 max-w-[180px] hover:text-primary transition-colors cursor-pointer">
+      <div className="p-4 pt-2 flex flex-col flex-grow">
+        <Link href={`/product/${product.id}`} className="flex justify-between items-start mb-2">
+          <div className="flex flex-col gap-1">
+            <h3 className="font-bold text-[17px] leading-snug text-foreground line-clamp-2 hover:text-primary transition-colors cursor-pointer pr-2">
               {product.name}
             </h3>
             {product.brand && (
-              <span className="text-blue-600 font-bold text-xs uppercase tracking-wider ">
+              <span className="text-primary/80 font-bold text-[10px] uppercase tracking-widest">
                 {product.brand}
               </span>
             )}
           </div>
-          <div className="flex flex-col items-end">
+          <div className="flex flex-col items-end shrink-0">
 
             <div className="mt-auto">
               <div className="flex justify-between text-xs font-semibold text-muted-foreground ">
@@ -74,19 +74,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
           </div>
         </Link>
-        <div className="flex justify-between items-center flex-wrap gap-x-3 gap-y-1 mb-2">
-          <div className="flex items-end gap-2">
-            <span className="font-bold text-red-600 text-lg leading-none">
+        <div className="flex justify-between items-end flex-wrap gap-x-3 gap-y-1 mt-auto pt-2">
+          <div className="flex flex-col items-start gap-1">
+            <span className="font-extrabold text-red-600 text-xl leading-none">
               {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(salePrice)}
             </span>
             {hasDiscount && (
-              <span className="text-muted-foreground line-through text-sm leading-none mb-[2px]">
+              <span className="text-muted-foreground line-through text-xs font-semibold leading-none">
                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(originalPrice)}
               </span>
             )}
           </div>
-
-
         </div>
       </div>
     </div>

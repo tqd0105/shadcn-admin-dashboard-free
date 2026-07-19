@@ -490,32 +490,33 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
       {/* STATUS HERO BANNER: Trạng thái & Thời gian đếm ngược rõ ràng, trực quan */}
       {status === "PENDING" && (
-        <div className="mb-4 p-5 sm:p-5 rounded-3xl bg-gradient-to-r from-yellow-300/15 via-primary/10 to-green-300/15 border-2 border-amber-500/30 shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="mb-6 p-5 sm:p-6 rounded-[32px] bg-card/60 backdrop-blur-xl border border-amber-500/30 shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-primary/5 to-green-500/5 pointer-events-none" />
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-center gap-4 text-center sm:text-left z-10">
             <div className="relative flex items-center justify-center shrink-0">
               <span className="absolute size-14 rounded-full bg-green-500/50 animate-ping -z-100" />
-              <div className="size-16 rounded-2xl text-white flex items-center justify-center">
-                <Image src="/icons/card.png" alt="Logo" width={48} height={48} />
+              <div className="size-16 rounded-[20px] bg-background text-white flex items-center justify-center shadow-inner">
+                <Image src="/icons/card.png" alt="Logo" width={44} height={44} />
               </div>
             </div>
             <div>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <h2 className="text-lg sm:text-xl font-extrabold text-foreground tracking-tight">
-                  Đang chờ bạn thanh toán...
+                <h2 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 tracking-tight">
+                  Đang chờ thanh toán...
                 </h2>
               </div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Quét mã QR bên dưới hoặc chuyển khoản theo đúng thông tin. Màn hình sẽ thông báo <strong className="text-green-500">Thành công</strong> sau khi nhận được tiền!
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
+                Quét mã QR bên dưới hoặc chuyển khoản theo đúng thông tin. Màn hình sẽ thông báo <strong className="text-green-500 font-bold">Thành công</strong> sau khi nhận được tiền!
               </p>
             </div>
           </div>
 
           {/* ĐỒNG HỒ ĐẾM NGƯỢC RÕ RÀNG VÀ NỔI BẬT */}
-          <div className="flex flex-col items-center w-full sm:w-fit sm:items-end shrink-0 bg-background/80 backdrop-blur-md px-5 py-3 rounded-2xl border shadow-sm z-10">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Thời gian giữ đơn</span>
-            <div className="flex items-center justify-center gap-2 mt-0.5 font-mono font-black text-2xl sm:text-3xl text-amber-600 dark:text-amber-400 tracking-tight">
+          <div className="flex flex-col items-center w-full sm:w-fit sm:items-end shrink-0 bg-background/80 backdrop-blur-md px-5 py-3 rounded-[20px] border border-border/50 shadow-sm z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Thời gian giữ đơn</span>
+            <div className="flex items-center justify-center gap-2 mt-0.5 font-mono font-black text-3xl text-amber-600 dark:text-amber-400 tracking-tight drop-shadow-sm">
               <Image src="/icons/time.png" alt="Logo" width={25} height={25} />
               <div className="w-[3em] text-center">{formatTime(timeLeft)}</div>
             </div>
@@ -525,18 +526,19 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         {/* CỘT TRÁI: MÃ QR RỘNG HƠN & HƯỚNG DẪN TRỰC QUAN */}
-        <div className="md:col-span-7 bg-card border rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 relative overflow-hidden flex flex-col items-center">
-          <div className="w-full flex items-center justify-between border-b pb-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <div className="md:col-span-7 bg-card/80 backdrop-blur-xl border border-border/50 rounded-[32px] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col items-center">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
+          <div className="w-full flex items-center justify-between border-b border-border/50 pb-4 mb-6 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[16px] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
                 <IconQrcode className="w-6 h-6" />
               </div>
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-foreground">Quét Mã VietQR Tự Động</h1>
-                <p className="text-xs text-muted-foreground">Hỗ trợ tất cả ứng dụng Ngân hàng & MoMo</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Hỗ trợ tất cả ứng dụng Ngân hàng & MoMo</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-sm">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Napas 24/7</span>
             </div>
@@ -544,49 +546,52 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
           {status === "SUCCESS" ? (
             /* TRẠNG THÁI THÀNH CÔNG */
-            <div className="py-12 text-center space-y-6 animate-in fade-in zoom-in duration-500">
-              <div className="w-20 h-20 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto ring-8 ring-green-500/5 shadow-inner">
-                <IconCheck className="w-10 h-10 stroke-[3]" />
+            <div className="py-16 text-center space-y-6 animate-in fade-in zoom-in duration-500 relative overflow-hidden bg-green-500/5 rounded-3xl border border-green-500/20 w-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+              <div className="w-24 h-24 bg-green-500/10 text-green-600 dark:text-green-400 rounded-[24px] flex items-center justify-center mx-auto shadow-inner relative z-10">
+                <IconCheck className="w-12 h-12 stroke-[3]" />
               </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 flex items-center justify-center gap-2">
+              <div className="space-y-3 relative z-10 px-4">
+                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400 flex items-center justify-center gap-2">
                   <span>Thanh toán thành công!</span>
                 </h2>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                <p className="text-base text-muted-foreground max-w-md mx-auto">
                   Hệ thống đã xác thực giao dịch tự động thành công. Đơn hàng <strong className="text-foreground">#{order?.id.split("-")[0].toUpperCase()}</strong> của bạn đã được xác nhận và đang chuyển sang bộ phận đóng gói!
                 </p>
               </div>
-              <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="lg" className="font-bold shadow-lg shadow-primary/25 rounded-xl">
+              <div className="pt-6 flex flex-col sm:flex-row gap-4 justify-center relative z-10 px-4">
+                <Button asChild size="lg" className="rounded-xl font-bold shadow-lg shadow-green-500/20 bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300 w-full sm:w-auto">
                   <Link href="/account/orders">Xem chi tiết đơn hàng</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-xl font-semibold">
+                <Button asChild variant="outline" size="lg" className="rounded-xl font-bold hover:scale-105 transition-transform duration-300 w-full sm:w-auto">
                   <Link href="/">Tiếp tục mua sắm</Link>
                 </Button>
               </div>
             </div>
           ) : status === "EXPIRED" ? (
             /* TRẠNG THÁI HẾT HẠN */
-            <div className="py-12 text-center space-y-6 animate-in fade-in duration-300">
-              <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto">
-                <IconAlertCircle className="w-8 h-8" />
+            <div className="py-16 text-center space-y-6 animate-in fade-in duration-300 relative overflow-hidden bg-destructive/5 rounded-3xl border border-destructive/20 w-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-destructive/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+              <div className="w-24 h-24 bg-destructive/10 text-destructive rounded-[24px] flex items-center justify-center mx-auto shadow-inner relative z-10">
+                <IconAlertCircle className="w-12 h-12 stroke-[2]" />
               </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-destructive">Mã thanh toán đã hết hạn</h2>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              <div className="space-y-3 relative z-10 px-4">
+                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-destructive to-destructive/70">Mã thanh toán đã hết hạn</h2>
+                <p className="text-base text-muted-foreground max-w-sm mx-auto">
                   Phiên làm việc 10 phút đã kết thúc để đảm bảo an toàn giao dịch. Bạn vui lòng tạo mã mới để tiếp tục.
                 </p>
               </div>
-              <Button onClick={handleRegenerateQR} size="lg" disabled={refreshing} className="rounded-xl font-bold shadow-md">
-                {refreshing ? <IconLoader2 className="w-5 h-5 mr-2 animate-spin" /> : <IconRefresh className="w-5 h-5 mr-2" />}
-                Tạo lại mã thanh toán mới
-              </Button>
+              <div className="pt-4 relative z-10 px-4">
+                <Button onClick={handleRegenerateQR} size="lg" disabled={refreshing} className="rounded-xl font-bold shadow-lg shadow-destructive/20 bg-destructive hover:bg-destructive/90 hover:scale-105 transition-all duration-300 w-full sm:w-auto">
+                  {refreshing ? <IconLoader2 className="w-5 h-5 mr-2 animate-spin" /> : <IconRefresh className="w-5 h-5 mr-2" />}
+                  Tạo lại mã thanh toán mới
+                </Button>
+              </div>
             </div>
           ) : (
-            /* TRẠNG THÁI ĐANG CHỜ THANH TOÁN (PENDING) */
-            <div className="w-full flex flex-col items-center space-y-6">
+            <div className="w-full flex flex-col items-center space-y-6 relative z-10">
               {/* Ảnh QR Code RỘNG HƠN & RÕ RÀNG HƠN */}
-              <div className="w-full bg-white p-4 sm:p-6 rounded-3xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center shadow-md relative group max-w-md mx-auto">
+              <div className="w-full bg-white p-4 sm:p-6 rounded-[24px] border border-border/50 flex flex-col items-center justify-center shadow-sm relative group max-w-md mx-auto">
                 {payment && (
                   <Image
                     width={380}
@@ -623,10 +628,11 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
         {/* CỘT PHẢI: CHI TIẾT TÀI KHOẢN & ĐƠN HÀNG */}
         <div className="md:col-span-5 space-y-6">
-          <div className="bg-card border rounded-3xl p-6 sm:p-7 shadow-lg shadow-black/5 space-y-5">
-            <p className="text-md text-muted-foreground border-b font-semibold pb-3 text-foreground flex items-center justify-between">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[32px] p-6 sm:p-8 shadow-sm space-y-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
+            <p className="text-md text-muted-foreground border-b border-border/50 font-semibold pb-3 text-foreground flex items-center justify-between relative z-10">
               <span>Ngân hàng thụ hưởng</span>
-              <span className="text-lg font-extrabold text-green-700 tracking-wide">{bankConfig.bankId}</span>
+              <span className="text-lg font-extrabold text-green-700 dark:text-green-500 tracking-wide">{bankConfig.bankId}</span>
             </p>
 
             <div className="space-y-4 text-sm">

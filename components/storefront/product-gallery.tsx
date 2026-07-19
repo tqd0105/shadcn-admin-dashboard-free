@@ -22,9 +22,9 @@ export function ProductGallery({ images, productName, discountPercent }: Product
 
   if (!images || images.length === 0) {
     return (
-      <div className="relative rounded-xl overflow-hidden border border-outline-variant bg-secondary/20 group aspect-square flex items-center justify-center">
+      <div className="relative rounded-[24px] overflow-hidden border border-border/50 bg-card/80 backdrop-blur-xl group aspect-square flex items-center justify-center shadow-sm">
         {hasDiscount && (
-          <Badge className="absolute top-4 left-4 z-10 bg-red-600 hover:bg-red-700 pointer-events-none text-white font-extrabold px-3 py-1 text-sm shadow-md">
+          <Badge className="absolute top-5 left-5 z-10 bg-red-600 hover:bg-red-700 pointer-events-none text-white font-extrabold px-3 py-1 text-sm shadow-md border-none">
             -{discountPercent}%
           </Badge>
         )}
@@ -32,7 +32,7 @@ export function ProductGallery({ images, productName, discountPercent }: Product
           fill
           unoptimized
           alt={productName}
-          className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+          className="object-contain p-6 transition-transform duration-700 group-hover:scale-110"
           src="/placeholder-image.jpg"
         />
       </div>
@@ -44,9 +44,9 @@ export function ProductGallery({ images, productName, discountPercent }: Product
   return (
     <div className="flex flex-col space-y-4">
       {/* Main Image */}
-      <div className="relative rounded-xl overflow-hidden border border-outline-variant bg-secondary/20 group aspect-square flex items-center justify-center">
+      <div className="relative rounded-[24px] overflow-hidden border border-border/50 bg-card/80 backdrop-blur-xl group aspect-square flex items-center justify-center shadow-sm">
         {hasDiscount && (
-          <Badge className="absolute top-4 left-4 z-10 bg-red-600 hover:bg-red-700 pointer-events-none text-white font-extrabold px-3 py-1 text-sm shadow-md">
+          <Badge className="absolute top-5 left-5 z-10 bg-red-600 hover:bg-red-700 pointer-events-none text-white font-extrabold px-3 py-1 text-sm shadow-md border-none">
             -{discountPercent}%
           </Badge>
         )}
@@ -54,7 +54,7 @@ export function ProductGallery({ images, productName, discountPercent }: Product
           fill
           unoptimized
           alt={productName}
-          className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+          className="object-contain p-6 transition-transform duration-700 group-hover:scale-110"
           src={mainImage.image_url}
         />
         {/* <button
@@ -73,10 +73,10 @@ export function ProductGallery({ images, productName, discountPercent }: Product
               key={image.id}
               onClick={() => setActiveIndex(index)}
               className={cn(
-                "flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-colors relative bg-secondary/20",
+                "flex-shrink-0 w-24 h-24 m-1 rounded-[16px] overflow-hidden border-2 transition-all duration-300 relative bg-card/60 backdrop-blur-md",
                 activeIndex === index
-                  ? "border-primary"
-                  : "border-transparent hover:border-outline-variant"
+                  ? "border-primary shadow-md scale-105 ring-4 ring-primary/10"
+                  : "border-transparent hover:border-border/80 hover:bg-card/80 opacity-70 hover:opacity-100"
               )}
             >
               <Image

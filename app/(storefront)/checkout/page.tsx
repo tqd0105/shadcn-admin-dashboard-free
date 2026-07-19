@@ -182,16 +182,17 @@ export default function CheckoutPage() {
 
   if (success) {
     return (
-      <div className="container mx-auto py-20 text-center space-y-6">
-        <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-          <IconCheck className="h-8 w-8" />
+      <div className="flex flex-col items-center justify-center py-24 space-y-6 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+        <div className="mx-auto w-24 h-24 bg-green-500/10 text-green-600 rounded-[24px] flex items-center justify-center mb-2 shadow-inner">
+          <IconCheck className="h-12 w-12" />
         </div>
-        <h1 className="text-3xl font-bold">Đặt hàng thành công!</h1>
-        <p className="text-muted-foreground text-lg">
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400 relative z-10">Đặt hàng thành công!</h1>
+        <p className="text-muted-foreground text-base relative z-10 text-center">
           Cảm ơn bạn đã mua sắm. Đơn hàng của bạn đang được xử lý.
         </p>
-        <div className="pt-6">
-          <Button asChild size="lg">
+        <div className="pt-6 relative z-10">
+          <Button asChild size="lg" className="rounded-xl px-8 font-bold shadow-lg shadow-green-500/20 bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300">
             <Link href="/account/orders">Quản lý Đơn hàng </Link>
           </Button>
         </div>
@@ -227,9 +228,10 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Giỏ hàng trống</h1>
-        <Button asChild>
+      <div className="flex flex-col items-center justify-center py-24 space-y-6 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 relative z-10">Giỏ hàng trống</h1>
+        <Button asChild size="lg" className="rounded-xl px-8 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform duration-300 relative z-10">
           <Link href="/cart">Quay lại Giỏ hàng</Link>
         </Button>
       </div>
@@ -243,16 +245,17 @@ export default function CheckoutPage() {
       <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-12">
         <div className="space-y-8">
           {/* Thông tin giao hàng */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold border-b pb-2">Thông tin nhận hàng</h2>
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[24px] p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
+            <h2 className="text-xl font-bold border-b border-border/50 pb-4">Thông tin nhận hàng</h2>
 
             {savedAddresses.length > 0 && (
-              <div className="bg-primary/5 p-4 rounded-lg border border-primary/20 space-y-2">
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 space-y-3">
                 <Label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1">
                   ★ Chọn nhanh từ Sổ địa chỉ đã lưu:
                 </Label>
                 <select
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground"
+                  className="w-full h-11 px-4 rounded-[14px] border border-input bg-background text-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground shadow-sm"
                   value={selectedAddressId}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -280,21 +283,23 @@ export default function CheckoutPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="fullName">Họ và Tên</Label>
+              <Label htmlFor="fullName" className="font-semibold">Họ và Tên</Label>
               <Input
                 id="fullName"
                 required
+                className="h-11 rounded-[14px] bg-background/50 focus:bg-background transition-colors"
                 value={formData.fullName}
                 onChange={e => setFormData({ ...formData, fullName: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Số điện thoại</Label>
+              <Label htmlFor="phone" className="font-semibold">Số điện thoại</Label>
               <Input
                 id="phone"
                 required
                 type="tel"
+                className="h-11 rounded-[14px] bg-background/50 focus:bg-background transition-colors"
                 value={formData.phone}
                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
               />
@@ -302,19 +307,21 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2 col-span-2 sm:col-span-1">
-                <Label htmlFor="city">Tỉnh / Thành phố</Label>
+                <Label htmlFor="city" className="font-semibold">Tỉnh / Thành phố</Label>
                 <Input
                   id="city"
                   required
+                  className="h-11 rounded-[14px] bg-background/50 focus:bg-background transition-colors"
                   value={formData.city}
                   onChange={e => setFormData({ ...formData, city: e.target.value })}
                 />
               </div>
               <div className="space-y-2 col-span-2 sm:col-span-1">
-                <Label htmlFor="street">Địa chỉ cụ thể</Label>
+                <Label htmlFor="street" className="font-semibold">Địa chỉ cụ thể</Label>
                 <Input
                   id="street"
                   required
+                  className="h-11 rounded-[14px] bg-background/50 focus:bg-background transition-colors"
                   value={formData.street}
                   onChange={e => setFormData({ ...formData, street: e.target.value })}
                 />
@@ -322,7 +329,7 @@ export default function CheckoutPage() {
             </div>
 
             {!selectedAddressId && (
-              <div className="flex items-center gap-2 pt-2 border-t">
+              <div className="flex items-center gap-3 pt-4 border-t border-border/50">
                 <input
                   type="checkbox"
                   id="saveNewAddr"
@@ -330,7 +337,7 @@ export default function CheckoutPage() {
                   onChange={e => setSaveNewAddress(e.target.checked)}
                   className="w-4 h-4 rounded border-input text-primary focus:ring-primary cursor-pointer accent-primary"
                 />
-                <Label htmlFor="saveNewAddr" className="text-xs cursor-pointer text-muted-foreground font-normal">
+                <Label htmlFor="saveNewAddr" className="text-sm cursor-pointer text-muted-foreground font-medium">
                   Lưu địa chỉ mới này vào Sổ địa chỉ để mua sắm nhanh hơn lần sau
                 </Label>
               </div>
@@ -338,22 +345,28 @@ export default function CheckoutPage() {
           </div>
 
           {/* Phương thức thanh toán */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold border-b pb-2">Phương thức thanh toán</h2>
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[24px] p-6 sm:p-8 shadow-sm space-y-6">
+            <h2 className="text-xl font-bold border-b border-border/50 pb-4">Phương thức thanh toán</h2>
             <RadioGroup
               value={formData.paymentMethod}
               onValueChange={v => setFormData({ ...formData, paymentMethod: v })}
-              className="space-y-3"
+              className="space-y-4"
             >
-              <div className="flex items-center space-x-3 border p-4 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
-                <RadioGroupItem value="cod" id="cod" />
-                <Label htmlFor="cod" className="cursor-pointer font-medium flex-1">Thanh toán khi nhận hàng (COD)</Label>
+              <div
+                className={`flex items-center space-x-3 border-2 p-4 rounded-[16px] cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'cod' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 hover:bg-muted/50 hover:border-border'}`}
+                onClick={() => setFormData({ ...formData, paymentMethod: 'cod' })}
+              >
+                <RadioGroupItem value="cod" id="cod" className="mt-0.5" />
+                <Label htmlFor="cod" className="cursor-pointer font-bold flex-1 text-[14.5px]">Thanh toán khi nhận hàng (COD)</Label>
               </div>
-              <div className="flex items-center space-x-3 border p-4 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
-                <RadioGroupItem value="banking" id="banking" />
-                <Label htmlFor="banking" className="cursor-pointer font-medium flex-1 flex items-center justify-between">
+              <div
+                className={`flex items-center space-x-3 border-2 p-4 rounded-[16px] cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'banking' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 hover:bg-muted/50 hover:border-border'}`}
+                onClick={() => setFormData({ ...formData, paymentMethod: 'banking' })}
+              >
+                <RadioGroupItem value="banking" id="banking" className="mt-0.5" />
+                <Label htmlFor="banking" className="cursor-pointer font-bold flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[14.5px]">
                   <span>Chuyển khoản ngân hàng</span>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Quét QR tự động</span>
+                  <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold shadow-sm w-fit">Quét QR tự động</span>
                 </Label>
               </div>
             </RadioGroup>
@@ -362,10 +375,11 @@ export default function CheckoutPage() {
 
         <div>
           {/* Tóm tắt đơn hàng */}
-          <div className="rounded-xl border bg-card p-6 shadow-sm sticky top-24">
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[24px] p-6 sm:p-8 shadow-xl sticky top-28 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
             <h2 className="text-xl font-bold mb-6">Đơn hàng của bạn</h2>
 
-            <div className="space-y-4 max-h-[300px] overflow-auto pr-2 mb-6">
+            <div className="space-y-4 max-h-[300px] overflow-auto pr-2 mb-6 scrollbar-thin scrollbar-thumb-primary/10">
               {cartItems.map((item) => {
                 const basePrice = Number(item.products?.price || 0);
                 const discount = Number(item.products?.discount_percent || 0);
@@ -374,34 +388,34 @@ export default function CheckoutPage() {
 
                 return (
                   <div key={item.id} className="flex justify-between text-sm">
-                    <div className="flex gap-3">
-                      <div className="relative">
+                    <div className="flex gap-4">
+                      <div className="relative shrink-0">
                         <Image
                           width={48}
                           height={48}
                           unoptimized
                           src={item.products?.image_url || "https://placehold.co/48x48"}
                           alt="img"
-                          className="h-12 w-12 rounded border object-cover"
+                          className="h-14 w-14 rounded-[12px] border border-border/50 object-cover shadow-sm"
                         />
-                        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold shadow-sm">
                           {item.quantity}
                         </span>
                       </div>
                       <div className="flex flex-col justify-center">
-                        <span className="font-medium line-clamp-1 max-w-[150px]">{item.products?.name}</span>
-                        {item.product_variants && <span className="text-xs text-muted-foreground">{item.product_variants.name}</span>}
+                        <span className="font-bold line-clamp-1 max-w-[150px]">{item.products?.name}</span>
+                        {item.product_variants && <span className="text-xs text-muted-foreground mt-0.5">{item.product_variants.name}</span>}
                       </div>
                     </div>
-                    <span className="font-medium self-center">{formatCurrency(price * item.quantity)}</span>
+                    <span className="font-bold self-center text-[14.5px]">{formatCurrency(price * item.quantity)}</span>
                   </div>
                 );
               })}
             </div>
 
             {/* Mã giảm giá */}
-            <div className="mb-6 border-t pt-4">
-              <Label htmlFor="coupon" className="mb-2 block">Mã giảm giá</Label>
+            <div className="mb-8 border-t border-border/50 pt-6">
+              <Label htmlFor="coupon" className="mb-2 block font-semibold text-[13px] uppercase tracking-wider text-muted-foreground/80">Mã giảm giá</Label>
               <div className="flex gap-2">
                 <Input
                   id="coupon"
@@ -409,58 +423,63 @@ export default function CheckoutPage() {
                   value={couponCodeInput}
                   onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
                   disabled={!!appliedCoupon}
+                  className="h-11 rounded-[14px] bg-background/50 focus:bg-background"
                 />
                 {!appliedCoupon ? (
-                  <Button type="button" variant="secondary" onClick={handleApplyCoupon}>Áp dụng</Button>
+                  <Button type="button" variant="secondary" onClick={handleApplyCoupon} className="h-11 rounded-[14px] font-bold px-6 border border-border/50 hover:bg-muted">Áp dụng</Button>
                 ) : (
-                  <Button type="button" variant="destructive" onClick={handleRemoveCoupon}>Hủy</Button>
+                  <Button type="button" variant="destructive" onClick={handleRemoveCoupon} className="h-11 rounded-[14px] font-bold px-6">Hủy</Button>
                 )}
               </div>
-              {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+              {couponError && <p className="text-red-500 text-xs mt-2 font-medium pl-1">{couponError}</p>}
               {appliedCoupon && (
-                <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
-                  <IconCheck className="w-3 h-3" /> Đã áp dụng mã giảm {appliedCoupon.discount_percent}%
-                </p>
+                <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center gap-2">
+                  <IconCheck className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="text-green-600 text-sm font-bold">Đã áp dụng mã giảm {appliedCoupon.discount_percent}%</p>
+                    <p className="text-green-600/80 text-xs font-medium mt-0.5">Tiết kiệm được {formatCurrency(getSubtotal() * appliedCoupon.discount_percent / 100)}</p>
+                  </div>
+                </div>
               )}
             </div>
 
-            <div className="space-y-3 text-sm mb-6 border-t pt-4">
+            <div className="space-y-4 text-sm mb-8 border-t border-border/50 pt-6">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Tạm tính</span>
-                <span className="font-medium text-base">{formatCurrency(getSubtotal())}</span>
+                <span className="text-muted-foreground font-medium">Tạm tính</span>
+                <span className="font-bold text-base">{formatCurrency(getSubtotal())}</span>
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between items-center text-green-600">
-                  <span>Giảm giá ({appliedCoupon.code})</span>
-                  <span className="font-medium">-{formatCurrency(getSubtotal() * appliedCoupon.discount_percent / 100)}</span>
+                  <span className="font-medium">Giảm giá ({appliedCoupon.code})</span>
+                  <span className="font-bold">-{formatCurrency(getSubtotal() * appliedCoupon.discount_percent / 100)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Phí vận chuyển</span>
-                <span className="font-medium">Miễn phí</span>
+                <span className="text-muted-foreground font-medium">Phí vận chuyển</span>
+                <span className="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md text-[11px] uppercase tracking-wide">Miễn phí</span>
               </div>
 
-              <div className="border-t pt-4 mt-2">
+              <div className="border-t border-border/60 pt-6 mt-4">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-base">Tổng cộng</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(calculateTotal())}</span>
+                  <span className="font-bold text-base text-foreground/90">Tổng cộng</span>
+                  <span className="text-2xl lg:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">{formatCurrency(calculateTotal())}</span>
                 </div>
               </div>
             </div>
 
             {role === "admin" || role === "staff" ? (
-              <div className="space-y-2">
-                <Button type="button" className="w-full h-12 text-base font-semibold opacity-60 cursor-not-allowed" size="lg" disabled>
+              <div className="space-y-3">
+                <Button type="button" className="w-full h-14 text-base font-bold rounded-xl opacity-60 cursor-not-allowed shadow-md" size="lg" disabled>
                   Hoàn tất đặt hàng
                 </Button>
-                <p className="text-[12px] text-center text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                <p className="text-[12px] text-center text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 p-3 rounded-[14px] border border-amber-500/20">
                   * {role === "admin"
                     ? "Quản trị viên (Admin) không được tạo đơn hàng thanh toán cá nhân."
                     : "Nhân viên (Staff) vui lòng dùng tài khoản Khách hàng để thanh toán."}
                 </p>
               </div>
             ) : (
-              <Button type="submit" className="w-full h-12 text-base font-semibold" size="lg" disabled={submitting}>
+              <Button type="submit" className="w-full h-14 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 hover:scale-[1.02] duration-300" size="lg" disabled={submitting}>
                 {submitting ? <IconLoader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                 {submitting ? "Đang xử lý..." : "Đặt hàng ngay"}
               </Button>
