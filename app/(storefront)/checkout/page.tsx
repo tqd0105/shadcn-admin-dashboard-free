@@ -202,25 +202,26 @@ export default function CheckoutPage() {
 
   if (role === "admin" || role === "staff") {
     return (
-      <div className="container mx-auto py-20 px-4 flex flex-col items-center justify-center min-h-[55vh]">
-        <div className="max-w-xl w-full border-3 border-black p-6 rounded-2xl shadow-lg flex flex-col items-center text-center space-y-4">
-          <Image src="/icons/warning2.png" alt="Warning" width={64} height={64} />
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-            Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
-          </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {role === "admin"
-              ? "Tài khoản Quản trị viên (Admin) không được tạo đơn hàng và thanh toán cá nhân để bảo đảm tính trung thực cho các báo cáo doanh thu."
-              : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không thể tiến hành thanh toán."}
-          </p>
-          <div className="pt-2 flex flex-col sm:flex-row gap-3 w-full justify-center">
-            <Button asChild className="w-full sm:w-auto font-medium">
-              <Link href="/dashboard">Về Dashboard Quản Trị</Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full sm:w-auto">
-              <Link href="/">Về Trang Chủ</Link>
-            </Button>
-          </div>
+      <div className="flex flex-col items-center justify-center py-20 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+        <div className="h-24 w-24 bg-red-500/10 rounded-[24px] flex items-center justify-center mb-4 shadow-inner">
+          <Image src="/icons/warning2.png" alt="Warning" width={56} height={56} className="object-contain drop-shadow-sm" />
+        </div>
+        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 relative z-10 text-center mb-3">
+          Tài khoản {role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}
+        </h2>
+        <p className="text-muted-foreground text-[15px] relative z-10 text-center max-w-lg leading-relaxed mb-6">
+          {role === "admin"
+            ? "Tài khoản Quản trị viên (Admin) không được tạo đơn hàng và thanh toán cá nhân để bảo đảm tính trung thực cho các báo cáo doanh thu."
+            : "Tài khoản Nhân viên (Staff) là tài khoản vận hành nội bộ, không thể tiến hành thanh toán."}
+        </p>
+        <div className="pt-2 flex flex-col sm:flex-row gap-4 w-full justify-center relative z-10">
+          <Button asChild className="w-full sm:w-auto font-bold rounded-full px-8 shadow-md shadow-primary/20 h-11 transition-all hover:scale-105">
+            <Link href="/dashboard">Về Dashboard Quản Trị</Link>
+          </Button>
+          <Button variant="outline" asChild className="w-full sm:w-auto rounded-full px-8 font-bold hover:bg-muted/50 h-11 transition-all border-border/50 hover:border-foreground/20">
+            <Link href="/">Về Trang Chủ</Link>
+          </Button>
         </div>
       </div>
     );
@@ -242,7 +243,7 @@ export default function CheckoutPage() {
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-8">Thanh toán</h1>
 
-      <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-12">
+      <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-12 mx-2">
         <div className="space-y-8">
           {/* Thông tin giao hàng */}
           <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[24px] p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
@@ -364,7 +365,7 @@ export default function CheckoutPage() {
                 onClick={() => setFormData({ ...formData, paymentMethod: 'banking' })}
               >
                 <RadioGroupItem value="banking" id="banking" className="mt-0.5" />
-                <Label htmlFor="banking" className="cursor-pointer font-bold flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[14.5px]">
+                <Label htmlFor="banking" className="cursor-pointer font-bold flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[14.5px]">
                   <span>Chuyển khoản ngân hàng</span>
                   <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold shadow-sm w-fit">Quét QR tự động</span>
                 </Label>

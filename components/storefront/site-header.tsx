@@ -147,14 +147,14 @@ export function SiteHeader() {
   }, [user]);
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-all duration-300 shadow-lg">
-      <div className="flex flex-wrap md:flex-nowrap justify-between items-center w-full px-4 md:px-8 max-w-[1440px] mx-auto py-3 md:py-0 md:h-[80px] z-50 gap-y-3 md:gap-y-0">
+      <div className="grid grid-cols-[1fr_auto] md:flex md:flex-nowrap justify-between items-center w-full px-4 md:px-8 max-w-[1440px] mx-auto py-3 md:py-0 md:h-[80px] z-50 gap-y-3 md:gap-y-0">
         {/* Brand */}
-        <div className="flex items-center gap-2 md:gap-4 order-1">
+        <div className="flex items-center gap-1.5 md:gap-4 order-1 min-w-0 pr-2">
           {/* Mobile Menu */}
-          <div className="flex lg:hidden items-center">
+          <div className="flex lg:hidden items-center shrink-0">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="mr-2">
+                <Button variant="ghost" size="icon" className="mr-1 md:mr-2 h-9 w-9">
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
@@ -383,25 +383,25 @@ export function SiteHeader() {
               </SheetContent>
             </Sheet>
           </div>
-          <Link href="/" className="group text-xl md:text-2xl font-black tracking-tighter flex-shrink-0 flex items-center gap-2.5 transition-all duration-300">
-            <div className="relative">
-              <div className="absolute -inset-1 rounded-full  group-hover:opacity-80 transition duration-800 animate-pulse" />
-              <Image src="/icons/luxecommerce.png" alt="Logo" width={34} height={34} className="relative  " />
+          <Link href="/" className="group text-lg md:text-2xl font-black tracking-tighter flex-shrink-0 flex items-center gap-1.5 md:gap-2.5 transition-all duration-300 min-w-0 overflow-hidden">
+            <div className="relative shrink-0">
+              <div className="absolute -inset-1 rounded-full group-hover:opacity-80 transition duration-800 animate-pulse" />
+              <Image src="/icons/luxecommerce.png" alt="Logo" width={28} height={28} className="relative md:w-[34px] md:h-[34px]" />
             </div>
-            <span className="flex items-center tracking-tight ">
+            <span className="flex items-center tracking-tight truncate">
               <span className="bg-gradient-to-r from-violet-500 via-purple-400 to-fuchsia-400 dark:from-violet-300 dark:via-purple-200 dark:to-fuchsia-300 bg-clip-text text-transparent animate-shimmer-metallic drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]">
                 Luxe
               </span>
-              <span className="ml-0.5  bg-gradient-to-r from-slate-700 via-slate-500 to-slate-800 dark:from-slate-100 dark:via-white dark:to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+              <span className="ml-0.5 bg-gradient-to-r from-slate-700 via-slate-500 to-slate-800 dark:from-slate-100 dark:via-white dark:to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] truncate">
                 Commerce
               </span>
-              <Image src="/icons/star.png" alt="Logo" width={25} height={25} className="ml-1.5 animate__animated animate__flash animate__infinite inline-block" />
+              <Image src="/icons/star.png" alt="Logo" width={20} height={20} className="ml-1 md:w-[25px] md:h-[25px] animate__animated animate__flash animate__infinite hidden sm:inline-block shrink-0" />
             </span>
           </Link>
         </div>
 
         {/* Search (Row 2 on Mobile, Center on Desktop) */}
-        <div ref={searchRef} className="flex w-full md:w-auto order-3 md:order-2 md:flex-1 md:max-w-[480px] lg:max-w-xl md:mx-8 relative group">
+        <div ref={searchRef} className="col-span-2 md:col-span-1 flex w-full md:w-auto order-3 md:order-2 md:flex-1 md:max-w-[480px] lg:max-w-xl md:mx-8 relative group">
           <form action="/products" method="GET" className="w-full relative flex items-center" onSubmit={() => addToHistory(searchQuery)}>
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors group-focus-within:text-primary" />
             <input
@@ -497,7 +497,7 @@ export function SiteHeader() {
         </div>
 
         {/* Actions (Right) */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 order-2 md:order-3">
+        <div className="flex items-center justify-end gap-1 flex-shrink-0 order-2 md:order-3">
           {/* Navigation Links (Desktop) */}
           <nav className="hidden lg:flex items-center gap-1 mr-3 bg-muted/40 p-1 rounded-full border border-border/40">
             <Link className={cn("flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 group hover:-translate-y-[1px] hover:shadow-sm active:scale-95 active:translate-y-0", pathname === "/" ? "bg-background shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-primary ring-1 ring-border/30" : "text-muted-foreground hover:text-foreground hover:bg-background/60")} href="/">
@@ -564,7 +564,7 @@ export function SiteHeader() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="inline-flex rounded-full border-2 border-transparent hover:border-primary/30 transition-all ml-1.5 md:ml-2 h-10 w-10 p-0 shrink-0 shadow-sm hover:shadow-md">
+                <Button variant="ghost" size="icon" className="inline-flex rounded-full border-2 border-transparent hover:border-primary/30 transition-all ml-1 h-9 w-9 md:h-10 md:w-10 p-0 shrink-0 shadow-sm hover:shadow-md">
                   <Avatar className="h-full w-full">
                     <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} className="object-cover" />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary/50 text-primary-foreground font-bold text-xs">

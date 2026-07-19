@@ -204,7 +204,7 @@ export default function AddressesPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`group flex flex-col p-6 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${addr.is_default ? 'bg-primary/5 border-primary/30 shadow-md shadow-primary/5' : 'bg-card/60 backdrop-blur-xl border-border/50 shadow-sm hover:shadow-md hover:border-border'}`}>
+            <div key={addr.id} className={`group flex flex-col p-6 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${addr.is_default ? 'bg-primary/10 border-2 border-primary/100 shadow-md shadow-primary/5' : 'bg-card/60 backdrop-blur-xl border-border/50 shadow-sm hover:shadow-md hover:border-border'}`}>
               
               {addr.is_default && (
                 <div className="absolute top-4 right-4">

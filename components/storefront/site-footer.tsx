@@ -57,18 +57,18 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-border/50 px-4 md:px-10 py-6 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
+      <div className="border-t border-border/50 px-4 md:px-10 py-6 max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-4 relative z-10">
         <p className="text-sm text-muted-foreground font-medium text-center md:text-left">
           © 2026 LuxeCommerce. All rights reserved.
         </p>
-        <div className="flex gap-4">
+        {/* <div className="flex gap-4">
           <div className="w-10 h-7 rounded bg-background/50 border border-border/50 flex items-center justify-center">
             <Wallet className="w-5 h-5 text-muted-foreground" />
           </div>
           <div className="w-10 h-7 rounded bg-background/50 border border-border/50 flex items-center justify-center">
             <CreditCard className="w-5 h-5 text-muted-foreground" />
           </div>
-        </div>
+        </div> */}
       </div>
     </footer>
   );
