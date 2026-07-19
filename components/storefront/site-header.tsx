@@ -49,6 +49,21 @@ export function SiteHeader() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+      setSearchHistory(history);
+    } catch (e) {}
+  }, []);
+
+  const addToHistory = (term: string) => {
+    if (!term.trim()) return;
+    const newHistory = [term, ...searchHistory.filter(h => h !== term)].slice(0, 5);
+    setSearchHistory(newHistory);
+    localStorage.setItem("searchHistory", JSON.stringify(newHistory));
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -387,7 +402,7 @@ export function SiteHeader() {
 
         {/* Search (Row 2 on Mobile, Center on Desktop) */}
         <div ref={searchRef} className="flex w-full md:w-auto order-3 md:order-2 md:flex-1 md:max-w-[480px] lg:max-w-xl md:mx-8 relative group">
-          <form action="/products" method="GET" className="w-full relative flex items-center">
+          <form action="/products" method="GET" className="w-full relative flex items-center" onSubmit={() => addToHistory(searchQuery)}>
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors group-focus-within:text-primary" />
             <input
               name="search"
@@ -405,41 +420,77 @@ export function SiteHeader() {
             />
           </form>
 
-          {/* Suggestions Dropdown */}
-          {showSuggestions && searchQuery.trim().length > 0 && (
-            <div className="absolute top-full mt-2 w-full bg-background border rounded-xl shadow-lg overflow-hidden z-50">
-              {isSearching ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">Đang tìm kiếm...</div>
-              ) : searchResults.length > 0 ? (
-                <div className="py-2">
-                  {searchResults.map((product) => {
-                    const price = product.price;
-                    const salePrice = product.discount_percent ? Math.round(price * (1 - product.discount_percent / 100)) : price;
-                    return (
-                      <Link
-                        key={product.id}
-                        href={`/product/${product.id}`}
-                        className="flex items-center gap-3 px-4 py-2 hover:bg-secondary/80 transition-colors"
-                        onClick={() => setShowSuggestions(false)}
-                      >
-                        <Image width={40} height={40} unoptimized src={product.image_url || "https://placehold.co/40x40"} alt={product.name} className="w-10 h-10 object-cover rounded-md border" />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium line-clamp-1">{product.name}</span>
-                          <span className="text-xs text-red-600 font-bold">
-                            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(salePrice)}
-                          </span>
-                        </div>
+          {/* Suggestions & History Dropdown */}
+          {showSuggestions && (searchQuery.trim().length > 0 || searchHistory.length > 0) && (
+            <div className="absolute top-full mt-3 w-full bg-card/100 backdrop-blur-md border border-border/50 rounded-[24px] shadow-[0_10px_40px_rgba(0,0,0,0.08)] overflow-hidden z-50">
+              {searchQuery.trim().length > 0 ? (
+                // Search Results View
+                isSearching ? (
+                  <div className="p-6 text-center text-sm font-medium text-muted-foreground flex items-center justify-center gap-2">
+                    <Image src="/icons/star.png" alt="Đang tìm kiếm" width={24} height={24} className="object-contain" /> Đang tìm kiếm...
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="py-2">
+                    <div className="px-4 py-2 flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      <span>Gợi ý sản phẩm</span>
+                    </div>
+                    {searchResults.map((product) => {
+                      const price = product.price;
+                      const salePrice = product.discount_percent ? Math.round(price * (1 - product.discount_percent / 100)) : price;
+                      return (
+                        <Link
+                          key={product.id}
+                          href={`/product/${product.id}`}
+                          className="flex items-center gap-4 px-4 py-3 hover:bg-primary/5 transition-colors group"
+                          onClick={() => { setShowSuggestions(false); addToHistory(searchQuery); }}
+                        >
+                          <div className="w-12 h-12 rounded-[14px] overflow-hidden border border-border/50 group-hover:border-primary/30 transition-colors bg-muted/30 p-1 flex items-center justify-center">
+                            <Image width={48} height={48} unoptimized src={product.image_url || "https://placehold.co/48x48"} alt={product.name} className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                          </div>
+                          <div className="flex flex-col flex-1">
+                            <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">{product.name}</span>
+                            <span className="text-xs text-red-600 font-black mt-0.5">
+                              {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(salePrice)}
+                            </span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                    <div className="border-t border-border/50 p-3 mt-1 bg-background/50">
+                      <Link href={`/products?search=${searchQuery}`} onClick={() => { setShowSuggestions(false); addToHistory(searchQuery); }} className="w-full py-2.5 rounded-[14px] bg-primary/10 hover:bg-primary hover:text-primary-foreground text-primary text-sm font-bold text-center block transition-all shadow-sm">
+                        Xem tất cả kết quả ({searchResults.length}+)
                       </Link>
-                    )
-                  })}
-                  <div className="border-t px-4 py-3 mt-2 bg-secondary/30">
-                    <Link href={`/products?search=${searchQuery}`} onClick={() => setShowSuggestions(false)} className="text-sm font-medium text-primary text-center block hover:underline">
-                      Xem tất cả kết quả
-                    </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-sm font-medium text-muted-foreground">Không tìm thấy sản phẩm nào phù hợp</div>
+                )
+              ) : (
+                // Search History View
+                <div className="p-5">
+                  <div className="flex justify-between items-center mb-4 px-1">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"><Search className="w-3.5 h-3.5" /> Lịch sử tìm kiếm</h4>
+                    <button 
+                      type="button"
+                      onClick={() => { setSearchHistory([]); localStorage.removeItem("searchHistory"); }} 
+                      className="text-xs font-medium text-muted-foreground hover:text-red-500 transition-colors bg-secondary/50 hover:bg-red-500/10 px-2.5 py-1.5 rounded-md"
+                    >
+                      Xoá tất cả
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {searchHistory.map((term, i) => (
+                      <Link 
+                        key={`${term}-${i}`} 
+                        href={`/products?search=${term}`} 
+                        onClick={() => { setShowSuggestions(false); addToHistory(term); }} 
+                        className="px-4 py-2 bg-background border border-border/60 hover:border-primary/50 hover:bg-primary/5 hover:text-primary hover:shadow-md rounded-full text-sm font-medium transition-all shadow-sm"
+                      >
+                        {term}
+                      </Link>
+                    ))}
                   </div>
                 </div>
-              ) : (
-                <div className="p-4 text-center text-sm text-muted-foreground">Không tìm thấy sản phẩm nào</div>
               )}
             </div>
           )}
