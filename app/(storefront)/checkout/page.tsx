@@ -241,7 +241,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8">Thanh toán</h1>
+      <h1 className="text-3xl font-bold mb-8 ml-2">Thanh toán</h1>
 
       <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-12 mx-2">
         <div className="space-y-8">

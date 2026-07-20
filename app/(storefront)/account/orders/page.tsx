@@ -35,10 +35,46 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { toast } from "sonner";
 
+function OrderCountdown({ createdAt }: { createdAt: string }) {
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const createdTime = new Date(createdAt).getTime();
+      const expirationTime = createdTime + 24 * 60 * 60 * 1000;
+      const now = new Date().getTime();
+      const difference = expirationTime - now;
+
+      if (difference <= 0) {
+        setTimeLeft("Đã quá hạn");
+        return;
+      }
+
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+
+      setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [createdAt]);
+
+  if (!timeLeft) return null;
+
+  return (
+    <span className="text-[12px] text-gray-400 font-bold tracking-wider flex items-center justify-center gap-1  px-3 py-1.5 rounded-full border border-rose-500 shadow-sm ">
+      <Clock className="w-3 h-3 animate-pulse" /> Còn lại: <span className="text-red-500">{timeLeft}</span>
+    </span>
+  );
+}
+
 function OrderTimeline({ status }: { status: string }) {
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-2 py-2 px-4 sm:px-6 bg-rose-500 border-b-2 border-white text-white dark:text-rose-400 text-xs font-bold">
+      <div className="flex items-center gap-2 py-2 px-4 sm:px-6 bg-rose-500 dark:border-b-2  dark:border-white text-white text-xs font-bold">
         <Image src="/icons/cancel_order.png" alt="ic-cancel" width={30} height={30} />
         <span>Đơn hàng này đã bị hủy.</span>
       </div>
@@ -648,17 +684,20 @@ export default function MyOrdersPage() {
                   {/* Thông tin phương thức thanh toán gọn nhẹ, rõ ràng */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-background border border-border/50 shadow-sm text-xs">
                     <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                      <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                         <CreditCard className="size-4 text-primary" />
+                      <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                         <Image src="/icons/payment_method2.png" alt="Banking" width={30} height={30}  />
                       </div>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Phương thức thanh toán</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider flex items-center">
+                          Phương thức thanh toán
+                          
+                        </span>
                         <div className="flex items-center gap-2">
                           <strong className="font-bold text-foreground text-[13px]">
                             {isBanking ? "Chuyển khoản VietQR" : "Thanh toán khi nhận hàng (COD)"}
                           </strong>
                           {isBanking && paymentObj?.payment_code && (
-                            <span className="font-mono font-bold text-[11px] px-2 py-0.5 rounded-md bg-muted border text-primary">
+                            <span className="font-mono font-bold text-[12px] px-2 py-0.5 rounded-md bg-muted  text-primary">
                               {paymentObj.payment_code}
                             </span>
                           )}
@@ -667,7 +706,13 @@ export default function MyOrdersPage() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center justify-between sm:justify-end gap-2.5 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full border shadow-sm w-full sm:w-aut text-center ${
+                      <span className="w-full sm:w-auto text-center">
+                        {isBanking && (payStatus === 'PENDING' || payStatus === 'CREATED') && order.status === 'pending' && (
+                            <OrderCountdown createdAt={order.created_at} />
+                          )}
+                      </span>
+                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full border shadow-sm w-full sm:w-auto text-center ${
+                        order.status === 'cancelled' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' :
                         isBanking
                           ? (payStatus === 'MATCHED' ? 'bg-green-500/10 text-green-600 border-green-500/20' 
                             : payStatus === 'MANUAL' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
@@ -675,11 +720,13 @@ export default function MyOrdersPage() {
                             : 'bg-amber-500/10 text-amber-600 border-amber-500/20')
                           : ((order.status === 'delivered' || order.status === 'completed') ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-muted text-muted-foreground')
                       }`}>
-                        {isBanking ? (
-                          payStatus === 'MATCHED' ? 'Đã chuyển khoản' : payStatus === 'MANUAL' ? 'Đã xác nhận' : payStatus === 'EXPIRED' ? 'Hết hạn' : 'Chờ chuyển khoản'
-                        ) : (
-                          (order.status === 'delivered' || order.status === 'completed') ? 'Đã thu tiền (COD)' : 'Thanh toán khi nhận'
-                        )}
+                        {order.status === 'cancelled' ? 'Đã hủy thanh toán' : 
+                          isBanking ? (
+                            payStatus === 'MATCHED' ? 'Đã chuyển khoản' : payStatus === 'MANUAL' ? 'Đã xác nhận' : payStatus === 'EXPIRED' ? 'Hết hạn' : 'Chờ chuyển khoản'
+                          ) : (
+                            (order.status === 'delivered' || order.status === 'completed') ? 'Đã thu tiền (COD)' : 'Thanh toán khi nhận'
+                          )
+                        }
                       </span>
                       {isBanking && (payStatus === 'PENDING' || payStatus === 'CREATED') && order.status === 'pending' && (
                         <Button asChild size="sm" className="h-8 px-4 text-xs font-bold w-full sm:w-auto text-center bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md rounded-full">
@@ -859,7 +906,7 @@ export default function MyOrdersPage() {
             <AlertDialogCancel>Đóng lại</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelOrder}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-white dark:text-black hover:bg-destructive/90"
             >
               Chắc chắn hủy
             </AlertDialogAction>

@@ -279,14 +279,30 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
 
       // Lấy hoặc tạo payment
       const { data: payData } = await getPaymentByOrderId(orderId);
-      if (payData) {
+      
+      let shouldCreateNew = false;
+      if (!payData) {
+        shouldCreateNew = true;
+      } else {
+        const expiresAtMs = new Date(payData.expires_at).getTime();
+        const isExpired = expiresAtMs <= Date.now() || payData.status === "EXPIRED";
+        if (isExpired && (payData.status === "PENDING" || payData.status === "CREATED" || payData.status === "EXPIRED")) {
+          shouldCreateNew = true;
+        }
+      }
+
+      if (!shouldCreateNew && payData) {
         setPayment(payData);
         checkStatusAndExpiry(payData, orderData);
       } else {
-        // Nếu chưa có payment thì tự động tạo mới
+        // Nếu chưa có payment hoặc payment cũ đã hết hạn, tự động tạo mới
         const { data: newPay, error: payErr } = await createPayment(orderId, orderData.total_amount);
         if (payErr || !newPay) {
           toast.error("Lỗi khởi tạo cổng thanh toán!");
+          if (payData) {
+            setPayment(payData);
+            checkStatusAndExpiry(payData, orderData);
+          }
         } else {
           setPayment(newPay);
           checkStatusAndExpiry(newPay, orderData);
@@ -538,10 +554,10 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
                 <p className="text-xs text-muted-foreground mt-0.5">Hỗ trợ tất cả ứng dụng Ngân hàng & MoMo</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-sm">
+            {/* <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-sm">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Napas 24/7</span>
-            </div>
+            </div> */}
           </div>
 
           {status === "SUCCESS" ? (
