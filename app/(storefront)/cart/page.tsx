@@ -156,7 +156,7 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8">Giỏ hàng của bạn</h1>
+      <h1 className="text-3xl font-bold mb-8 ml-2">Giỏ hàng của bạn</h1>
 
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-4 mx-2">
