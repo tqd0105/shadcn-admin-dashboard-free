@@ -18,12 +18,13 @@ interface WebhookPayload {
   parsed?: boolean;
   emailId?: string;
   subject?: string;
-  amount: number;
+  amount?: number;
   txnId?: string;
-  invoiceCode: string;
+  invoiceCode?: string;
   date?: string;
   from?: string;
   bank?: string;
+  raw?: string;
 }
 
 /**
@@ -84,15 +85,44 @@ export async function POST(req: Request) {
 
     // 2. Parse body
     const body: WebhookPayload = await req.json();
-    const { amount, invoiceCode, from, emailId, txnId, date } = body;
+    let { amount, invoiceCode, from, emailId, txnId, date, parsed, raw } = body;
     
+    // Nếu n8n gửi sang nhưng bị lỗi parse (parsed: false) và có raw text, ta sẽ TỰ PARSE
+    if (parsed === false && raw) {
+      console.log("⚠️ [Webhook] n8n không parse được email, hệ thống tự động parse raw text...");
+      // Parse số tiền (VD: SD tăng: +29,992,500 VND)
+      const amountMatch = raw.match(/(?:SD tăng|Số tiền|Giao dịch|So tien|PS CÓ)[^\d]*\+?([\d,\.]+)/i);
+      if (amountMatch) {
+        amount = Number(amountMatch[1].replace(/,/g, "").replace(/\./g, ""));
+      }
+
+      // Parse Nội dung
+      const descMatch = raw.match(/(?:Nội dung|ND|NDGD|Noi dung|Chi tiết)\s*:\s*([^\n]+)/i);
+      if (descMatch) {
+        invoiceCode = descMatch[1].trim();
+      } else {
+        // Quét mù tìm mã LX
+        const lxMatch = raw.match(/L\s*X\s*-?\s*[A-Z0-9]{4,15}/i);
+        if (lxMatch) invoiceCode = lxMatch[0];
+      }
+
+      // Parse thời gian
+      const dateMatch = raw.match(/(?:Thời gian|Ngày|Date|Time)\s*:\s*([0-9\/\s:-]+)/i);
+      if (dateMatch) date = dateMatch[1].trim();
+
+      // Parse người gửi
+      const senderMatch = raw.match(/(?:Người gửi|Từ|From|TK chuyển)\s*:\s*([^\n]+)/i);
+      if (senderMatch) from = senderMatch[1].trim();
+    }
+
     // Ánh xạ các trường từ n8n sang logic hiện tại
-    const description = invoiceCode;
+    const description = invoiceCode || "";
     const sender_name = `[n8n] ${from || "Khách"}`;
     const transaction_id = txnId || emailId;
     const transaction_time = parseTransactionTime(date);
 
     if (!amount || !description) {
+      console.error("❌ [Webhook] Bó tay, không thể trích xuất amount và invoiceCode từ raw data.");
       return NextResponse.json(
         { success: false, error: "Missing required fields: amount, invoiceCode" },
         { status: 400 }
