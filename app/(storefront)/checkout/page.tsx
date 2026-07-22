@@ -87,6 +87,13 @@ export default function CheckoutPage() {
     }
   }, [user, authLoading, router, loadCart, loadAddresses]);
 
+  useEffect(() => {
+    window.addEventListener("cart-updated", loadCart);
+    return () => {
+      window.removeEventListener("cart-updated", loadCart);
+    };
+  }, [loadCart]);
+
   const getSubtotal = () => {
     return cartItems.reduce((total, item) => {
       const basePrice = Number(item.products?.price || 0);
@@ -156,9 +163,9 @@ export default function CheckoutPage() {
       selectedAddressId: selectedAddressId || undefined,
       saveToAddressBook: !selectedAddressId ? saveNewAddress : false
     });
-    setSubmitting(false);
 
     if (error || !order) {
+      setSubmitting(false); // Only stop loading if there's an error
       toast.error("Đặt hàng thất bại!", {
         description: error?.message || "Lỗi kết nối máy chủ"
       });
@@ -168,36 +175,38 @@ export default function CheckoutPage() {
         toast.info("Đang chuyển đến cổng thanh toán QR...", {
           description: "Vui lòng hoàn tất chuyển khoản trong 10 phút."
         });
+        // Intentionally keep submitting=true to prevent UI flashes before Next.js navigation finishes
         router.push(`/checkout/payment/${order.id}`);
       } else {
         toast.success("Đặt hàng thành công!");
         setSuccess(true);
+        setSubmitting(false); // Can safely set false here since the success screen handles the UI
       }
     }
   };
-
-  if (authLoading || loading) {
-    return <LuxeLoading label="Đang chuẩn bị thông tin thanh toán..." />;
-  }
 
   if (success) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-6 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-50 pointer-events-none" />
         <div className="mx-auto w-24 h-24 bg-green-500/10 text-green-600 rounded-[24px] flex items-center justify-center mb-2 shadow-inner">
-          <IconCheck className="h-12 w-12" />
+          <Image src="/icons/success.png" alt="Success" width={60} height={60} className="object-contain drop-shadow-sm" />
         </div>
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400 relative z-10">Đặt hàng thành công!</h1>
         <p className="text-muted-foreground text-base relative z-10 text-center">
           Cảm ơn bạn đã mua sắm. Đơn hàng của bạn đang được xử lý.
         </p>
-        <div className="pt-6 relative z-10">
+        <div className=" relative z-10">
           <Button asChild size="lg" className="rounded-xl px-8 font-bold shadow-lg shadow-green-500/20 bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-300">
             <Link href="/account/orders">Quản lý Đơn hàng </Link>
           </Button>
         </div>
       </div>
     );
+  }
+
+  if ((authLoading || loading) && !submitting) {
+    return <LuxeLoading label="Đang chuẩn bị thông tin thanh toán..." />;
   }
 
   if (role === "admin" || role === "staff") {
@@ -227,7 +236,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (cartItems.length === 0) {
+  if (cartItems.length === 0 && !submitting) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-6 px-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] mx-auto max-w-2xl my-10 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
@@ -354,20 +363,20 @@ export default function CheckoutPage() {
               className="space-y-4"
             >
               <div
-                className={`flex items-center space-x-3 border-2 p-4 rounded-[16px] cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'cod' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 hover:bg-muted/50 hover:border-border'}`}
-                onClick={() => setFormData({ ...formData, paymentMethod: 'cod' })}
+                className={`relative flex items-center space-x-3 border-2 p-4 rounded-[16px] transition-all duration-200 ${formData.paymentMethod === 'cod' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 hover:bg-muted/50 hover:border-border'}`}
               >
-                <RadioGroupItem value="cod" id="cod" className="mt-0.5" />
-                <Label htmlFor="cod" className="cursor-pointer font-bold flex-1 text-[14.5px]">Thanh toán khi nhận hàng (COD)</Label>
+                <RadioGroupItem value="cod" id="cod" className="mt-0.5 relative z-10" />
+                <Label htmlFor="cod" className="cursor-pointer font-bold flex-1 text-[14.5px] after:absolute after:inset-0">
+                  Thanh toán khi nhận hàng (COD)
+                </Label>
               </div>
               <div
-                className={`flex items-center space-x-3 border-2 p-4 rounded-[16px] cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'banking' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 hover:bg-muted/50 hover:border-border'}`}
-                onClick={() => setFormData({ ...formData, paymentMethod: 'banking' })}
+                className={`relative flex items-center space-x-3 border-2 p-4 rounded-[16px] transition-all duration-200 ${formData.paymentMethod === 'banking' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 hover:bg-muted/50 hover:border-border'}`}
               >
-                <RadioGroupItem value="banking" id="banking" className="mt-0.5" />
-                <Label htmlFor="banking" className="cursor-pointer font-bold flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[14.5px]">
+                <RadioGroupItem value="banking" id="banking" className="mt-0.5 relative z-10" />
+                <Label htmlFor="banking" className="cursor-pointer font-bold flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[14.5px] after:absolute after:inset-0">
                   <span>Chuyển khoản ngân hàng</span>
-                  <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold shadow-sm w-fit">Quét QR tự động</span>
+                  <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold shadow-sm w-fit relative z-10">Quét QR tự động</span>
                 </Label>
               </div>
             </RadioGroup>

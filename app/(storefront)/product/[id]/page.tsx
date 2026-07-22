@@ -89,6 +89,7 @@ export default async function ProductDetailsPage({
                 basePrice={product.price}
                 discountPercent={product.discount_percent}
                 variants={product.product_variants || []}
+                stockQuantity={product.stock_quantity || 0}
               />
             </div>
           </div>
