@@ -56,9 +56,14 @@ export function NavMain({
 
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
-                  <Link href={item.url} onClick={() => setOpenMobile(false)}>
-                    {item.icon && <item.icon />}
+                <SidebarMenuButton 
+                  tooltip={item.title} 
+                  asChild 
+                  isActive={isActive}
+                  className="rounded-xl font-medium tracking-wide hover:bg-primary/10 hover:text-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-bold transition-all duration-300 group/navitem py-5 mb-1"
+                >
+                  <Link href={item.url} onClick={() => setOpenMobile(false)} className="flex items-center gap-3">
+                    {item.icon && <item.icon className="size-5 shrink-0 group-data-[active=true]/navitem:scale-110 transition-transform duration-300" />}
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>

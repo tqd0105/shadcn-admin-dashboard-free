@@ -286,7 +286,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       } else {
         const expiresAtMs = new Date(payData.expires_at).getTime();
         const isExpired = expiresAtMs <= Date.now() || payData.status === "EXPIRED";
-        if (isExpired && (payData.status === "PENDING" || payData.status === "CREATED" || payData.status === "EXPIRED")) {
+        if (isExpired && (payData.status === "PENDING" || payData.status === "EXPIRED")) {
           shouldCreateNew = true;
         }
       }

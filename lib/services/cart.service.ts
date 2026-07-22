@@ -207,16 +207,28 @@ export async function syncGuestCartToSupabase(): Promise<{ mergedCount: number; 
   if (userError || !userData?.user) return { mergedCount: 0, error: userError || new Error("Not authenticated") };
 
   let mergedCount = 0;
+  const remainingGuestItems = [];
+  
   for (const item of guestItems) {
     const { error } = await addToCart(item.product_id, item.quantity, item.variant_id || undefined);
     if (!error) {
       mergedCount += item.quantity;
+    } else {
+      console.error("❌ [Cart] Lỗi gộp sản phẩm:", error);
+      remainingGuestItems.push(item);
     }
   }
 
-  // Clear guest cart once synced to database
-  clearGuestCart();
-  return { mergedCount, error: null };
+  // Clear guest cart once synced to database, keep items that failed
+  if (remainingGuestItems.length === 0) {
+    clearGuestCart();
+  } else {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(remainingGuestItems));
+    }
+  }
+  
+  return { mergedCount, error: remainingGuestItems.length > 0 ? new Error("Một số sản phẩm không thể gộp") : null };
 }
 
 
