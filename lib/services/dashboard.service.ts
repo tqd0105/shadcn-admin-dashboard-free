@@ -14,14 +14,16 @@ export interface DashboardStats {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    // 1. Lấy tổng số khách hàng (profiles) và tổng số sản phẩm (products)
+    // 1. Lấy tổng số khách hàng (profiles) với role 'user' và tổng số sản phẩm (products)
+    const { data: userRole } = await supabase.from('roles').select('id').eq('name', 'customer').single();
+    
     const [customersRes, productsRes, allOrdersRes, recentOrdersRes] = await Promise.all([
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role_id", userRole?.id),
       supabase.from("products").select("id", { count: "exact", head: true }),
       supabase.from("orders").select("id, total_amount, status, payment_method, created_at"),
       supabase
         .from("orders")
-        .select("id, total_amount, status, payment_method, created_at, profiles(full_name, email)")
+        .select("id, total_amount, status, payment_method, created_at, profiles(full_name, email, avatar_url)")
         .order("created_at", { ascending: false })
         .limit(4),
     ]);

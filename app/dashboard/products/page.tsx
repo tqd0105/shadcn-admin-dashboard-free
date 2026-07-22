@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ProductForm } from "@/components/admin/product-form";
+import { ProductCard } from "@/components/storefront/product-card";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ import {
   IconPackage,
   IconSearch,
   IconLoader2,
+  IconX,
 } from "@tabler/icons-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -204,168 +206,140 @@ function ProductsPageContent() {
     });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in-50 duration-700 slide-in-from-bottom-4">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground text-sm">
-            Manage your product catalog
+      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/50 shadow-[0_10px_40px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[60px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/10 rounded-full blur-[60px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
+        <div className="relative z-10">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mb-1">
+            Quản lý sản phẩm
+          </h1>
+          <p className="text-muted-foreground text-sm font-medium">
+            Quản lý danh mục sản phẩm của bạn
           </p>
         </div>
         {role === "admin" && (
-          <Button onClick={openCreate} className="gap-2">
+          <Button 
+            onClick={openCreate} 
+            className="relative z-10 gap-2 rounded-full px-6 shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-all duration-300 hover:scale-105"
+          >
             <IconPlus className="size-4" />
-            Add Product
+            Thêm sản phẩm
           </Button>
         )}
       </div>
 
       {/* Search & Stats */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-sm flex-1">
-          <IconSearch className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-1">
+        <div className="relative max-w-sm flex-1 group">
+          <Image src="/icons/search.png" alt="search" width={20} height={20} className="text-muted-foreground z-10 absolute left-4 top-1/2 size-4 -translate-y-1/2 group-focus-within:text-primary transition-colors" />
           <Input
-            placeholder="Search products..."
+            placeholder="Tìm kiếm sản phẩm..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-10 rounded-full bg-card/50 backdrop-blur-sm border-border/50 focus-visible:ring-primary/20 h-11 shadow-md"
           />
         </div>
-        <Badge variant="secondary" className="w-fit gap-1.5 px-3 py-1.5">
-          <IconPackage className="size-3.5" />
-          {products.length} product{products.length !== 1 ? "s" : ""}
+        <Badge variant="secondary" className="w-fit gap-1.5 px-4 py-2 rounded-full bg-primary/5 shadow-sm text-primary hover:bg-primary/20 border-0 font-bold transition-colors">
+          <Image src="/icons/cart-history.png" alt="product" width={20} height={20}  />
+          {products.length} sản phẩm
         </Badge>
       </div>
 
       {/* Products Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
+        <div className="flex items-center justify-center py-32">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+            <IconLoader2 className="text-primary size-10 animate-spin relative z-10" />
+          </div>
         </div>
       ) : products.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="bg-muted mb-4 rounded-full p-4">
-              <IconPackage className="text-muted-foreground size-8" />
-            </div>
-            <p className="text-muted-foreground text-lg font-medium">
-              {search ? "No products match your search" : "No products yet"}
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {search
-                ? "Try a different search term"
-                : "Get started by adding your first product"}
-            </p>
-            {!search && role === "admin" && (
-              <Button
-                onClick={openCreate}
-                variant="outline"
-                className="mt-4 gap-2"
-              >
-                <IconPlus className="size-4" />
-                Add Product
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-32 px-4 text-center bg-card/30 rounded-[32px] border border-border/50 border-dashed relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          <div className="bg-primary/10 mb-6 rounded-full p-6 relative">
+             <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+            <IconPackage className="text-primary size-12 relative z-10" />
+          </div>
+          <h3 className="text-foreground text-xl font-bold mb-2">
+            {search ? "Không tìm thấy sản phẩm nào" : "Chưa có sản phẩm nào"}
+          </h3>
+          <p className="text-muted-foreground text-sm max-w-sm">
+            {search
+              ? "Vui lòng thử lại với từ khóa khác để tìm kiếm sản phẩm."
+              : "Bắt đầu bằng cách thêm sản phẩm đầu tiên vào cửa hàng của bạn."}
+          </p>
+          {!search && role === "admin" && (
+            <Button
+              onClick={openCreate}
+              className="mt-8 gap-2 rounded-full px-8 h-12 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform duration-300"
+            >
+              <IconPlus className="size-5" />
+              Thêm sản phẩm ngay
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
-            <Card
-              key={product.id}
-              className="group relative overflow-hidden transition-shadow hover:shadow-lg"
-            >
-              {/* Product Image */}
-              <div className="bg-muted relative aspect-square overflow-hidden">
-                {product.image_url ? (
-                  <Image
-                    fill
-                    unoptimized
-                    src={product.image_url}
-                    alt={product.name}
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <IconPackage className="text-muted-foreground/40 size-16" />
-                  </div>
-                )}
-                {/* Hover overlay with actions */}
-                {(role === "admin" || role === "staff") && (
-                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100">
+            <div key={product.id} className="relative group/admin block h-full">
+              <ProductCard product={product} />
+              
+              {/* Admin actions overlay */}
+              {(role === "admin" || role === "staff") && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/40 backdrop-blur-[2px] opacity-0 transition-all duration-300 group-hover/admin:opacity-100 z-50 rounded-[24px]">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-10 px-6 gap-2 shadow-xl font-bold rounded-full border border-border"
+                    onClick={(e) => { e.preventDefault(); openEdit(product); }}
+                  >
+                    <IconEdit className="size-4" />
+                    {role === "staff" ? "Cập nhật" : "Sửa sản phẩm"}
+                  </Button>
+                  {role === "admin" && (
                     <Button
                       size="sm"
-                      variant="secondary"
-                      className="h-9 gap-1.5 shadow-md"
-                      onClick={() => openEdit(product)}
+                      variant="destructive"
+                      className="h-10 px-6 gap-2 shadow-xl font-bold rounded-full"
+                      onClick={(e) => { e.preventDefault(); setDeleteTarget(product); }}
                     >
-                      <IconEdit className="size-3.5" />
-                      {role === "staff" ? "Cập nhật" : "Edit"}
+                      <IconTrash className="size-4" />
+                      Xóa sản phẩm
                     </Button>
-                    {role === "admin" && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="h-9 gap-1.5 shadow-md"
-                        onClick={() => setDeleteTarget(product)}
-                      >
-                        <IconTrash className="size-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    <CardTitle className="line-clamp-1 text-base truncate max-w-[120px]">
-                      {product.name}
-                    </CardTitle>
-                    <span className="text-muted-foreground text-[11px]">
-                      {formatDate(product.created_at)}
-                    </span>
-                  </div>
-                  {product.categories && (
-                    <Badge variant="outline" className="text-[10px] whitespace-nowrap">
-                      {product.categories.name}
-                    </Badge>
                   )}
                 </div>
-              </CardHeader>
-              <CardFooter>
-                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                  {formatPrice(product.price)}
-                </span>
-              </CardFooter>
-            </Card>
+              )}
+            </div>
           ))}
         </div>
       )}
 
       {/* Pagination Controls */}
       {products.length > 0 && (
-        <div className="flex items-center justify-between px-2 py-4">
-          <div className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+        <div className="flex items-center justify-between pt-6 pb-2">
+          <div className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-full">
+            Trang <span className="text-foreground font-bold">{page}</span> / {totalPages}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1 || loading}
+              className="rounded-full px-5 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors shadow-md disabled:shadow-none disabled:opacity-40 disabled:bg-muted/50"
             >
-              Previous
+              Trước
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages || totalPages === 0 || loading}
+              className="rounded-full px-5 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors shadow-md disabled:shadow-none disabled:opacity-40 disabled:bg-muted/50"
             >
-              Next
+              Sau
             </Button>
           </div>
         </div>
@@ -382,31 +356,37 @@ function ProductsPageContent() {
 
       {role === "admin" && (
         <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the product
-                &quot;{deleteTarget?.name}&quot; and remove all of its data from our servers.
+          <AlertDialogContent className="bg-card/90 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] overflow-hidden">
+            <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-red-500/10 rounded-full blur-[40px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
+            <AlertDialogHeader className="relative z-10">
+              <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
+                <span className="bg-red-500/10 p-2 rounded-full text-red-500">
+                  <Image src="/icons/delete.png" alt="delete" width={20} height={20} />
+                </span>
+                Bạn có chắc chắn muốn xóa?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-base mt-2">
+                Hành động này không thể hoàn tác. Sản phẩm
+                &quot;<span className="font-bold text-foreground">{deleteTarget?.name}</span>&quot; sẽ bị xóa vĩnh viễn khỏi hệ thống.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogFooter className="relative z-10 mt-4">
+              <AlertDialogCancel disabled={deleting} className="rounded-full px-6 bg-secondary/50 border-0 hover:bg-secondary">Hủy</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
                   handleDelete();
                 }}
                 disabled={deleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-red-600 text-white hover:bg-red-700 rounded-full px-6 shadow-lg shadow-red-600/20 transition-all"
               >
                 {deleting ? (
                   <>
                     <IconLoader2 className="mr-2 size-4 animate-spin" />
-                    Deleting...
+                    Đang xóa...
                   </>
                 ) : (
-                  "Delete"
+                  "Xóa sản phẩm"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

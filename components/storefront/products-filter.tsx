@@ -118,7 +118,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
     return val.replace(/\D/g, "");
   };
 
-  const FilterContent = () => (
+  const filterContent = (
     <Accordion type="multiple" defaultValue={["categories", "brands", "price"]} className="w-full">
       {categories.length > 0 && (
         <AccordionItem value="categories" className="border-b-0 mb-2">
@@ -248,7 +248,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
               </SheetDescription>
             </SheetHeader>
             <ScrollArea className="flex-1 px-6 py-2 min-h-0">
-              <FilterContent />
+              {filterContent}
             </ScrollArea>
             <div className="p-4 border-t bg-background ">
               <Button className=" w-full h-11 rounded-full text-base font-medium shadow-sm" onClick={() => setIsMobileOpen(false)}>
@@ -266,7 +266,7 @@ export function ProductsFilter({ categories, brands }: ProductsFilterProps) {
           <p className="text-muted-foreground text-sm">Khám phá bộ sưu tập đẳng cấp</p>
         </div>
         <div className="bg-card border rounded-2xl p-5 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
-          <FilterContent />
+          {filterContent}
         </div>
       </aside>
     </>
