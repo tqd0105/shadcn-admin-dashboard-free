@@ -55,7 +55,7 @@ export function SiteHeader() {
     try {
       const history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
       setSearchHistory(history);
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const addToHistory = (term: string) => {
@@ -146,90 +146,105 @@ export function SiteHeader() {
     };
   }, [user]);
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-all duration-300 shadow-lg">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-all duration-300 shadow-lg ">
       <div className="grid grid-cols-[1fr_auto] md:flex md:flex-nowrap justify-between items-center w-full px-4 md:px-8 max-w-[1440px] mx-auto py-3 md:py-0 md:h-[80px] z-50 gap-y-3 md:gap-y-0">
         {/* Brand */}
         <div className="flex items-center gap-1.5 md:gap-4 order-1 min-w-0 pr-2">
           {/* Mobile Menu */}
-          <div className="flex lg:hidden items-center shrink-0">
+          <div className="flex lg:hidden items-center shrink-0 ">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="mr-1 md:mr-2 h-9 w-9">
-                  <Menu className="w-5 h-5" />
+                  <Image src="/icons/menu2.png" alt="Logo" width={25} height={25} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 flex flex-col h-full bg-background/60 backdrop-blur-2xl overflow-hidden border-r border-border/50 shadow-2xl">
+              <SheetContent side="left" className="w-[310px] sm:w-[360px] p-0 flex flex-col h-full bg-background/80 backdrop-blur-2xl overflow-hidden border-r border-border/50 shadow-2xl">
                 <SheetTitle className="sr-only">Menu Điều Hướng</SheetTitle>
                 {/* 1. Header Khu Vực Tài Khoản */}
                 <div className="p-6 pb-5 bg-card/40 border-b border-border/50 relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
+                  <div className="absolute inset-0 animate__animated animate__fadeInLeft" />
                   <div className="relative z-10">
-                  {user ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-md ring-4 ring-primary/5">
-                          <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} className="object-cover" />
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/50 text-primary-foreground font-bold text-lg">
-                            {user.email?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-[17px] truncate text-foreground">
-                            {profile?.full_name || user.user_metadata?.full_name || "Khách hàng"}
-                          </h4>
-                          <p className="text-[13px] text-muted-foreground truncate">{user.email}</p>
-                          <div className="mt-1.5 flex items-center gap-1.5">
-                            {role && (
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-sm ${role === "admin"
+                    {user ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-md ring-4 ring-primary/5">
+                            <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture} className="object-cover" />
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/50 text-primary-foreground font-bold text-lg">
+                              {user.email?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-[17px] truncate text-foreground">
+                              {profile?.full_name || user.user_metadata?.full_name || "Khách hàng"}
+                            </h4>
+                            <p className="text-[13px] text-muted-foreground truncate">{user.email}</p>
+                            <div className="mt-1.5 flex items-center gap-1.5">
+                              {role && (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-sm ${role === "admin"
                                   ? "bg-red-500/10 text-red-600 dark:text-red-400"
                                   : role === "staff"
                                     ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                                     : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                }`}>
-                                {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Thành viên"}
-                              </span>
-                            )}
+                                  }`}>
+                                  {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Thành viên"}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Nút vào Bảng Quản Trị dành riêng cho Admin */}
-                      {role === "admin" && (
+                        {/* Nút vào Bảng Quản Trị dành riêng cho Admin */}
+                        {role === "admin" && (
+                          <SheetClose asChild>
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-[14px] bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold text-[14.5px] shadow-md shadow-red-500/20 hover:opacity-90 hover:scale-[1.02] transition-all duration-300"
+                            >
+                              <Image src="/icons/dashboard3.png" alt="Logo" width={22} height={22} className="object-contain" /> Bảng Quản Trị (Admin)
+                            </Link>
+                          </SheetClose>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-2 space-y-3">
+
+                        <div>
+                          <h4 className="font-bold text-base text-foreground ">Chào mừng đến với</h4>
+                          <div className="group text-lg md:text-2xl font-black tracking-tighter flex-shrink-0 flex justify-center items-center gap-1.5 md:gap-2.5 transition-all duration-300 min-w-0 overflow-hidden">
+                            <div className="relative shrink-0">
+                              <div className="absolute -inset-1 rounded-full group-hover:opacity-80 transition duration-800 animate-pulse" />
+                              <Image src="/icons/luxecommerce.png" alt="Logo" width={28} height={28} className="relative md:w-[34px] md:h-[34px]" />
+                            </div>
+                            <span className="flex items-center tracking-tight truncate">
+                              <span className="bg-gradient-to-r from-violet-500 via-purple-400 to-fuchsia-400 dark:from-violet-300 dark:via-purple-200 dark:to-fuchsia-300 bg-clip-text text-transparent animate-shimmer-metallic drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]">
+                                Luxe
+                              </span>
+                              <span className="ml-0.5 bg-gradient-to-r from-slate-700 via-slate-500 to-slate-800 dark:from-slate-100 dark:via-white dark:to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] truncate">
+                                Commerce
+                              </span>
+                              <Image src="/icons/star.png" alt="Logo" width={20} height={20} className="ml-1 md:w-[25px] md:h-[25px] animate__animated animate__flash animate__infinite hidden sm:inline-block shrink-0" />
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Đăng nhập để nhận ưu đãi & theo dõi đơn hàng
+                          </p>
+                        </div>
                         <SheetClose asChild>
-                          <Link
-                            href="/dashboard"
-                            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-[14px] bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold text-[14.5px] shadow-md shadow-red-500/20 hover:opacity-90 hover:scale-[1.02] transition-all duration-300"
+                          <Button
+                            onClick={() => openModal("login")}
+                            className="w-full font-bold shadow-md shadow-primary/20"
+                            size="lg"
                           >
-                            <Image src="/icons/dashboard3.png" alt="Logo" width={22} height={22} className="object-contain" /> Bảng Quản Trị (Admin)
-                          </Link>
+                            Đăng nhập / Đăng ký
+                          </Button>
                         </SheetClose>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-2 space-y-3">
-
-                      <div>
-                        <h4 className="font-bold text-base text-foreground uppercase">Chào mừng đến LuxeCommerce</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Đăng nhập để nhận ưu đãi & theo dõi đơn hàng
-                        </p>
                       </div>
-                      <SheetClose asChild>
-                        <Button
-                          onClick={() => openModal("login")}
-                          className="w-full font-bold shadow-md shadow-primary/20"
-                          size="lg"
-                        >
-                          Đăng nhập / Đăng ký
-                        </Button>
-                      </SheetClose>
-                    </div>
-                  )}
+                    )}
                   </div>
                 </div>
 
                 {/* 2. Menu Điều Hướng Cuộn */}
-                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 ">
                   {/* Khám Phá */}
                   <div className="space-y-1">
                     <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-2">
@@ -470,9 +485,9 @@ export function SiteHeader() {
                 <div className="p-5">
                   <div className="flex justify-between items-center mb-4 px-1">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"><Search className="w-3.5 h-3.5" /> Lịch sử tìm kiếm</h4>
-                    <button 
+                    <button
                       type="button"
-                      onClick={() => { setSearchHistory([]); localStorage.removeItem("searchHistory"); }} 
+                      onClick={() => { setSearchHistory([]); localStorage.removeItem("searchHistory"); }}
                       className="text-xs font-medium text-muted-foreground hover:text-red-500 transition-colors bg-secondary/50 hover:bg-red-500/10 px-2.5 py-1.5 rounded-md"
                     >
                       Xoá tất cả
@@ -480,10 +495,10 @@ export function SiteHeader() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {searchHistory.map((term, i) => (
-                      <Link 
-                        key={`${term}-${i}`} 
-                        href={`/products?search=${term}`} 
-                        onClick={() => { setShowSuggestions(false); addToHistory(term); }} 
+                      <Link
+                        key={`${term}-${i}`}
+                        href={`/products?search=${term}`}
+                        onClick={() => { setShowSuggestions(false); addToHistory(term); }}
                         className="px-4 py-2 bg-background border border-border/60 hover:border-primary/50 hover:bg-primary/5 hover:text-primary hover:shadow-md rounded-full text-sm font-medium transition-all shadow-sm"
                       >
                         {term}
@@ -588,10 +603,10 @@ export function SiteHeader() {
                       </p>
                       {role && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide shrink-0 shadow-sm ${role === "admin"
-                            ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                            : role === "staff"
-                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                          : role === "staff"
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                           }`}>
                           {role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Customer"}
                         </span>

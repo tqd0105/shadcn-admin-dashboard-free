@@ -39,9 +39,10 @@ interface ProductActionsProps {
   basePrice: number;
   discountPercent?: number;
   variants: Variant[];
+  stockQuantity?: number;
 }
 
-export function ProductActions({ productId, productName, productImage, productSlug, basePrice, discountPercent, variants }: ProductActionsProps) {
+export function ProductActions({ productId, productName, productImage, productSlug, basePrice, discountPercent, variants, stockQuantity = 0 }: ProductActionsProps) {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
     variants && variants.length > 0 ? variants[0] : null
   );
@@ -97,6 +98,10 @@ export function ProductActions({ productId, productName, productImage, productSl
 
   const finalPrice = saleBasePrice + currentPriceModifier; // Red text (Sale Price)
   const finalOriginalPrice = originalBasePrice + currentPriceModifier; // Strikethrough (Original Price)
+
+  const isOutOfStock = variants && variants.length > 0
+    ? selectedVariant?.stock_quantity === 0
+    : stockQuantity <= 0;
 
   const handleAddToCart = async () => {
     if (role === "admin" || role === "staff") {
@@ -186,7 +191,7 @@ export function ProductActions({ productId, productName, productImage, productSl
       <div className="relative group rounded-3xl p-[2px] bg-gradient-to-r from-red-500 via-amber-400 to-rose-600 shadow-[0_10px_35px_rgba(239,68,68,0.25)] dark:shadow-[0_10px_35px_rgba(239,68,68,0.35)] transition-all duration-500 hover:shadow-[0_15px_45px_rgba(245,158,11,0.35)] overflow-hidden">
         {/* Shimmer light sweep beam */}
         <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/100 dark:via-white/50 to-transparent animate-shimmer-sweep pointer-events-none z-20" />
-        
+
         {/* Ambient glowing background orbs */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-amber-400/30 via-red-500/20 to-transparent  rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-700 animate-pulse" />
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-rose-500/20 via-orange-400/20 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
@@ -194,24 +199,35 @@ export function ProductActions({ productId, productName, productImage, productSl
         <div className="relative z-10 rounded-[22px] bg-white dark:bg-black p-4 sm:p-6 backdrop-blur-xl space-y-4 overflow-hidden border border-white/60 dark:border-white/10">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-3">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 ">
-              <span className="text-3xl sm:text-4xl xl:text-5xl font-black bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 dark:from-red-400 dark:via-rose-400 dark:to-amber-400 bg-clip-text text-transparent tracking-tight leading-none drop-shadow-sm">
+              <span className={cn(
+                "text-3xl sm:text-4xl xl:text-5xl font-black bg-clip-text text-transparent tracking-tight leading-none drop-shadow-sm",
+                isOutOfStock ? "bg-gradient-to-r from-muted-foreground to-muted-foreground/60" : "bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 dark:from-red-400 dark:via-rose-400 dark:to-amber-400"
+              )}>
                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(finalPrice)}
               </span>
-              {hasDiscount && (
+              {!isOutOfStock && hasDiscount && (
                 <span className="text-base sm:text-lg xl:text-xl text-muted-foreground/80 line-through decoration-red-500/70 font-semibold tracking-normal">
                   {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(finalOriginalPrice)}
                 </span>
               )}
+              {isOutOfStock && (
+                <Badge className="bg-muted/80 backdrop-blur-md text-muted-foreground border-border/50 px-3 py-1.5 text-xs font-bold tracking-widest uppercase shadow-sm pointer-events-none ml-2">
+                  Tạm hết hàng
+                </Badge>
+              )}
             </div>
-            {hasDiscount && (
-              <Badge className="bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 hover:from-red-700 hover:to-amber-700 text-white font-extrabold px-3.5 py-1.5 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 shadow-[0_4px_15px_rgba(239,68,68,0.4)] border border-amber-300/50 rounded-full w-fit shrink-0">
+            {!isOutOfStock && hasDiscount && (
+              <Badge className="bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 hover:from-red-700 hover:to-amber-700 text-white font-extrabold px-3.5 py-1.5 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 shadow-[0_4px_15px_rgba(239,68,68,0.4)] border border-amber-300/50  w-fit shrink-0" style={{
+                borderBottomRightRadius: "50%",
+                borderTopRightRadius: "50%"
+              }}>
                 <Image src="/icons/discount1.png" alt="Discount" width={18} height={18} className="shrink-0 drop-shadow animate-bounce-subtle" />
                 <span className="drop-shadow-sm">GIẢM NGAY {discountPercent}%</span>
               </Badge>
             )}
           </div>
 
-          {hasDiscount && (
+          {!isOutOfStock && hasDiscount && (
             <div className="pt-3.5 border-t border-red-200/60 dark:border-red-800/40 flex flex-col xl:flex-row xl:items-center justify-between items-center sm:items-start gap-3 text-xs sm:text-sm font-medium">
               <div className="flex flex-wrap items-center gap-2 w-fit px-3.5 py-2 rounded-xl border-2 border-yellow-400 dark:border-red-400/20 backdrop-blur-md shadow-md">
                 <Image src="/icons/save_money.png" alt="Discount" width={18} height={18} className="shrink-0 drop-shadow animate-pulse" />
@@ -286,19 +302,27 @@ export function ProductActions({ productId, productName, productImage, productSl
       <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           onClick={handleAddToCart}
-          disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="w-full flex justify-center items-center h-14 px-5 py-3 bg-primary text-primary-foreground font-bold text-sm sm:text-base rounded-[16px] shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed whitespace-nowrap"
+          disabled={isOutOfStock || isAdding}
+          className="flex-1 flex justify-center items-center h-14 px-5 py-3 bg-primary text-primary-foreground font-bold text-sm sm:text-base rounded-[16px] shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed whitespace-nowrap"
         >
-          <span className="material-symbols-outlined text-[20px] mr-2">shopping_bag</span>
-          <span>{isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}</span>
+          {isOutOfStock ? (
+            <span>Sản phẩm hiện đang tạm hết hàng</span>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[20px] mr-2">shopping_bag</span>
+              <span>{isAdding ? "Đang xử lý..." : "Thêm vào giỏ hàng"}</span>
+            </>
+          )}
         </button>
-        <button
-          onClick={handleBuyNow}
-          disabled={selectedVariant?.stock_quantity === 0 || isAdding}
-          className="flex-1 min-w-[130px] flex justify-center items-center h-14 px-5 py-3 bg-card/80 backdrop-blur-md border-2 border-primary/20 text-primary font-bold text-sm sm:text-base rounded-[16px] hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
-        >
-          <span>{isAdding ? "Đang xử lý..." : "Mua ngay"}</span>
-        </button>
+        {!isOutOfStock && (
+          <button
+            onClick={handleBuyNow}
+            disabled={isAdding}
+            className="flex-1 min-w-[130px] flex justify-center items-center h-14 px-5 py-3 bg-card/80 backdrop-blur-md border-2 border-primary/20 text-primary font-bold text-sm sm:text-base rounded-[16px] hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
+          >
+            <span>{isAdding ? "Đang xử lý..." : "Mua ngay"}</span>
+          </button>
+        )}
         <button
           onClick={handleToggleWishlist}
           disabled={isTogglingHeart}
@@ -316,22 +340,38 @@ export function ProductActions({ productId, productName, productImage, productSl
 
       {/* Login Alert Modal */}
       <AlertDialog open={showLoginAlert} onOpenChange={setShowLoginAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Yêu cầu đăng nhập</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn cần phải đăng nhập để thêm sản phẩm vào giỏ hàng hoặc thực hiện mua hàng.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Đóng lại</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              setShowLoginAlert(false);
-              openModal("login");
-            }}>
+        <AlertDialogContent className="sm:max-w-[550px] overflow-hidden rounded-[24px] border border-border/50 bg-background/95 backdrop-blur-2xl shadow-2xl p-0 animate__animated animate__zoomIn animate__faster">
+          {/* Decorative Background */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="p-6 pb-2 relative z-10">
+            <AlertDialogHeader className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Image src="/icons/lock.png" alt="Lock" width={35} height={35} />
+              <AlertDialogTitle className="text-xl sm:text-xl font-black text-center sm:text-left">
+                Yêu cầu đăng nhập
+              </AlertDialogTitle>
+              </div>
+              <AlertDialogDescription className="text-sm sm:text-base text-center sm:text-left text-muted-foreground leading-relaxed">
+                Vui lòng đăng nhập để lưu sản phẩm vào danh sách yêu thích và trải nghiệm đầy đủ các tính năng mua sắm tuyệt vời nhất.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          
+          <div className="p-4 sm:p-4 bg-secondary/70 border-t border-border/50 relative z-10 flex flex-col sm:flex-row justify-end gap-3">
+            <AlertDialogCancel className="mt-0 rounded-[14px] h-12 font-bold border-border/60 hover:bg-secondary transition-colors px-6">
+              Để sau  
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setShowLoginAlert(false);
+                openModal("login");
+              }}
+              className="rounded-[14px] h-12 font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] px-6"
+            >
               Đăng nhập ngay
             </AlertDialogAction>
-          </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
 
