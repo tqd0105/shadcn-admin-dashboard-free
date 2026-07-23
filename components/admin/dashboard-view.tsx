@@ -118,9 +118,9 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
   return (
     <div className="space-y-4 sm:space-y-6 pb-6 animate-in fade-in-50 duration-700 slide-in-from-bottom-4">
       {/* 1. Header & Nút thao tác */}
-      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
+      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[80px] pointer-events-none translate-x-1/3 -translate-y-1/3 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-green-500/5 rounded-full blur-[80px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
 
         <div className="space-y-2 z-10 relative">
 
@@ -132,12 +132,12 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 z-10 relative w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 z-10 relative w-full sm:w-auto mt-2 sm:mt-0">
           <Button
             variant="secondary"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="rounded-2xl h-12 px-6 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white text-primary hover:bg-white/90"
+            className="rounded-2xl h-12 px-6 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white text-primary hover:bg-white/90 w-full sm:w-auto"
           >
             <RefreshCw
               className={cn("w-5 h-5 mr-2", isRefreshing && "animate-spin")}
@@ -148,7 +148,7 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
       </div>
 
       {/* 2. Các thông số chính (KPIs) */}
-      <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 relative", role !== "admin" && "opacity-50 pointer-events-none")}>
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 relative", role !== "admin" && " pointer-events-none")}>
         {role === "admin" ? (
           <>
             {/* Thẻ 1: Doanh thu */}
@@ -161,7 +161,7 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
                 </div>
               </div>
               <div className="space-y-2 relative z-10">
-                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
+                <h3 className="text-2xl sm:text-3xl xl:text-4xl font-black text-foreground tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70 truncate">
                   {formatCurrency(stats.totalRevenue)}
                 </h3>
                 <div className={cn(
@@ -186,8 +186,8 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
                 </div>
               </div>
               <div className="space-y-2 relative z-10">
-                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1">
-                  {stats.totalOrders} <span className="text-base font-semibold text-muted-foreground">đơn</span>
+                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1 truncate">
+                  {stats.totalOrders} <span className="text-sm sm:text-base font-semibold text-muted-foreground">đơn</span>
                 </h3>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/5 text-amber-600">
                   <Clock className="w-3.5 h-3.5 animate-pulse" />
@@ -206,8 +206,8 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
                 </div>
               </div>
               <div className="space-y-2 relative z-10">
-                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1">
-                  {stats.totalCustomers} <span className="text-base font-semibold text-muted-foreground">tài khoản</span>
+                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1 truncate">
+                  {stats.totalCustomers} <span className="text-sm sm:text-base font-semibold text-muted-foreground">tài khoản</span>
                 </h3>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/5 text-purple-600">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -228,8 +228,8 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
                 </div>
               </div>
               <div className="space-y-2 relative z-10">
-                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1">
-                  {stats.totalOrders} <span className="text-base font-semibold text-muted-foreground">đơn</span>
+                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1 truncate">
+                  {stats.totalOrders} <span className="text-sm sm:text-base font-semibold text-muted-foreground">đơn</span>
                 </h3>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-600">
                   <span>Toàn bộ hệ thống</span>
@@ -247,11 +247,31 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
                 </div>
               </div>
               <div className="space-y-2 relative z-10">
-                <h3 className="text-3xl sm:text-4xl font-black text-amber-600 tracking-tighter flex items-baseline gap-1">
-                  {stats.pendingOrders} <span className="text-base font-semibold text-muted-foreground">đơn</span>
+                <h3 className="text-3xl sm:text-4xl font-black text-amber-600 tracking-tighter flex items-baseline gap-1 truncate">
+                  {stats.pendingOrders} <span className="text-sm sm:text-base font-semibold text-muted-foreground">đơn</span>
                 </h3>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600">
                   <span>Cần xác nhận ngay</span>
+                </div>
+              </div>
+            </div>
+
+             {/* Thẻ 3: Khách hàng */}
+            <div className="p-5 rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 relative overflow-hidden group">
+              <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Khách hàng VIP</span>
+                <div className="w-15 h-15 rounded-2xl bg-gradient-to-br from-purple-400/10 to-purple-600/10 text-purple-600 flex items-center justify-center font-bold shadow-inner ring-1 ring-purple-500/20 group-hover:scale-110 transition-transform duration-500">
+                  <Image src="/icons/customer.png" alt="VNĐ" width={50} height={50} />
+                </div>
+              </div>
+              <div className="space-y-2 relative z-10">
+                <h3 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter flex items-baseline gap-1 truncate">
+                  {stats.totalCustomers} <span className="text-sm sm:text-base font-semibold text-muted-foreground">tài khoản</span>
+                </h3>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/5 text-purple-600">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Cộng đồng mua sắm tích cực</span>
                 </div>
               </div>
             </div>
@@ -268,8 +288,8 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
               <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:scale-150 transition-transform duration-1000" />
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 relative z-10">
-                <div className="space-y-1.5">
-                  <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2">
+                <div className="space-y-1.5 w-full sm:w-auto">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-foreground flex items-center gap-2">
                     Biểu đồ doanh thu
                   </h2>
                   <p className="text-sm text-muted-foreground font-medium">Thống kê dòng tiền trong 7 ngày gần nhất</p>
@@ -354,8 +374,8 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
         <div className={cn("h-full p-5 sm:p-6 rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] flex flex-col justify-between space-y-6 relative overflow-hidden", role === "admin" ? "lg:col-span-1" : "lg:col-span-3")}>
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
           <div className="space-y-2 relative z-10">
-            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-              <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <h2 className="text-lg sm:text-xl font-extrabold text-foreground flex items-center gap-2">
                 Đơn hàng mới nhất
               </h2>
               <Link

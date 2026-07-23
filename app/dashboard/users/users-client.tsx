@@ -309,58 +309,67 @@ export default function UsersClient() {
   );
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Quản lý Tài khoản</h1>
-        <Button onClick={openCreate}>
-          <PlusCircledIcon className="mr-2" /> Thêm người dùng
+    <div className="space-y-6 pb-8 animate-fade-in">
+      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-[24px] bg-card/80 backdrop-blur-xl border border-border/50 shadow-[0_10px_40px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[60px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-yellow-500/10 rounded-full blur-[60px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
+        <div className="relative z-10">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mb-1">
+            Quản lý Tài khoản
+          </h1>
+          <p className="text-sm font-medium text-muted-foreground mt-1">
+            Quản lý phân quyền và thông tin người dùng trong hệ thống
+          </p>
+        </div>
+        <Button onClick={openCreate} className="relative z-10 gap-2 rounded-full px-6 shadow-lg shadow-primary/20 hover:scale-105 transition-transform h-11 w-full sm:w-auto mt-2 sm:mt-0">
+          <PlusCircledIcon className="size-5" />
+          <span className="font-semibold">Thêm người dùng</span>
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <UsersDataTable 
-            data={users}
-            pageCount={totalPages}
-            pageIndex={page - 1}
-            pageSize={pageSize}
-            onPageChange={(newIdx) => setPage(newIdx + 1)}
-            search={search}
-            onSearchChange={setSearch}
-            loading={loading}
-            onEdit={openEdit}
-            onDelete={openDelete}
-            onToggleLock={openToggleLock}
-            role={role}
-          />
-        </CardContent>
-      </Card>
+      <div className="w-full">
+        <UsersDataTable 
+          data={users}
+          pageCount={totalPages}
+          pageIndex={page - 1}
+          pageSize={pageSize}
+          onPageChange={(newIdx) => setPage(newIdx + 1)}
+          search={search}
+          onSearchChange={setSearch}
+          loading={loading}
+          onEdit={openEdit}
+          onDelete={openDelete}
+          onToggleLock={openToggleLock}
+          role={role}
+        />
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-2xl font-bold">
               {editingUser ? "Chỉnh sửa Tài khoản" : "Tạo Tài khoản mới"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm">
               {editingUser
                 ? "Cập nhật thông tin của người dùng."
                 : "Điền thông tin bên dưới để cấp tài khoản mới."}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Tên hiển thị <span className="text-red-500">*</span></Label>
+              <Label htmlFor="full_name" className="font-semibold">Tên hiển thị <span className="text-red-500">*</span></Label>
               <Input
                 id="full_name"
                 value={form.full_name}
                 onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                 placeholder="Nhập họ và tên..."
+                className="rounded-xl h-11 bg-background/50"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
+              <Label htmlFor="email" className="font-semibold">Email <span className="text-red-500">*</span></Label>
               <Input
                 id="email"
                 type="email"
@@ -368,44 +377,46 @@ export default function UsersClient() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="email@example.com"
                 disabled={!!editingUser}
+                className="rounded-xl h-11 bg-background/50"
               />
             </div>
             {!editingUser && (
               <div className="space-y-2">
-                <Label htmlFor="password">Mật khẩu <span className="text-red-500">*</span></Label>
+                <Label htmlFor="password" className="font-semibold">Mật khẩu <span className="text-red-500">*</span></Label>
                 <Input
                   id="password"
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="Nhập mật khẩu..."
+                  className="rounded-xl h-11 bg-background/50"
                 />
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="role">Vai trò <span className="text-red-500">*</span></Label>
+              <Label htmlFor="role" className="font-semibold">Vai trò <span className="text-red-500">*</span></Label>
               <Select
                 value={form.role_id}
                 onValueChange={(val) => setForm({ ...form, role_id: val })}
                 disabled={role === "staff" || saving}
               >
-                <SelectTrigger id="role">
+                <SelectTrigger id="role" className="rounded-xl h-11 bg-background/50">
                   <SelectValue placeholder="Chọn vai trò" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   {roles
                     .filter(r => role === "admin" ? true : r.name === "customer")
                     .map(r => (
-                      <SelectItem key={r.id} value={r.id}>
+                      <SelectItem key={r.id} value={r.id} className="rounded-lg cursor-pointer">
                         <span className="capitalize">{r.name}</span>
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="space-y-0.5">
-                <Label htmlFor="is_locked" className="text-base font-medium">Khóa tài khoản</Label>
+            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+              <div className="space-y-1">
+                <Label htmlFor="is_locked" className="text-base font-bold">Khóa tài khoản</Label>
                 <p className="text-xs text-muted-foreground">Ngăn chặn người dùng đăng nhập vào hệ thống.</p>
               </div>
               <Switch
@@ -416,28 +427,32 @@ export default function UsersClient() {
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Hủy</Button>
-            <Button onClick={handleSave} disabled={saving}>
+          <DialogFooter className="pt-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving} className="rounded-full px-6 bg-background/50 hover:bg-secondary">
+              Hủy
+            </Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-full px-8 shadow-md shadow-primary/20">
               {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
-              Lưu
+              Lưu thay đổi
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <div className="flex items-center gap-2 text-red-600">
-              <IconAlertTriangle className="size-6 shrink-0" />
-              <AlertDialogTitle className="text-xl">Xác nhận xóa tài khoản vĩnh viễn</AlertDialogTitle>
-            </div>
-            <AlertDialogDescription className="space-y-3 pt-2 text-foreground/90">
+        <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+          <AlertDialogHeader className="relative z-10">
+            <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
+              <span className="bg-red-500/10 p-2 rounded-full text-red-500">
+                <IconAlertTriangle className="size-5" />
+              </span>
+              Xác nhận xóa tài khoản vĩnh viễn
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2 text-foreground/80">
               <p>
                 Bạn có chắc chắn muốn xóa tài khoản <strong>{deleteTarget?.email}</strong>? Hành động này <strong>không thể hoàn tác</strong> và sẽ xóa sạch toàn bộ hồ sơ, thông tin xác thực cùng các dữ liệu liên quan khỏi hệ thống.
               </p>
-              <div className="bg-red-50 dark:bg-red-950/40 p-3 rounded-lg border border-red-200 dark:border-red-900 text-xs text-red-700 dark:text-red-300">
+              <div className="bg-red-500/5 dark:bg-red-950/20 p-3.5 rounded-xl border border-red-500/20 text-xs text-red-600 dark:text-red-400">
                 Để xác nhận, vui lòng gõ chính xác cụm từ <strong>XÓA TÀI KHOẢN</strong> (hoặc email <strong>{deleteTarget?.email}</strong>) vào ô bên dưới:
               </div>
             </AlertDialogDescription>
@@ -448,7 +463,7 @@ export default function UsersClient() {
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder="Gõ XÓA TÀI KHOẢN hoặc email để xác nhận..."
-              className="border-red-300 focus-visible:ring-red-500"
+              className="border-red-500/30 focus-visible:ring-red-500 rounded-xl h-11 bg-background/50"
               disabled={deleting}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && isDeleteConfirmed && !deleting) {
@@ -459,12 +474,12 @@ export default function UsersClient() {
             />
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Hủy bỏ</AlertDialogCancel>
+          <AlertDialogFooter className="relative z-10 pt-2">
+            <AlertDialogCancel disabled={deleting} className="rounded-full px-6 bg-background/50 hover:bg-secondary border-border/50">Hủy bỏ</AlertDialogCancel>
             <AlertDialogAction
               className={cn(
-                "bg-red-600 hover:bg-red-700 text-white transition-all",
-                (!isDeleteConfirmed || deleting) && "opacity-50 cursor-not-allowed pointer-events-none"
+                "rounded-full px-6 transition-all",
+                (!isDeleteConfirmed || deleting) ? "opacity-50 cursor-not-allowed pointer-events-none bg-red-600" : "bg-red-600 hover:bg-red-700 hover:scale-105 shadow-lg shadow-red-500/20 text-white"
               )}
               onClick={(e) => {
                 e.preventDefault();
@@ -482,48 +497,47 @@ export default function UsersClient() {
       </AlertDialog>
 
       <AlertDialog open={!!lockTarget} onOpenChange={(open) => !open && !locking && setLockTarget(null)}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <div className="flex items-center gap-2">
+        <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+          <AlertDialogHeader className="relative z-10">
+            <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
               {lockTarget?.action === "lock" ? (
-                <div className="p-2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <IconLock className="size-6" />
-                </div>
+                <span className="bg-amber-500/10 p-2 rounded-full text-amber-500">
+                  <IconLock className="size-5" />
+                </span>
               ) : (
-                <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <IconLockOpen className="size-6" />
-                </div>
+                <span className="bg-emerald-500/10 p-2 rounded-full text-emerald-500">
+                  <IconLockOpen className="size-5" />
+                </span>
               )}
-              <AlertDialogTitle className="text-xl">
-                {lockTarget?.action === "lock" ? "Khóa quyền truy cập tài khoản?" : "Mở khóa tài khoản?"}
-              </AlertDialogTitle>
-            </div>
-            <AlertDialogDescription className="space-y-2 pt-2 text-foreground/90">
+              {lockTarget?.action === "lock" ? "Khóa quyền truy cập?" : "Mở khóa tài khoản?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2 text-foreground/80">
               {lockTarget?.action === "lock" ? (
                 <>
                   <p>
-                    Tài khoản <strong>{lockTarget.user.email}</strong> sẽ lập tức bị <strong>hủy phiên đăng nhập</strong> trên toàn bộ các thiết bị đang kết nối.
+                    Tài khoản <strong>{lockTarget.user.email}</strong> sẽ bị <strong>hủy phiên đăng nhập</strong> trên toàn bộ các thiết bị.
                   </p>
-                  <p className="text-xs text-muted-foreground bg-muted p-2.5 rounded-md border">
+                  <div className="bg-amber-500/5 dark:bg-amber-950/20 p-3 rounded-xl border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
                     Người dùng sẽ không thể đăng nhập hoặc thực hiện bất kỳ giao dịch nào cho tới khi được Mở khóa.
-                  </p>
+                  </div>
                 </>
               ) : (
                 <>
                   <p>
-                    Tài khoản <strong>{lockTarget?.user.email}</strong> sẽ được khôi phục toàn bộ quyền đăng nhập và mua sắm bình thường trên cửa hàng.
+                    Tài khoản <strong>{lockTarget?.user.email}</strong> sẽ được khôi phục toàn bộ quyền đăng nhập và mua sắm bình thường trên hệ thống.
                   </p>
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={locking}>Hủy</AlertDialogCancel>
+          <AlertDialogFooter className="relative z-10 pt-2">
+            <AlertDialogCancel disabled={locking} className="rounded-full px-6 bg-background/50 hover:bg-secondary border-border/50">Hủy</AlertDialogCancel>
             <AlertDialogAction
               className={cn(
+                "rounded-full px-6 transition-all text-white",
                 lockTarget?.action === "lock"
-                  ? "bg-amber-600 hover:bg-amber-700 text-white"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  ? "bg-amber-600 hover:bg-amber-700 hover:scale-105 shadow-lg shadow-amber-500/20"
+                  : "bg-emerald-600 hover:bg-emerald-700 hover:scale-105 shadow-lg shadow-emerald-500/20"
               )}
               onClick={(e) => {
                 e.preventDefault();
@@ -540,32 +554,32 @@ export default function UsersClient() {
 
       {/* Transfer Admin Dialog */}
       <AlertDialog open={transferAdminDialogOpen} onOpenChange={setTransferAdminDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md overflow-visible">
-          <AlertDialogHeader>
-            <div className="flex items-center gap-2.5 text-orange-600 dark:text-orange-400">
-              <div >
-                <Image src="/icons/warning1.png" alt="lock" width={35} height={35} />
+        <AlertDialogContent className="sm:max-w-md overflow-visible bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+          <AlertDialogHeader className="relative z-10">
+            <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400">
+              <div className="bg-orange-500/10 p-2 rounded-full shrink-0">
+                <Image src="/icons/warning1.png" alt="warning" width={30} height={30} className="w-7 h-7 object-contain" />
               </div>
               <AlertDialogTitle className="text-xl font-bold">
                 Chuyển giao Quyền Quản Trị
               </AlertDialogTitle>
             </div>
-            <AlertDialogDescription className="space-y-4 pt-2 text-foreground/90 text-sm">
+            <AlertDialogDescription className="space-y-4 pt-3 text-foreground/80 text-sm">
               <p>
                 Bạn đang thực hiện thao tác xóa hoặc hạ cấp tài khoản <strong>Admin duy nhất</strong> của hệ thống.
               </p>
-              <div className="bg-orange-50 dark:bg-orange-950/40 p-3.5 rounded-lg border border-orange-200 dark:border-orange-900/60 text-xs text-orange-700 dark:text-orange-300 leading-relaxed">
+              <div className="bg-orange-500/5 dark:bg-orange-950/20 p-4 rounded-xl border border-orange-500/20 text-xs text-orange-600 dark:text-orange-400 leading-relaxed shadow-inner">
                 Để tiếp tục, vui lòng chọn một tài khoản khác để chuyển quyền Admin. Hệ thống không thể không có người quản trị.
               </div>
               <div className="flex flex-col gap-2 pt-2">
-                <Label>Chọn Quản trị viên mới</Label>
+                <Label className="font-semibold text-foreground">Chọn Quản trị viên mới</Label>
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
                       aria-expanded={popoverOpen}
-                      className="w-full justify-between"
+                      className="w-full justify-between h-11 rounded-xl bg-background/50 border-border/50 hover:bg-secondary transition-colors"
                     >
                       {transferTargetId
                         ? transferUsers.find((user) => user.id === transferTargetId)?.full_name || "Đã chọn 1 tài khoản"
@@ -573,15 +587,16 @@ export default function UsersClient() {
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[380px] p-0" align="start">
+                  <PopoverContent className="w-[380px] p-0 rounded-[16px] border-border/50 shadow-xl overflow-hidden bg-card/95 backdrop-blur-xl" align="start">
                     <Command shouldFilter={false}>
                       <CommandInput 
                         placeholder="Nhập tên hoặc email..." 
                         value={transferSearch}
                         onValueChange={setTransferSearch}
+                        className="h-11"
                       />
-                      <CommandList>
-                        <CommandEmpty>Không tìm thấy tài khoản nào.</CommandEmpty>
+                      <CommandList className="max-h-[220px] hide-scrollbar p-1">
+                        <CommandEmpty className="py-6 text-center text-sm">Không tìm thấy tài khoản nào.</CommandEmpty>
                         <CommandGroup>
                           {transferUsers.map((user) => (
                             <CommandItem
@@ -591,20 +606,25 @@ export default function UsersClient() {
                                 setTransferTargetId(currentValue === transferTargetId ? "" : currentValue);
                                 setPopoverOpen(false);
                               }}
+                              className="rounded-xl my-1 cursor-pointer"
                             >
                               <Check
                                 className={cn(
-                                  "mr-2 h-4 w-4",
+                                  "mr-2 h-4 w-4 text-primary",
                                   transferTargetId === user.id ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8 ring-1 ring-border/50 shadow-sm">
                                   <AvatarImage src={user.avatar_url || ""} />
-                                  <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
+                                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                    {user.full_name?.substring(0, 2).toUpperCase() || "U"}
+                                  </AvatarFallback>
                                 </Avatar>
-                                <span className="font-medium">{user.full_name}</span>
-                                <span className="text-muted-foreground text-xs block truncate w-32">({user.email})</span>
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-sm">{user.full_name}</span>
+                                  <span className="text-muted-foreground text-[11px] block truncate w-40">{user.email}</span>
+                                </div>
                               </div>
                             </CommandItem>
                           ))}
@@ -616,13 +636,16 @@ export default function UsersClient() {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4">
-            <AlertDialogCancel disabled={transferring} onClick={() => {
+          <AlertDialogFooter className="mt-4 relative z-10 pt-2 border-t border-border/50">
+            <AlertDialogCancel disabled={transferring} className="rounded-full px-6 bg-background/50 hover:bg-secondary border-border/50" onClick={() => {
               setPendingAction(null);
               setTransferTargetId("");
             }}>Hủy bỏ</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-orange-600 hover:bg-orange-700 text-white"
+              className={cn(
+                "rounded-full px-6 transition-all text-white",
+                !transferTargetId || transferring ? "opacity-50 cursor-not-allowed bg-orange-600" : "bg-orange-600 hover:bg-orange-700 hover:scale-105 shadow-lg shadow-orange-500/20"
+              )}
               disabled={!transferTargetId || transferring}
               onClick={(e) => {
                 e.preventDefault();
@@ -635,6 +658,6 @@ export default function UsersClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

@@ -222,7 +222,7 @@ function ProductsPageContent() {
         {role === "admin" && (
           <Button 
             onClick={openCreate} 
-            className="relative z-10 gap-2 rounded-full px-6 shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-all duration-300 hover:scale-105"
+            className="relative z-10 gap-2 rounded-full px-6 shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-all duration-300 hover:scale-105 w-full sm:w-auto mt-2 sm:mt-0"
           >
             <IconPlus className="size-4" />
             Thêm sản phẩm
@@ -232,7 +232,7 @@ function ProductsPageContent() {
 
       {/* Search & Stats */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-1">
-        <div className="relative max-w-sm flex-1 group">
+        <div className="relative max-w-sm w-full group">
           <Image src="/icons/search.png" alt="search" width={20} height={20} className="text-muted-foreground z-10 absolute left-4 top-1/2 size-4 -translate-y-1/2 group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Tìm kiếm sản phẩm..."
@@ -241,7 +241,7 @@ function ProductsPageContent() {
             className="pl-10 rounded-full bg-card/50 backdrop-blur-sm border-border/50 focus-visible:ring-primary/20 h-11 shadow-md"
           />
         </div>
-        <Badge variant="secondary" className="w-fit gap-1.5 px-4 py-2 rounded-full bg-primary/5 shadow-sm text-primary hover:bg-primary/20 border-0 font-bold transition-colors">
+        <Badge variant="secondary" className="w-full sm:w-auto justify-center gap-1.5 px-4 py-2 rounded-full bg-primary/5 shadow-sm text-primary hover:bg-primary/20 border-0 font-bold transition-colors">
           <Image src="/icons/cart-history.png" alt="product" width={20} height={20}  />
           {products.length} sản phẩm
         </Badge>
@@ -288,25 +288,25 @@ function ProductsPageContent() {
               
               {/* Admin actions overlay */}
               {(role === "admin" || role === "staff") && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/40 backdrop-blur-[2px] opacity-0 transition-all duration-300 group-hover/admin:opacity-100 z-50 rounded-[24px]">
+                <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-100 lg:opacity-0 lg:group-hover/admin:opacity-100 transition-opacity duration-300 z-50">
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="secondary"
-                    className="h-10 px-6 gap-2 shadow-xl font-bold rounded-full border border-border"
+                    className="h-9 w-9 shadow-lg rounded-full bg-background/80 backdrop-blur-md border border-border/50 text-foreground hover:bg-background hover:scale-110 transition-all"
                     onClick={(e) => { e.preventDefault(); openEdit(product); }}
+                    title={role === "staff" ? "Cập nhật" : "Sửa sản phẩm"}
                   >
                     <IconEdit className="size-4" />
-                    {role === "staff" ? "Cập nhật" : "Sửa sản phẩm"}
                   </Button>
                   {role === "admin" && (
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="destructive"
-                      className="h-10 px-6 gap-2 shadow-xl font-bold rounded-full"
+                      className="h-9 w-9 shadow-lg rounded-full backdrop-blur-md hover:scale-110 transition-all"
                       onClick={(e) => { e.preventDefault(); setDeleteTarget(product); }}
+                      title="Xóa sản phẩm"
                     >
                       <IconTrash className="size-4" />
-                      Xóa sản phẩm
                     </Button>
                   )}
                 </div>
@@ -318,11 +318,11 @@ function ProductsPageContent() {
 
       {/* Pagination Controls */}
       {products.length > 0 && (
-        <div className="flex items-center justify-between pt-6 pb-2">
-          <div className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-full">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 pb-2">
+          <div className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-full w-full sm:w-auto text-center border border-border/50">
             Trang <span className="text-foreground font-bold">{page}</span> / {totalPages}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
             <Button
               variant="outline"
               size="sm"
