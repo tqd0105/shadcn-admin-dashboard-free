@@ -279,6 +279,13 @@ export default function CheckoutPage() {
                         street: addr.street || "",
                         city: addr.city || ""
                       }));
+                    } else {
+                      setFormData(prev => ({
+                        ...prev,
+                        phone: "",
+                        street: "",
+                        city: ""
+                      }));
                     }
                   }}
                 >
@@ -389,7 +396,7 @@ export default function CheckoutPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
             <h2 className="text-xl font-bold mb-6">Đơn hàng của bạn</h2>
 
-            <div className="space-y-4 max-h-[300px] overflow-auto pr-2 mb-6 scrollbar-thin scrollbar-thumb-primary/10">
+            <div className="space-y-4 max-h-[300px]  pr-2 mb-6 scrollbar-thin scrollbar-thumb-primary/10">
               {cartItems.map((item) => {
                 const basePrice = Number(item.products?.price || 0);
                 const discount = Number(item.products?.discount_percent || 0);
