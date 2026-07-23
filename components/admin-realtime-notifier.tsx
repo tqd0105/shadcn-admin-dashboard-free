@@ -150,7 +150,7 @@ export function AdminRealtimeNotifier() {
                 <span className="font-bold text-[11px] tracking-wider uppercase text-rose-600 dark:text-rose-400">Đã hủy!</span>
                 <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400">#{shortId}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">Khách vừa thao tác hủy</p>
+              <p className="text-[11px] text-muted-foreground truncate mt-0.5">Đơn hàng vừa bị huỷ!</p>
             </div>
           </div>
           <button
@@ -166,18 +166,52 @@ export function AdminRealtimeNotifier() {
       ), { duration: 8000 });
     } else {
       toast.custom((t) => (
-        <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-sky-500/30 bg-background/95 backdrop-blur-xl shadow-lg w-full max-w-[300px]">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-500 shrink-0">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+        <div className="relative overflow-hidden flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-white/20 dark:border-white/10 bg-background/70 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-[340px] group animate__animated animate__zoomIn animate__faster">
+          {/* Subtle animated background glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-transparent opacity-50 pointer-events-none" />
+          
+          <div className="relative flex items-center gap-3 min-w-0 flex-1">
+            <div className="relative flex items-center justify-center p-2 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 text-white shrink-0 shadow-lg shadow-sky-500/30 group-hover:scale-110 transition-transform duration-500">
+              <RefreshCw className="w-4 h-4 animate-spin" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold truncate">Đơn #{shortId}</p>
-              <p className="text-[10px] text-muted-foreground truncate">Cập nhật: {data.status}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-[13px] font-extrabold text-foreground truncate tracking-tight">
+                Cập nhật đơn #{shortId}
+              </p>
+              <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+                </span>
+                <span className="truncate">
+                  {{
+                    'pending': 'Chờ xử lý',
+                    'processing': 'Đang xử lý',
+                    'delivering': 'Đang giao hàng',
+                    'shipping': 'Đang giao hàng',
+                    'completed': 'Đã nhận hàng',
+                    'delivered': 'Đã giao  hàng',
+                    'cancelled': 'Đã huỷ',
+                    'paid': 'Đã thanh toán',
+                    'unpaid': 'Chưa thanh toán',
+                    'refunded': 'Đã hoàn tiền'
+                  }[data.status?.toLowerCase()] || data.status}
+                </span>
+              </p>
             </div>
           </div>
+
+          <button 
+            onClick={() => {
+              toast.dismiss(t);
+              router.push(`/dashboard/orders`);
+            }}
+            className="relative z-10 shrink-0 px-3 py-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-foreground text-[11px] font-bold transition-all border border-black/5 dark:border-white/10 active:scale-95"
+          >
+            Chi tiết
+          </button>
         </div>
-      ), { duration: 4000 });
+      ), { duration: 5000 });
     }
   }, [router, playSingleChime]);
 

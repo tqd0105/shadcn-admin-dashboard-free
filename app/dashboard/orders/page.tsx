@@ -780,7 +780,7 @@ function OrdersContent() {
       </Tabs>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen} >
-        <DialogContent className="sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] flex flex-col">
+        <DialogContent className="sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] flex flex-col animate__animated animate__zoomIn">
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
             <DialogHeader className="pr-12 text-left">
               <DialogTitle className="flex items-start sm:items-center gap-2 sm:gap-3 text-lg sm:text-xl md:text-2xl font-extrabold text-foreground min-w-0">
@@ -948,7 +948,7 @@ function OrdersContent() {
 
       {role === "admin" && (
         <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-          <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.1)] rounded-[24px]">
+          <AlertDialogContent className="bg-card/95 backdrop-blur-xl border-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.1)] rounded-[24px] animate__animated animate__bounceIn">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-xl text-red-600 flex items-center gap-2">
                 <IconTrash className="size-6" />

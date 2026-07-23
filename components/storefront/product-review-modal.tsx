@@ -134,7 +134,7 @@ export function ProductReviewModal({ isOpen, onClose, item, onSuccess }: Product
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden border shadow-2xl rounded-2xl bg-background">
+      <DialogContent className="max-w-lg p-0 overflow-hidden border shadow-2xl rounded-2xl bg-background animate__animated animate__zoomIn">
         {/* Header Banner */}
         <div className="p-6 pb-4 border-b border-border/80 bg-card">
           <DialogHeader className="text-left space-y-1.5">

@@ -684,7 +684,7 @@ function PromoBannersPageContent() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-0 flex flex-col">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-0 flex flex-col animate__animated animate__zoomIn">
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <DialogHeader className="pr-8 text-left">
@@ -926,7 +926,7 @@ function PromoBannersPageContent() {
       {/* Delete Alert Dialog */}
       {role === "admin" && (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent className="rounded-[24px] border-red-500/20 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 w-[calc(100%-2rem)] sm:max-w-lg">
+          <AlertDialogContent className="rounded-[24px] border-red-500/20 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 w-[calc(100%-2rem)] sm:max-w-lg animate__animated animate__bounceIn">
             <AlertDialogHeader className="text-left">
               <AlertDialogTitle className="text-red-600 dark:text-red-400 font-extrabold text-xl">Xác nhận xóa Banner?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -952,7 +952,7 @@ function PromoBannersPageContent() {
       )}
       {/* Quick Create Category Dialog */}
       <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl" style={{ zIndex: 10000 }}>
+        <DialogContent className="sm:max-w-[425px] rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl animate__animated animate__bounceIn" style={{ zIndex: 10000 }}>
           <form onSubmit={handleQuickCreateCategory}>
             <DialogHeader>
               <DialogTitle className="text-xl font-extrabold text-foreground">Thêm nhanh Danh mục</DialogTitle>

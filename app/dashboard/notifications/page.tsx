@@ -645,7 +645,7 @@ function NotificationsPageContent() {
 
               {/* Modal xác nhận thu hồi / xóa thông báo */}
               <AlertDialog open={!!deleteTargetItem} onOpenChange={(open) => !open && setDeleteTargetItem(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent className="animate__animated animate__bounceIn">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
                       <IconTrash className="size-5" /> Xác nhận thu hồi thông báo

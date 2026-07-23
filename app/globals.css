@@ -256,6 +256,7 @@
   --animate-duration: 3s;
 }
 
+
 @keyframes luxe-bounce {
   0%, 100% {
     transform: translateY(-80%); /* Nhảy cao hẳn lên 40% thay vì 25% */

@@ -345,7 +345,7 @@ export default function UsersClient() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__zoomIn">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {editingUser ? "Chỉnh sửa Tài khoản" : "Tạo Tài khoản mới"}
@@ -440,7 +440,7 @@ export default function UsersClient() {
       </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+        <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__bounceIn">
           <AlertDialogHeader className="relative z-10">
             <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
               <span className="bg-red-500/10 p-2 rounded-full text-red-500">
@@ -497,7 +497,7 @@ export default function UsersClient() {
       </AlertDialog>
 
       <AlertDialog open={!!lockTarget} onOpenChange={(open) => !open && !locking && setLockTarget(null)}>
-        <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+        <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__bounceIn">
           <AlertDialogHeader className="relative z-10">
             <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
               {lockTarget?.action === "lock" ? (
@@ -554,7 +554,7 @@ export default function UsersClient() {
 
       {/* Transfer Admin Dialog */}
       <AlertDialog open={transferAdminDialogOpen} onOpenChange={setTransferAdminDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md overflow-visible bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+        <AlertDialogContent className="sm:max-w-md overflow-visible bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__bounceIn">
           <AlertDialogHeader className="relative z-10">
             <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400">
               <div className="bg-orange-500/10 p-2 rounded-full shrink-0">

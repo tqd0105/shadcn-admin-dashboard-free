@@ -147,7 +147,7 @@ export default function AddressesPage() {
               <IconPlus className="size-4 mr-2" /> Thêm Địa Chỉ Mới
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] p-0 rounded-[24px] overflow-hidden border-border/50">
+          <DialogContent className="sm:max-w-[500px] p-0 rounded-[24px] overflow-hidden border-border/50 animate__animated animate__zoomIn">
             <DialogHeader className="px-6 pt-6 pb-4 bg-muted/30 border-b border-border/50">
               <DialogTitle className="text-xl font-bold">{formData.id ? "Cập Nhật Địa Chỉ" : "Thêm Địa Chỉ Mới"}</DialogTitle>
             </DialogHeader>
@@ -244,7 +244,7 @@ export default function AddressesPage() {
 
       {/* Modal Xác nhận xóa địa chỉ */}
       <Dialog open={!!deleteModalId} onOpenChange={(open) => { if (!open) setDeleteModalId(null); }}>
-        <DialogContent className="sm:max-w-md p-0 rounded-[24px] overflow-hidden border-border/50 text-center">
+        <DialogContent className="sm:max-w-md p-0 rounded-[24px] overflow-hidden border-border/50 text-center animate__animated animate__bounceIn">
           <div className="pt-8 pb-6 px-6">
             <div className="size-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 ring-8 ring-red-50 dark:ring-red-950/50">
               <IconTrash className="size-8" />

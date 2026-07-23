@@ -186,7 +186,7 @@ export function AuthModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal()}>
-      <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden bg-white border border-border/50 shadow-2xl shadow-white shadow-primary rounded-[32px]  backdrop-blur-xl animate__animated animate__bounceIn">
+      <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden bg-white dark:bg-card/95 border border-border/50 shadow-2xl shadow-primary/20 rounded-[32px]  backdrop-blur-xl animate__animated animate__bounceIn">
         <div className="flex flex-col relative">
           {/* Decorative background glow */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10" />
@@ -270,7 +270,7 @@ export function AuthModal() {
                 </Button>
 
                 <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-gray-300" /></div>
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
                   <div className="relative flex justify-center text-[11px] font-bold uppercase tracking-wider">
                     <span className="bg-white dark:bg-card rounded-full px-3  text-muted-foreground">Hoặc tiếp tục với</span>
                   </div>

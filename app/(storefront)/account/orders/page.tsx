@@ -895,7 +895,7 @@ export default function MyOrdersPage() {
       )}
 
       <AlertDialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="animate__animated animate__bounceIn">
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận hủy đơn hàng</AlertDialogTitle>
             <AlertDialogDescription>
@@ -915,7 +915,7 @@ export default function MyOrdersPage() {
       </AlertDialog>
 
       <AlertDialog open={confirmReceiveModalOpen} onOpenChange={setConfirmReceiveModalOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="animate__animated animate__bounceIn">
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận đã nhận được hàng?</AlertDialogTitle>
             <AlertDialogDescription>

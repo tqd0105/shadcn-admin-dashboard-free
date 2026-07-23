@@ -395,7 +395,7 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[32px] p-6 sm:p-8">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[32px] p-6 sm:p-8 animate__animated animate__zoomIn">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
           <DialogHeader className="relative z-10 mb-2">
             <DialogTitle className="text-2xl font-bold text-foreground">
@@ -731,7 +731,7 @@ export function ProductForm({ open, onOpenChange, product, onSuccess }: ProductF
       </Dialog>
 
       <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
-        <DialogContent className="sm:max-w-sm bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+        <DialogContent className="sm:max-w-sm bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__zoomIn">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Tạo danh mục mới</DialogTitle>
           </DialogHeader>
