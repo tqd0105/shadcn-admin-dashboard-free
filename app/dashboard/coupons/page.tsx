@@ -14,6 +14,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -51,6 +61,8 @@ function CouponsContent() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [couponToDelete, setCouponToDelete] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     code: "",
@@ -151,13 +163,16 @@ function CouponsContent() {
     setIsSubmitting(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (role !== "admin") return;
-    if (!confirm("Bạn có chắc chắn muốn xóa mã này?")) return;
-    const { error } = await deleteCoupon(id);
+  const confirmDelete = async () => {
+    if (!couponToDelete || role !== "admin") return;
+    setIsSubmitting(true);
+    const { error } = await deleteCoupon(couponToDelete);
+    setIsSubmitting(false);
     if (error) {
       alert("Lỗi khi xóa: " + error.message);
     } else {
+      setIsDeleteDialogOpen(false);
+      setCouponToDelete(null);
       setRefreshTrigger((prev) => prev + 1);
     }
   };
@@ -174,28 +189,31 @@ function CouponsContent() {
   if (role !== "admin" && role !== "staff") return null;
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 lg:p-8 space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Mã giảm giá (Coupons)</h1>
-          <p className="text-gray-500 text-sm">Quản lý toàn bộ mã giảm giá và chương trình ưu đãi của hệ thống</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
+            Mã giảm giá
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">Quản lý toàn bộ mã giảm giá và chương trình ưu đãi của hệ thống</p>
         </div>
-        <Button onClick={handleOpenCreateDialog}>
-          <IconPlus className="w-4 h-4 mr-2" /> Thêm Mã mới
+        <Button onClick={handleOpenCreateDialog} className="rounded-full shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold w-full sm:w-auto">
+          <IconPlus className="w-4 h-4 " /> Thêm Mã mới
         </Button>
       </div>
 
-      <div className=" rounded-xl shadow-sm border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Mã code</TableHead>
-              <TableHead>Mô tả ngắn</TableHead>
-              <TableHead>Giảm giá</TableHead>
-              <TableHead>Đã dùng</TableHead>
-              <TableHead>Hạn sử dụng</TableHead>
-              <TableHead>Active</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+      <div className="rounded-[24px] border border-border/50 bg-card/50 backdrop-blur-xl shadow-sm overflow-hidden flex flex-col w-full min-w-0">
+        <div className="overflow-x-auto w-full">
+          <Table className="min-w-[800px] w-full">
+          <TableHeader className="bg-muted/30">
+            <TableRow className="hover:bg-transparent border-border/50">
+              <TableHead className="font-bold text-foreground h-14">Mã code</TableHead>
+              <TableHead className="font-bold text-foreground h-14">Mô tả ngắn</TableHead>
+              <TableHead className="font-bold text-foreground h-14">Giảm giá</TableHead>
+              <TableHead className="font-bold text-foreground h-14">Đã dùng</TableHead>
+              <TableHead className="font-bold text-foreground h-14">Hạn sử dụng</TableHead>
+              <TableHead className="font-bold text-foreground h-14">Trạng thái</TableHead>
+              <TableHead className="text-right font-bold text-foreground h-14">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,39 +231,55 @@ function CouponsContent() {
               </TableRow>
             ) : (
               coupons.map((coupon) => (
-                <TableRow key={coupon.id}>
-                  <TableCell className="font-mono font-bold text-indigo-600">
+                <TableRow key={coupon.id} className="border-border/50 hover:bg-muted/30 transition-colors">
+                  <TableCell className="font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-md inline-block mt-2.5 ml-2">
                     {coupon.code}
                   </TableCell>
-                  <TableCell>{coupon.title || "-"}</TableCell>
-                  <TableCell>{coupon.discount_percent}%</TableCell>
+                  <TableCell className="font-medium">{coupon.title || "-"}</TableCell>
                   <TableCell>
-                    {coupon.used_count} / {coupon.usage_limit || "∞"}
+                    <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/5 text-primary ">
+                      {coupon.discount_percent}%
+                    </span>
                   </TableCell>
-                  <TableCell>
-                    {new Date(coupon.valid_until).toLocaleDateString("vi-VN")}
+                  <TableCell className="font-medium text-muted-foreground">
+                    <span className="text-foreground">{coupon.used_count}</span> / {coupon.usage_limit || "∞"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground font-medium text-sm">
+                    {new Date(coupon.valid_until).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </TableCell>
                   <TableCell>
                     <Switch
                       checked={coupon.is_active}
                       onCheckedChange={() => handleToggleActive(coupon.id, coupon.is_active)}
+                      className={coupon.is_active ? "data-[state=checked]:bg-emerald-500" : ""}
                     />
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleOpenEditDialog(coupon)}
+                      className="rounded-full hover:bg-blue-500/10 hover:text-blue-600 text-muted-foreground transition-colors"
                     >
-                      <IconEdit className="w-4 h-4 text-gray-500" />
+                      <IconEdit className="w-4 h-4" />
                     </Button>
                     {role === "admin" && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(coupon.id)}
+                        onClick={() => {
+                          setCouponToDelete(coupon.id);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        className="rounded-full hover:bg-red-500/10 hover:text-red-600 text-muted-foreground transition-colors ml-1"
                       >
-                        <IconTrash className="w-4 h-4 text-red-500" />
+                        <IconTrash className="w-4 h-4" />
                       </Button>
                     )}
                   </TableCell>
@@ -254,23 +288,24 @@ function CouponsContent() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-[500px] rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6">
+          <DialogHeader className="pr-8 text-left">
+            <DialogTitle className="text-xl md:text-2xl font-extrabold text-foreground">
               {dialogMode === "create" ? "Thêm mã giảm giá mới" : "Chỉnh sửa mã giảm giá"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <form onSubmit={handleSubmit} className="space-y-2 ">
             {formError && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm border border-red-200 dark:border-red-900/50">
                 {formError}
               </div>
             )}
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Mã code</Label>
                 <Input
@@ -304,7 +339,7 @@ function CouponsContent() {
               <p className="text-xs text-gray-500">Ghi chú hoặc giải thích điều kiện áp dụng cho mã giảm giá.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Hạn sử dụng</Label>
                 <Input
@@ -330,20 +365,22 @@ function CouponsContent() {
               <Switch
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                className="data-[state=checked]:bg-emerald-500"
               />
-              <Label>Kích hoạt (Cho phép sử dụng)</Label>
+              <Label className="font-medium text-muted-foreground">Kích hoạt (Cho phép sử dụng)</Label>
             </div>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 border-t border-border/50 mt-6">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setIsDialogOpen(false)}
                 disabled={isSubmitting}
+                className="rounded-full font-medium"
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
                 {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Lưu mã giảm giá
               </Button>
@@ -351,6 +388,34 @@ function CouponsContent() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Alert Dialog */}
+      {role === "admin" && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent className="rounded-[24px] border-red-500/20 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 w-[calc(100%-2rem)] sm:max-w-lg">
+            <AlertDialogHeader className="text-left">
+              <AlertDialogTitle className="text-red-600 dark:text-red-400 font-extrabold text-xl">Xác nhận xóa Mã giảm giá?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hành động này không thể hoàn tác. Mã giảm giá sẽ bị xóa vĩnh viễn khỏi hệ thống.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className=" border-t border-border/50 pt-4">
+              <AlertDialogCancel disabled={isSubmitting} className="rounded-full font-medium border-0 hover:bg-muted/50">Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDelete();
+                }}
+                className="rounded-full bg-red-600 hover:bg-red-700 text-white font-bold"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Xác nhận xóa
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

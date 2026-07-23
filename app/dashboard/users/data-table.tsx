@@ -7,7 +7,7 @@ import {
   getCoreRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { MoreHorizontal, Search } from "lucide-react";
+import { MoreHorizontal, Search, Pencil, Trash2, Lock, Unlock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 export type UserRow = {
   id: string;
@@ -108,12 +109,21 @@ export default function UsersDataTable({
       cell: ({ row }) => {
         const locked = row.original.is_locked;
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            locked
-              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-              : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-          }`}>
-            {locked ? "Đã khóa" : "Hoạt động"}
+          <span className={`inline-flex font-bold items-center px-3 py-1 rounded-full text-[11px] tracking-wide  shadow-sm border ${locked
+              ? "bg-red-500/10 text-red-600 border-red-500 dark:text-red-400"
+              : "bg-emerald-500/10 text-emerald-600 border-emerald-500 dark:text-emerald-400"
+            }`}>
+            {locked ? (
+              <span className="inline-flex items-center gap-1.5 text-red-600 ">
+                <Image src="/icons/lock.png" alt="Lock" width={15} height={15} />
+                Đã khóa
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-green-600 ">
+                <Image src="/icons/circle.png" alt="Unlock" width={10} height={10} />
+                Hoạt động
+              </span>
+            )}
           </span>
         );
       }
@@ -126,25 +136,31 @@ export default function UsersDataTable({
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-secondary transition-colors">
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit(user)}>Chỉnh sửa</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-2xl border-border/50 shadow-xl rounded-[20px] w-52 p-2">
+              <DropdownMenuLabel className="font-bold text-foreground px-2">Hành động</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-border/50" />
+              <DropdownMenuItem onClick={() => onEdit(user)} className="rounded-xl cursor-pointer hover:bg-secondary focus:bg-secondary transition-colors font-medium">
+                <Pencil className="mr-2 size-4 text-blue-500" /> Chỉnh sửa
+              </DropdownMenuItem>
               {onToggleLock && (
-                <DropdownMenuItem onClick={() => onToggleLock(user, !user.is_locked)}>
-                  {user.is_locked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                <DropdownMenuItem onClick={() => onToggleLock(user, !user.is_locked)} className="rounded-xl cursor-pointer hover:bg-secondary focus:bg-secondary transition-colors font-medium">
+                  {user.is_locked ? (
+                    <><Unlock className="mr-2 size-4 text-emerald-500" /> Mở khóa tài khoản</>
+                  ) : (
+                    <><Lock className="mr-2 size-4 text-amber-500" /> Khóa tài khoản</>
+                  )}
                 </DropdownMenuItem>
               )}
               {role === "admin" && (
                 <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => onDelete(user)} className="text-red-600">
-                    Xóa tài khoản
+                  <DropdownMenuSeparator className="bg-border/50" />
+                  <DropdownMenuItem onClick={() => onDelete(user)} className="text-red-600 rounded-xl cursor-pointer hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-600 transition-colors font-medium">
+                    <Trash2 className="mr-2 size-4" /> Xóa tài khoản
                   </DropdownMenuItem>
                 </>
               )}
@@ -172,25 +188,26 @@ export default function UsersDataTable({
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative max-w-sm w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative max-w-sm w-full group">
+          <Image src="/icons/search.png" alt="Search" width={20} height={20} className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Tìm kiếm email, tên..."
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            className="pl-8"
+            className="pl-10 rounded-full h-11 bg-background/50 border-border/50 hover:bg-secondary transition-colors focus-visible:ring-primary/30 shadow-md"
           />
         </div>
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
+      <div className="rounded-[24px] border border-border/50 bg-card/50 backdrop-blur-xl shadow-sm overflow-hidden flex flex-col">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[800px]">
+            <TableHeader className="bg-muted/30">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="hover:bg-transparent border-border/50">
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} className="font-bold text-foreground h-14">
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -202,11 +219,11 @@ export default function UsersDataTable({
           </TableHeader>
           <TableBody>
             {loading ? (
-               <TableRow>
-                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                   Đang tải dữ liệu...
-                 </TableCell>
-               </TableRow>
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Đang tải dữ liệu...
+                </TableCell>
+              </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
@@ -226,27 +243,30 @@ export default function UsersDataTable({
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-between space-x-2 pt-4">
-        <div className="text-sm text-muted-foreground">
-          Trang {pageIndex + 1} / {pageCount || 1}
         </div>
-        <div className="space-x-2">
+      </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 pb-2">
+        <div className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-full border border-border/50 w-full sm:w-auto text-center">
+          Trang <span className="text-foreground font-bold">{pageIndex + 1}</span> / {pageCount || 1}
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onPageChange(pageIndex - 1)}
             disabled={!table.getCanPreviousPage() || loading}
+            className="rounded-full px-5 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors disabled:opacity-40 disabled:bg-muted/50"
           >
-            Previous
+            Trước
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => onPageChange(pageIndex + 1)}
             disabled={!table.getCanNextPage() || loading}
+            className="rounded-full px-5 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors disabled:opacity-40 disabled:bg-muted/50"
           >
-            Next
+            Sau
           </Button>
         </div>
       </div>

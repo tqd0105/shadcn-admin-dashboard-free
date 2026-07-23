@@ -48,6 +48,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             <div className="mb-8 flex items-center gap-4 px-2">
               <div className="size-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-primary-foreground text-xl font-bold shadow-md ring-4 ring-primary/10 shrink-0 overflow-hidden">
                 {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   user.email?.charAt(0).toUpperCase() || "U"

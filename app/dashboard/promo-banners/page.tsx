@@ -126,7 +126,7 @@ function SortableBannerRow({
     <TableRow
       ref={setNodeRef}
       style={style}
-      className={`group ${isDragging ? "bg-muted/80 shadow-lg relative" : ""}`}
+      className={`group ${isDragging ? "bg-muted/80 shadow-lg relative" : ""} border-border/50 hover:bg-muted/30 transition-colors`}
     >
       <TableCell className="w-10 text-center p-2">
         <button
@@ -157,15 +157,16 @@ function SortableBannerRow({
         <Switch
           checked={banner.is_active}
           onCheckedChange={(checked) => handleToggleActive(banner, checked)}
+          className={banner.is_active ? "data-[state=checked]:bg-emerald-500" : ""}
         />
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleOpenEdit(banner)}
-            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="rounded-full h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 transition-colors"
           >
             <IconEdit className="w-4 h-4" />
             <span className="sr-only">Sửa</span>
@@ -178,7 +179,7 @@ function SortableBannerRow({
                 setBannerToDelete(banner.id);
                 setIsDeleteDialogOpen(true);
               }}
-              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="rounded-full h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-500/10 transition-colors"
             >
               <IconTrash className="w-4 h-4" />
               <span className="sr-only">Xóa</span>
@@ -197,7 +198,7 @@ function PromoBannersPageContent() {
   const searchParams = useSearchParams();
 
   const [banners, setBanners] = useState<PromoBanner[]>([]);
-  const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Search state
@@ -229,7 +230,7 @@ function PromoBannersPageContent() {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (page > 1) params.set("page", page.toString());
-    
+
     const newQueryString = params.toString();
     const currentQueryString = searchParams.toString();
 
@@ -244,12 +245,12 @@ function PromoBannersPageContent() {
       getPromoBannersAdmin(debouncedSearch, page, pageSize),
       getCategories("", 1, 100)
     ]);
-    
+
     if (bannersData.data) {
       setBanners(bannersData.data);
       setTotalPages(bannersData.totalPages || 1);
     }
-    
+
     if (categoriesData.data) {
       setCategories(categoriesData.data);
     }
@@ -286,7 +287,7 @@ function PromoBannersPageContent() {
   const [catSearch, setCatSearch] = useState("");
   const [debouncedCatSearch, setDebouncedCatSearch] = useState("");
   const [isSearchingCat, setIsSearchingCat] = useState(false);
-  
+
   // Quick Create Category state
   const [quickCreateDialogOpen, setQuickCreateDialogOpen] = useState(false);
   const [quickCreateName, setQuickCreateName] = useState("");
@@ -373,13 +374,13 @@ function PromoBannersPageContent() {
   const handleOpenEdit = (banner: PromoBanner) => {
     setDialogMode("edit");
     setSelectedBanner(banner);
-    
+
     // Determine link type based on existing link_url
     let currentLinkType: "category" | "custom" = "custom";
     if (banner.link_url && banner.link_url.startsWith("/products?categories=")) {
       currentLinkType = "category";
     }
-    
+
     setLinkType(currentLinkType);
     setFormData({
       title: banner.title,
@@ -402,15 +403,15 @@ function PromoBannersPageContent() {
 
     setIsUploading(true);
     setFormError("");
-    
+
     const { url, error } = await uploadImage(file, "banners");
-    
+
     if (error) {
       setFormError("Lỗi khi tải ảnh lên: " + (error.message || "Unknown error"));
     } else if (url) {
       setFormData(prev => ({ ...prev, image_url: url }));
     }
-    
+
     setIsUploading(false);
   };
 
@@ -429,7 +430,7 @@ function PromoBannersPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
-    
+
     if (!formData.title.trim()) {
       setFormError("Vui lòng nhập tiêu đề");
       return;
@@ -469,7 +470,7 @@ function PromoBannersPageContent() {
         setRefreshTrigger((prev) => prev + 1);
       }
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -478,16 +479,16 @@ function PromoBannersPageContent() {
     setIsSubmitting(true);
     const { error } = await deletePromoBanner(bannerToDelete);
     setIsSubmitting(false);
-    
+
     if (!error) {
       setIsDeleteDialogOpen(false);
-      
+
       // Cập nhật lại số thứ tự (order_index) tuần tự cho các banner còn lại sau khi xóa
       const remaining = banners
         .filter(b => b.id !== bannerToDelete)
         .sort((a, b) => a.order_index - b.order_index)
         .map((b, idx) => ({ ...b, order_index: idx }));
-      
+
       if (remaining.length > 0) {
         try {
           await updatePromoBannerOrders(remaining.map(b => ({ id: b.id, order_index: b.order_index })));
@@ -534,44 +535,44 @@ function PromoBannersPageContent() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full pb-10">
+    <div className="flex flex-col gap-6 w-full p-4 lg:p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý Promo Banner</h1>
-          <p className="text-muted-foreground mt-1">
-            Tạo và quản lý các banner hiển thị ngoài trang chủ.
+          <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">Quản lý Promo Banner</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            Tạo và quản lý các banner hiển thị ngoài trang chủ (kéo thả để đổi thứ tự).
           </p>
         </div>
-        <Button onClick={handleOpenCreate} className="flex items-center">
-          <IconPlus className="w-4 h-4 mr-2" />
+        <Button onClick={handleOpenCreate} className="rounded-full shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center w-full sm:w-auto mt-2 sm:mt-0">
+          <IconPlus className="w-4 h-4 " />
           Thêm Banner
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between rounded-[24px] border border-border/50 bg-card/50 backdrop-blur-xl shadow-sm p-4">
         <div className="relative w-full md:w-96">
-          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Image src="/icons/search.png" alt="Search" width={20} height={20} className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Tìm kiếm banner..."
-            className="pl-9 w-full"
+            className="pl-9 w-full rounded-full bg-background/50 border-border/50 focus-visible:ring-emerald-500/30"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="w-12 text-center"></TableHead>
-                <TableHead className="w-24">Hình ảnh</TableHead>
-                <TableHead>Tiêu đề</TableHead>
-                <TableHead>Link đích</TableHead>
-                <TableHead className="w-24 text-center">Thứ tự</TableHead>
-                <TableHead className="w-24 text-center">Hiển thị</TableHead>
-                <TableHead className="w-[120px] text-right">Thao tác</TableHead>
+      <div className="rounded-[24px] border border-border/50 bg-card/50 backdrop-blur-xl shadow-sm overflow-hidden flex flex-col w-full min-w-0">
+        <div className="overflow-x-auto w-full">
+          <Table className="min-w-[800px] w-full">
+            <TableHeader className="bg-muted/30">
+              <TableRow className="hover:bg-transparent border-border/50">
+                <TableHead className="w-12 text-center h-14"></TableHead>
+                <TableHead className="w-24 font-bold text-foreground h-14">Hình ảnh</TableHead>
+                <TableHead className="font-bold text-foreground h-14">Tiêu đề</TableHead>
+                <TableHead className="font-bold text-foreground h-14">Link đích</TableHead>
+                <TableHead className="w-24 text-center font-bold text-foreground h-14">Thứ tự</TableHead>
+                <TableHead className="w-24 text-center font-bold text-foreground h-14">Hiển thị</TableHead>
+                <TableHead className="w-[120px] text-right font-bold text-foreground h-14">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -629,14 +630,14 @@ function PromoBannersPageContent() {
             </TableBody>
           </Table>
         </div>
-        
+
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t">
-            <div className="text-sm text-muted-foreground">
-              Trang {page} / {totalPages}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t">
+            <div className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-1.5 rounded-full border border-border/50 w-full sm:w-auto text-center">
+              Trang <span className="text-foreground font-bold">{page}</span> / {totalPages}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -651,7 +652,7 @@ function PromoBannersPageContent() {
                   let pageNum = page - 2 + i;
                   if (page <= 3) pageNum = i + 1;
                   else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
-                  
+
                   if (pageNum > 0 && pageNum <= totalPages) {
                     return (
                       <Button
@@ -683,10 +684,11 @@ function PromoBannersPageContent() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-0 flex flex-col">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader className="pr-8 text-left">
+              <DialogTitle className="text-xl md:text-2xl font-extrabold text-foreground">
                 {dialogMode === "create" ? "Thêm Banner mới" : "Cập nhật Banner"}
               </DialogTitle>
               <DialogDescription>
@@ -704,8 +706,8 @@ function PromoBannersPageContent() {
                   required
                 />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="subtitle">Tiêu đề phụ</Label>
                   <Input
@@ -773,26 +775,26 @@ function PromoBannersPageContent() {
                   <Label>Link đích khi click</Label>
                   <div className="flex gap-4 ml-auto">
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="linkType" 
-                        value="category" 
-                        checked={linkType === "category"} 
-                        onChange={() => setLinkType("category")} 
+                      <input
+                        type="radio"
+                        name="linkType"
+                        value="category"
+                        checked={linkType === "category"}
+                        onChange={() => setLinkType("category")}
                       /> Danh mục
                     </label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="linkType" 
-                        value="custom" 
-                        checked={linkType === "custom"} 
-                        onChange={() => setLinkType("custom")} 
+                      <input
+                        type="radio"
+                        name="linkType"
+                        value="custom"
+                        checked={linkType === "custom"}
+                        onChange={() => setLinkType("custom")}
                       /> Tùy chỉnh
                     </label>
                   </div>
                 </div>
-                
+
                 {linkType === "category" ? (
                   <Popover open={comboboxOpen} onOpenChange={setComboboxOpen} modal={true}>
                     <PopoverTrigger asChild>
@@ -875,67 +877,70 @@ function PromoBannersPageContent() {
               </div>
 
               <div className="grid gap-2">
-                  <Label htmlFor="order_index">Thứ tự ưu tiên</Label>
-                  <Input
-                    id="order_index"
-                    type="number"
-                    value={formData.order_index}
-                    onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 0 })}
-                  />
-                </div>
-              
-              <div className="flex items-center gap-2 mt-2">
-                <Switch 
-                  id="is_active" 
-                  checked={formData.is_active} 
-                  onCheckedChange={(c) => setFormData({...formData, is_active: c})} 
+                <Label htmlFor="order_index">Thứ tự ưu tiên</Label>
+                <Input
+                  id="order_index"
+                  type="number"
+                  value={formData.order_index}
+                  onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 0 })}
                 />
-                <Label htmlFor="is_active">Hiển thị trên trang chủ</Label>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <Switch
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(c) => setFormData({ ...formData, is_active: c })}
+                  className="data-[state=checked]:bg-emerald-500"
+                />
+                <Label htmlFor="is_active" className="font-medium text-muted-foreground">Hiển thị trên trang chủ</Label>
               </div>
 
               {formError && (
-                <div className="text-sm font-medium text-red-500 bg-red-50 p-3 rounded-md border border-red-200">
+                <div className="text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-xl border border-red-200 dark:border-red-900/50">
                   {formError}
                 </div>
               )}
             </div>
-            
-            <DialogFooter>
+
+            <DialogFooter className="pt-4 border-t border-border/50 mt-4">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setIsDialogOpen(false)}
                 disabled={isSubmitting}
+                className="rounded-full font-medium"
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
                 {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {dialogMode === "create" ? "Tạo mới" : "Lưu thay đổi"}
               </Button>
             </DialogFooter>
           </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Delete Alert Dialog */}
       {role === "admin" && (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Xác nhận xóa Banner?</AlertDialogTitle>
+          <AlertDialogContent className="rounded-[24px] border-red-500/20 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 w-[calc(100%-2rem)] sm:max-w-lg">
+            <AlertDialogHeader className="text-left">
+              <AlertDialogTitle className="text-red-600 dark:text-red-400 font-extrabold text-xl">Xác nhận xóa Banner?</AlertDialogTitle>
               <AlertDialogDescription>
                 Hành động này không thể hoàn tác. Banner sẽ bị xóa vĩnh viễn khỏi hệ thống.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isSubmitting}>Hủy</AlertDialogCancel>
+            <AlertDialogFooter className=" border-t border-border/50 pt-4">
+              <AlertDialogCancel disabled={isSubmitting} className="rounded-full font-medium border-0 hover:bg-muted/50">Hủy</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
                   confirmDelete();
                 }}
-                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                className="rounded-full bg-red-600 hover:bg-red-700 text-white font-bold"
                 disabled={isSubmitting}
               >
                 {isSubmitting && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -947,10 +952,10 @@ function PromoBannersPageContent() {
       )}
       {/* Quick Create Category Dialog */}
       <Dialog open={quickCreateDialogOpen} onOpenChange={setQuickCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]" style={{ zIndex: 10000 }}>
+        <DialogContent className="sm:max-w-[425px] rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl" style={{ zIndex: 10000 }}>
           <form onSubmit={handleQuickCreateCategory}>
             <DialogHeader>
-              <DialogTitle>Thêm nhanh Danh mục</DialogTitle>
+              <DialogTitle className="text-xl font-extrabold text-foreground">Thêm nhanh Danh mục</DialogTitle>
               <DialogDescription>
                 Tạo một danh mục mới để liên kết ngay lập tức.
               </DialogDescription>
@@ -968,16 +973,17 @@ function PromoBannersPageContent() {
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4 border-t border-border/50 mt-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setQuickCreateDialogOpen(false)}
                 disabled={creatingCategory}
+                className="rounded-full font-medium"
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={creatingCategory}>
+              <Button type="submit" disabled={creatingCategory} className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
                 {creatingCategory && <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Tạo nhanh
               </Button>

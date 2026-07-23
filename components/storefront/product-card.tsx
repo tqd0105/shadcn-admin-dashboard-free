@@ -35,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className={cn(
-      "group border border-border/50 rounded-[24px] overflow-hidden bg-card/80 backdrop-blur-xl transition-all duration-500 relative flex flex-col h-full",
+      "group border border-border/50 rounded-[24px] overflow-hidden cursor-pointer bg-card/80 backdrop-blur-xl transition-all duration-500 relative flex flex-col h-full",
       isOutOfStock 
         ? "hover:border-border transition-all" 
         : "hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:bg-card"
@@ -59,7 +59,7 @@ export function ProductCard({ product }: ProductCardProps) {
         />
         {isOutOfStock && (
           <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-             <div className="border-[4px] border-red-600/80 text-red-600/80 px-4 py-2 rounded-md font-black text-xl sm:text-2xl tracking-[0.15em] uppercase transform -rotate-[15deg] shadow-2xl bg-white/10 backdrop-blur-[1px]">
+             <div className="border-[4px] border-red-600/80 text-red-600/80 px-4 py-2 rounded-md font-black text-xl  tracking-[0.15em] uppercase transform -rotate-[15deg] shadow-2xl bg-white/10 backdrop-blur-[1px]">
                Cháy hàng
              </div>
           </div>

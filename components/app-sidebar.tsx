@@ -66,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50 shadow-sm" {...props}>
-      <SidebarHeader className="pt-6 pb-2">
+      <SidebarHeader className="pt-2 pb-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className=" py-4 gap-2">
+      <SidebarContent className=" py-2 gap-2">
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter className=" border-t border-border/40">

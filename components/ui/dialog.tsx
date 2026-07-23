@@ -70,9 +70,9 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all focus:outline-none hover:shadow-lg transition-all cursor-pointer"
+            className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all focus:outline-none hover:shadow-lg hover:scale-110 transition-all cursor-pointer"
           >
-            <Image src="/icons/cancel.png" alt="close" width={30} height={30} />
+            <Image src="/icons/cancel1.png" alt="close" width={30} height={30} />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
