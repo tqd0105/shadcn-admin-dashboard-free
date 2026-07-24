@@ -41,8 +41,8 @@ const AuthContext = createContext<AuthContextType>({
 const clearAuthCache = () => {
     if (typeof window !== "undefined") {
         try {
-            Object.keys(localStorage).forEach(k => {
-                if (k.startsWith('luxe_auth_cache_')) localStorage.removeItem(k);
+            Object.keys(sessionStorage).forEach(k => {
+                if (k.startsWith('luxe_auth_cache_')) sessionStorage.removeItem(k);
             });
         } catch (e) {}
     }
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (roleData) setRole(roleData.name);
 
         if (typeof window !== "undefined" && currentProfile) {
-            localStorage.setItem(`luxe_auth_cache_${userObj.id}`, JSON.stringify({
+            sessionStorage.setItem(`luxe_auth_cache_${userObj.id}`, JSON.stringify({
                 profile: currentProfile,
                 role: roleData?.name ?? null
             }));
@@ -147,9 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (currentUser) {
                 lastUserIdRef.current = currentUser.id;
 
-                // 2. Kiểm tra bộ nhớ đệm tab (LocalStorage) để mở khóa giao diện NGAY LẬP TỨC (0ms spinner khi F5)
+                // 2. Kiểm tra bộ nhớ đệm tab (SessionStorage) để mở khóa giao diện NGAY LẬP TỨC (0ms spinner khi F5)
                 if (typeof window !== "undefined") {
-                    const cachedStr = localStorage.getItem(`luxe_auth_cache_${currentUser.id}`);
+                    const cachedStr = sessionStorage.getItem(`luxe_auth_cache_${currentUser.id}`);
                     if (cachedStr) {
                         try {
                             const cached = JSON.parse(cachedStr);

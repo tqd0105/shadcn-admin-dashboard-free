@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function AddressesPage() {
   const { user } = useAuth();
@@ -34,7 +35,8 @@ export default function AddressesPage() {
     phone: "",
     street: "",
     city: "",
-    is_default: false
+    is_default: false,
+    type: "home"
   });
 
   const fetchAddresses = useCallback(async () => {
@@ -60,7 +62,8 @@ export default function AddressesPage() {
       phone: "",
       street: "",
       city: "",
-      is_default: false
+      is_default: false,
+      type: "home"
     });
   };
 
@@ -76,7 +79,8 @@ export default function AddressesPage() {
       phone: addr.phone || "",
       street: addr.street || "",
       city: addr.city || "",
-      is_default: addr.is_default || false
+      is_default: addr.is_default || false,
+      type: addr.type || "home"
     });
     setIsDialogOpen(true);
   };
@@ -170,6 +174,20 @@ export default function AddressesPage() {
                 <Label htmlFor="street" className="text-[13px] font-semibold text-foreground/80">Địa chỉ cụ thể</Label>
                 <Input id="street" placeholder="Số nhà, ngõ, đường..." value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})} required className="h-11 bg-background/50 border-border/60 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary rounded-xl transition-all" />
               </div>
+              <div className="space-y-2.5">
+                <Label className="text-[13px] font-semibold text-foreground/80">Loại địa chỉ (Giao giờ hành chính hay nhà riêng?)</Label>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button type="button" variant={formData.type === 'home' ? 'default' : 'outline'} className="rounded-xl flex-1 min-w-[110px] h-10 border-border/60" onClick={() => setFormData({...formData, type: 'home'})}>
+                    <Image src="/icons/home1.png" alt="Home" width={20} height={20} /> Nhà riêng
+                  </Button>
+                  <Button type="button" variant={formData.type === 'office' ? 'default' : 'outline'} className="rounded-xl flex-1 min-w-[110px] h-10 border-border/60" onClick={() => setFormData({...formData, type: 'office'})}>
+                    <Image src="/icons/office.png" alt="Office" width={20} height={20} /> Văn phòng
+                  </Button>
+                  <Button type="button" variant={formData.type === 'other' ? 'default' : 'outline'} className="rounded-xl flex-1 min-w-[110px] h-10 border-border/60" onClick={() => setFormData({...formData, type: 'other'})}>
+                    <Image src="/icons/pin.png" alt="Other" width={20} height={20} /> Khác
+                  </Button>
+                </div>
+              </div>
               <div className="flex items-center space-x-3 pt-2 pb-2">
                 <Checkbox 
                   id="is_default" 
@@ -204,7 +222,7 @@ export default function AddressesPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`group flex flex-col p-6 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${addr.is_default ? 'bg-primary/10 border-2 border-primary/100 shadow-md shadow-primary/5' : 'bg-card/60 backdrop-blur-xl border-border/50 shadow-sm hover:shadow-md hover:border-border'}`}>
+            <div key={addr.id} className={`group flex flex-col p-6 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${addr.is_default ? 'bg-primary/10 border-2 border-primary/100  shadow-xl ' : 'bg-card/60 backdrop-blur-xl border-border/50 shadow-xs hover:shadow-md hover:border-border'}`}>
               
               {addr.is_default && (
                 <div className="absolute top-4 right-4">
@@ -215,21 +233,27 @@ export default function AddressesPage() {
                 </div>
               )}
               
-              <div className="flex-1 pr-24">
-                <div className="flex items-center gap-3 mb-1">
+              <div className="flex-1 ">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-3 mb-1">
                   <h3 className="font-bold text-lg text-foreground">{addr.full_name}</h3>
+                  {addr.type === 'home' && <span className="flex items-center gap-1 text-[10px] bg-sky-200 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 font-bold px-2 py-0.5 rounded-full shadow-sm"><Image src="/icons/home1.png" alt="Home" width={12} height={12} /> Nhà riêng</span>}
+                  {addr.type === 'office' && <span className="flex items-center gap-1 text-[10px] bg-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full shadow-sm"><Image src="/icons/office.png" alt="Office" width={12} height={12} /> Văn phòng</span>}
+                  {addr.type === 'other' && <span className="flex items-center gap-1 text-[10px] bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 font-bold px-2 py-0.5 rounded-full shadow-sm"><Image src="/icons/pin.png" alt="Other" width={12} height={12} /> Khác</span>}
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground mb-4 text-sm font-medium">
+                <div className="flex items-center gap-2  mb-2 text-sm font-bold">
+                  <span className="text-gray-400 font-normal ">SĐT:</span>
                   <span>{addr.phone}</span>
                 </div>
                 
-                <div className="space-y-1.5 text-[14px] text-foreground/80 leading-relaxed">
-                  <p>{addr.street}</p>
-                  <p>{addr.city}</p>
+                <div className="flex items-start gap-2 text-[14px] text-foreground/80 leading-relaxed">
+                  <span className="text-muted-foreground opacity-70 shrink-0">Địa chỉ:</span>
+                  <div className="space-y-1 font-bold">
+                    <p>{addr.street} - {addr.city}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mt-6 pt-5 border-t border-border/40">
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/40">
                 <Button variant="outline" size="sm" className="rounded-xl flex-1 border-border/60 hover:bg-muted/50" onClick={() => handleOpenEdit(addr)}>
                   <IconEdit className="size-4 mr-2 text-foreground/70" /> Sửa
                 </Button>

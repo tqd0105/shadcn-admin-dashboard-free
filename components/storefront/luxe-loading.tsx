@@ -12,7 +12,7 @@ interface LuxeLoadingProps {
 export function LuxeLoading({ 
   label = "Đang tải dữ liệu...", 
   className = "",
-  mode = "absolute" 
+  mode = "fixed" 
 }: LuxeLoadingProps) {
   const positionClasses = 
     mode === "absolute"

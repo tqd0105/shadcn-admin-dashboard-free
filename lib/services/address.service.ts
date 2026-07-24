@@ -20,7 +20,7 @@ export async function getAddresses() {
   return { data, error };
 }
 
-export async function addAddress(addressData: { full_name: string; phone: string; street: string; city: string; is_default: boolean }) {
+export async function addAddress(addressData: { full_name: string; phone: string; street: string; city: string; is_default: boolean; type?: string }) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) return { data: null, error: userError || new Error("User not authenticated") };
 
@@ -48,7 +48,7 @@ export async function addAddress(addressData: { full_name: string; phone: string
   return { data, error };
 }
 
-export async function updateAddress(id: string, addressData: { full_name: string; phone: string; street: string; city: string; is_default: boolean }) {
+export async function updateAddress(id: string, addressData: { full_name: string; phone: string; street: string; city: string; is_default: boolean; type?: string }) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) return { data: null, error: userError || new Error("User not authenticated") };
 

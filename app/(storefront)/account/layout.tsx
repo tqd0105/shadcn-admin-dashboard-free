@@ -11,7 +11,8 @@ import {
   MapPin, 
   Heart, 
   Settings, 
-  LogOut 
+  LogOut,
+  ShoppingCart
 } from "lucide-react";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -33,7 +34,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   const menuItems = [
     { name: "Tổng quan", href: "/account", icon: User },
-    { name: "Lịch sử mua hàng", href: "/account/orders", icon: Package },
+    { name: "Đơn hàng", href: "/account/orders", icon: ShoppingCart },
     { name: "Sổ địa chỉ", href: "/account/addresses", icon: MapPin },
     { name: "Yêu thích", href: "/account/wishlist", icon: Heart },
     { name: "Tuỳ chỉnh", href: "/account/settings", icon: Settings },
