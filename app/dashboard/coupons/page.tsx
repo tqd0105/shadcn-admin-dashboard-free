@@ -292,7 +292,7 @@ function CouponsContent() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6">
+        <DialogContent className="sm:max-w-[500px] rounded-[24px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 animate__animated animate__zoomIn">
           <DialogHeader className="pr-8 text-left">
             <DialogTitle className="text-xl md:text-2xl font-extrabold text-foreground">
               {dialogMode === "create" ? "Thêm mã giảm giá mới" : "Chỉnh sửa mã giảm giá"}
@@ -392,7 +392,7 @@ function CouponsContent() {
       {/* Delete Alert Dialog */}
       {role === "admin" && (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent className="rounded-[24px] border-red-500/20 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 w-[calc(100%-2rem)] sm:max-w-lg">
+          <AlertDialogContent className="rounded-[24px] border-red-500/20 bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-6 w-[calc(100%-2rem)] sm:max-w-lg animate__animated animate__bounceIn">
             <AlertDialogHeader className="text-left">
               <AlertDialogTitle className="text-red-600 dark:text-red-400 font-extrabold text-xl">Xác nhận xóa Mã giảm giá?</AlertDialogTitle>
               <AlertDialogDescription>

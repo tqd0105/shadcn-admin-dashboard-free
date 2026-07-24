@@ -356,7 +356,7 @@ function ProductsPageContent() {
 
       {role === "admin" && (
         <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-          <AlertDialogContent className="bg-card/90 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] overflow-hidden">
+          <AlertDialogContent className="bg-card/90 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] overflow-hidden animate__animated animate__bounceIn">
             <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-red-500/10 rounded-full blur-[40px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
             <AlertDialogHeader className="relative z-10">
               <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">

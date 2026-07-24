@@ -86,7 +86,7 @@ export function WishlistModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent showCloseButton={false}  className="sm:max-w-md p-0 overflow-hidden bg-card/80 backdrop-blur-3xl border border-border/50 rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] gap-0">
+      <DialogContent showCloseButton={false}  className="sm:max-w-md p-0 overflow-hidden bg-card/80 backdrop-blur-3xl border border-border/50 rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] gap-0 animate__animated animate__bounceIn">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-fuchsia-500/10 rounded-full blur-3xl -z-10 -translate-x-10 translate-y-10 pointer-events-none" />
 

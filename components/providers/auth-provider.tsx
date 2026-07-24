@@ -38,6 +38,16 @@ const AuthContext = createContext<AuthContextType>({
     showLockedAlert: () => {},
 });
 
+const clearAuthCache = () => {
+    if (typeof window !== "undefined") {
+        try {
+            Object.keys(sessionStorage).forEach(k => {
+                if (k.startsWith('luxe_auth_cache_')) sessionStorage.removeItem(k);
+            });
+        } catch (e) {}
+    }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null)
@@ -51,9 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const logout = useCallback(async () => {
-        if (typeof window !== "undefined") {
-            sessionStorage.clear();
-        }
+        clearAuthCache();
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
@@ -64,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await getProfile(userObj.id);
         if (error) {
             if (error.code === 'PGRST116') {
-                if (typeof window !== "undefined") sessionStorage.clear();
+                clearAuthCache();
                 await supabase.auth.signOut();
                 setUser(null); setProfile(null); setRole(null);
                 setAuthAlert('deleted');
@@ -76,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         let currentProfile = data;
         if (currentProfile?.is_locked) {
-            if (typeof window !== "undefined") sessionStorage.clear();
+            clearAuthCache();
             await supabase.auth.signOut();
             setUser(null);
             setProfile(null);
@@ -196,7 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             } else if (event === "SIGNED_OUT") {
                 lastUserIdRef.current = null;
-                if (typeof window !== "undefined") sessionStorage.clear();
+                clearAuthCache();
                 setUser(null);
                 setProfile(null);
                 setRole(null);
@@ -228,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const checkLockStatus = async (forceDeleted = false) => {
             if (forceDeleted) {
-                if (typeof window !== "undefined") sessionStorage.clear();
+                clearAuthCache();
                 await supabase.auth.signOut();
                 setUser(null); setProfile(null); setRole(null);
                 setAuthAlert('deleted');
@@ -238,13 +246,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const { data, error } = await getProfile(user.id);
             if (error && error.code === 'PGRST116') {
-                if (typeof window !== "undefined") sessionStorage.clear();
+                clearAuthCache();
                 await supabase.auth.signOut();
                 setUser(null); setProfile(null); setRole(null);
                 setAuthAlert('deleted');
                 router.push("/");
             } else if (data?.is_locked) {
-                if (typeof window !== "undefined") sessionStorage.clear();
+                clearAuthCache();
                 await supabase.auth.signOut();
                 setUser(null);
                 setProfile(null);
@@ -292,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         <AuthContext.Provider value={{ user, profile, role, loading, logout, showLockedAlert }}>
             {children}
             <AlertDialog open={authAlert !== 'none'} onOpenChange={(open) => !open && setAuthAlert('none')}>
-                <AlertDialogContent className="sm:max-w-md z-[9999]">
+                <AlertDialogContent className="sm:max-w-md z-[9999] animate__animated animate__bounceIn">
                     <AlertDialogHeader>
                         <div className="flex items-center gap-2.5 text-red-600 dark:text-red-400">
                             <div className="p-2 rounded-full bg-red-500/10 shrink-0">

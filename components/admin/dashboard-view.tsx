@@ -137,10 +137,10 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
             variant="secondary"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="rounded-2xl h-12 px-6 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white text-primary hover:bg-white/90 w-full sm:w-auto"
+            className="rounded-2xl h-12 px-6 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-white text-primary dark:text-primary-foreground hover:bg-white/90 w-full sm:w-auto"
           >
             <RefreshCw
-              className={cn("w-5 h-5 mr-2", isRefreshing && "animate-spin")}
+              className={cn("w-5 h-5 ", isRefreshing && "animate-spin")}
             />
             {isRefreshing ? "Đang tải..." : "Làm mới số liệu"}
           </Button>
@@ -318,17 +318,13 @@ export function DashboardView({ initialStats }: DashboardViewProps) {
                       <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--muted-foreground))" opacity={0.2} vertical={false} />
                       <XAxis
                         dataKey="date"
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        fontWeight={600}
+                        tick={{ fill: '#a1a1aa', fontSize: 12, fontWeight: 600 }}
                         tickLine={false}
                         axisLine={false}
                         dy={10}
                       />
                       <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        fontWeight={600}
+                        tick={{ fill: '#a1a1aa', fontSize: 12, fontWeight: 600 }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}

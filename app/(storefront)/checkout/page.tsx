@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { IconLoader2, IconCheck } from "@tabler/icons-react";
@@ -264,31 +265,49 @@ export default function CheckoutPage() {
                 <Label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1">
                   ★ Chọn nhanh từ Sổ địa chỉ đã lưu:
                 </Label>
-                <select
-                  className="w-full h-11 px-4 rounded-[14px] border border-input bg-background text-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground shadow-sm"
-                  value={selectedAddressId}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSelectedAddressId(val);
-                    const addr = savedAddresses.find(a => a.id === val);
-                    if (addr) {
+                <Select
+                  value={selectedAddressId || "new"}
+                  onValueChange={(val) => {
+                    if (val === "new") {
+                      setSelectedAddressId("");
                       setFormData(prev => ({
                         ...prev,
-                        fullName: addr.full_name || prev.fullName,
-                        phone: addr.phone || "",
-                        street: addr.street || "",
-                        city: addr.city || ""
+                        phone: "",
+                        street: "",
+                        city: ""
                       }));
+                    } else {
+                      setSelectedAddressId(val);
+                      const addr = savedAddresses.find(a => a.id === val);
+                      if (addr) {
+                        setFormData(prev => ({
+                          ...prev,
+                          fullName: addr.full_name || prev.fullName,
+                          phone: addr.phone || "",
+                          street: addr.street || "",
+                          city: addr.city || ""
+                        }));
+                      }
                     }
                   }}
                 >
-                  <option value="">-- Tự nhập địa chỉ mới bên dưới --</option>
-                  {savedAddresses.map(addr => (
-                    <option key={addr.id} value={addr.id}>
-                      {addr.full_name} ({addr.phone}) - {addr.street}, {addr.city} {addr.is_default ? " [Mặc định]" : ""}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full h-11 px-4 rounded-[14px] border border-input bg-background text-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground shadow-sm">
+                    <SelectValue placeholder="-- Tự nhập địa chỉ mới bên dưới --" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="new">-- Tự nhập địa chỉ mới bên dưới --</SelectItem>
+                    {savedAddresses.map(addr => (
+                      <SelectItem key={addr.id} value={addr.id} className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          {addr.type === 'home' && <span className="flex items-center gap-1 text-[10px] bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 font-bold px-2 py-0.5 rounded-full"><Image src="/icons/home1.png" alt="Home" width={12} height={12} /> Nhà riêng</span>}
+                          {addr.type === 'office' && <span className="flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full"><Image src="/icons/office.png" alt="Office" width={12} height={12} /> Văn phòng</span>}
+                          {addr.type === 'other' && <span className="flex items-center gap-1 text-[10px] bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 font-bold px-2 py-0.5 rounded-full"><Image src="/icons/pin.png" alt="Other" width={12} height={12} /> Khác</span>}
+                          <span className="truncate">{addr.full_name} ({addr.phone}) - {addr.street}, {addr.city} {addr.is_default ? " [Mặc định]" : ""}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
@@ -389,7 +408,7 @@ export default function CheckoutPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10 pointer-events-none" />
             <h2 className="text-xl font-bold mb-6">Đơn hàng của bạn</h2>
 
-            <div className="space-y-4 max-h-[300px] overflow-auto pr-2 mb-6 scrollbar-thin scrollbar-thumb-primary/10">
+            <div className="space-y-4 max-h-[300px]  pr-2 mb-6 scrollbar-thin scrollbar-thumb-primary/10">
               {cartItems.map((item) => {
                 const basePrice = Number(item.products?.price || 0);
                 const discount = Number(item.products?.discount_percent || 0);

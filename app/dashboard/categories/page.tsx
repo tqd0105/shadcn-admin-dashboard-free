@@ -358,7 +358,7 @@ function CategoriesPageContent() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__zoomIn">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {editingCategory ? "Chỉnh sửa Danh mục" : "Thêm Danh mục mới"}
@@ -420,7 +420,7 @@ function CategoriesPageContent() {
           open={!!deleteTarget}
           onOpenChange={(open) => !open && setDeleteTarget(null)}
         >
-          <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px]">
+          <AlertDialogContent className="sm:max-w-md bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-[24px] animate__animated animate__bounceIn">
             <AlertDialogHeader className="relative z-10">
               <AlertDialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
                 <span className="bg-red-500/10 p-2 rounded-full text-red-500">
